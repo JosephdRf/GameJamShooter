@@ -1,0 +1,167 @@
+[gd_scene format=3 uid="uid://cbwr375xy5csr"]
+
+[ext_resource type="Script" uid="uid://bavvm03elir3r" path="res://scripts/ui/lobby.gd" id="1_lobby"]
+
+[sub_resource type="Theme" id="Theme_lobby"]
+default_font_size = 22
+
+[node name="Lobby" type="Control" unique_id=1100872415]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = SubResource("Theme_lobby")
+script = ExtResource("1_lobby")
+
+[node name="Background" type="ColorRect" parent="." unique_id=1546834663]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.08, 0.09, 0.12, 1)
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=515676423]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 64
+theme_override_constants/margin_top = 32
+theme_override_constants/margin_right = 64
+theme_override_constants/margin_bottom = 32
+
+[node name="Layout" type="VBoxContainer" parent="Margin" unique_id=2071128866]
+layout_mode = 2
+theme_override_constants/separation = 24
+
+[node name="Title" type="Label" parent="Margin/Layout" unique_id=1342502477]
+layout_mode = 2
+theme_override_font_sizes/font_size = 48
+text = "GameJamShooter"
+horizontal_alignment = 1
+
+[node name="Home" type="HBoxContainer" parent="Margin/Layout" unique_id=1422249940]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 64
+
+[node name="Instructions" type="RichTextLabel" parent="Margin/Layout/Home" unique_id=377186386]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.6
+theme_override_font_sizes/normal_font_size = 18
+theme_override_font_sizes/bold_font_size = 18
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+
+[node name="Actions" type="VBoxContainer" parent="Margin/Layout/Home" unique_id=1629300250]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 16
+
+[node name="HostButton" type="Button" parent="Margin/Layout/Home/Actions" unique_id=153622100]
+custom_minimum_size = Vector2(0, 72)
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Héberger la partie"
+
+[node name="JoinLabel" type="Label" parent="Margin/Layout/Home/Actions" unique_id=1928747730]
+layout_mode = 2
+text = "… ou rejoindre l'hôte avec son IP :"
+
+[node name="AddressEdit" type="LineEdit" parent="Margin/Layout/Home/Actions" unique_id=1546484957]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+placeholder_text = "ex. 172.20.10.2"
+alignment = 1
+
+[node name="JoinButton" type="Button" parent="Margin/Layout/Home/Actions" unique_id=1018669562]
+custom_minimum_size = Vector2(0, 56)
+layout_mode = 2
+text = "Rejoindre"
+
+[node name="Status" type="Label" parent="Margin/Layout/Home/Actions" unique_id=1782090132]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.75, 0.4, 1)
+autowrap_mode = 3
+
+[node name="QuitButton" type="Button" parent="Margin/Layout/Home/Actions" unique_id=962262809]
+layout_mode = 2
+size_flags_vertical = 10
+text = "Quitter le jeu"
+
+[node name="Select" type="VBoxContainer" parent="Margin/Layout" unique_id=1554680312]
+visible = false
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 28
+
+[node name="Info" type="Label" parent="Margin/Layout/Select" unique_id=450304214]
+layout_mode = 2
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Teams" type="HBoxContainer" parent="Margin/Layout/Select" unique_id=1607433527]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 64
+alignment = 1
+
+[node name="Team1" type="VBoxContainer" parent="Margin/Layout/Select/Teams" unique_id=701324991]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Margin/Layout/Select/Teams/Team1" unique_id=286239954]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "Équipe 1"
+horizontal_alignment = 1
+
+[node name="Slots" type="HBoxContainer" parent="Margin/Layout/Select/Teams/Team1" unique_id=1605233165]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="Team2" type="VBoxContainer" parent="Margin/Layout/Select/Teams" unique_id=1715809928]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="Margin/Layout/Select/Teams/Team2" unique_id=1579114014]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "Équipe 2"
+horizontal_alignment = 1
+
+[node name="Slots" type="HBoxContainer" parent="Margin/Layout/Select/Teams/Team2" unique_id=412020034]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 16
+
+[node name="Hint" type="Label" parent="Margin/Layout/Select" unique_id=464712238]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.72, 0.78, 1)
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Buttons" type="HBoxContainer" parent="Margin/Layout/Select" unique_id=595801643]
+layout_mode = 2
+theme_override_constants/separation = 24
+alignment = 1
+
+[node name="LeaveButton" type="Button" parent="Margin/Layout/Select/Buttons" unique_id=1505272825]
+custom_minimum_size = Vector2(240, 64)
+layout_mode = 2
+text = "Quitter le salon"
+
+[node name="StartButton" type="Button" parent="Margin/Layout/Select/Buttons" unique_id=676212382]
+custom_minimum_size = Vector2(420, 64)
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Lancer la partie  (Start)"

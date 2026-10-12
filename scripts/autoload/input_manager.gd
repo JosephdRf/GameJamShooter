@@ -1,103 +1,109 @@
 extends Node
-## Crée les actions d'entrée de chaque joueur au démarrage.
+## Crée les actions d'entrée au démarrage.
 ##
-## Pour chaque joueur N (1 à 4), les actions suivantes sont créées :
-##   pN_left, pN_right, pN_up, pN_down, pN_jump        (déplacement / saut)
-##   pN_look_left, pN_look_right, pN_look_up, pN_look_down   (caméra)
+## Chaque ordinateur contrôle UN seul cube (celui choisi dans le lobby), avec
+## le clavier/trackpad OU n'importe quelle manette branchée :
+##   move_left/right/up/down : Z/Q/S/D (ou flèches) / joystick gauche
+##   look_left/right/up/down : joystick droit (la souris est gérée par PlayerCamera)
+##   jump                    : Espace / bouton du bas (B sur Switch Pro)
+##   start                   : bouton Start (+ sur Switch Pro)
+##   ui_accept (menus)       : Entrée / Espace / A sur Switch Pro (bouton de droite)
+##   menu_back (lobby)       : Retour arrière / B sur Switch Pro (bouton du bas)
+##   menu_left/menu_right    : comme move_left/right, mais avec une zone morte
+##                             plus large pour naviguer dans les menus
 ##
-## Attribution des périphériques :
-##   - Clavier + souris/trackpad -> joueur 1 :
-##     Z/Q/S/D (ou flèches) = déplacement, Espace = saut, souris/trackpad = caméra
-##     (touches *physiques* : Z/Q/S/D en AZERTY = W/A/S/D en QWERTY)
-##   - Manette d'index K (0, 1, 2, 3) -> joueur K + 1 :
-##     joystick gauche = déplacement, joystick droit = caméra, B = saut
+## Les touches sont *physiques* : Z/Q/S/D en AZERTY = W/A/S/D en QWERTY.
 
-const MAX_PLAYERS := 4
-const KEYBOARD_PLAYER := 1
 const STICK_DEADZONE := 0.15
+const MENU_DEADZONE := 0.5
 
 ## Godot utilise une disposition *positionnelle* (style Xbox) pour les boutons :
 ## JOY_BUTTON_A = bouton du BAS, soit le bouton "B" d'une manette Switch Pro
 ## (et A sur Xbox, Croix sur PlayStation). Cf. doc de JoyButton.
 const JUMP_BUTTON := JOY_BUTTON_A
+## Bouton "A" d'une manette Switch Pro (bouton de DROITE) pour valider dans les menus.
+const CONFIRM_BUTTON := JOY_BUTTON_B
+## Bouton "B" d'une manette Switch Pro (bouton du BAS) pour revenir en arrière.
+const BACK_BUTTON := JOY_BUTTON_A
 
 
 func _ready() -> void:
-	for player_id in range(1, MAX_PLAYERS + 1):
-		_setup_player_actions(player_id)
-	# Émis aussi au démarrage pour les manettes déjà branchées.
-	Input.joy_connection_changed.connect(_on_joy_connection_changed)
-
-
-static func action(player_id: int, action_name: StringName) -> StringName:
-	return StringName("p%d_%s" % [player_id, action_name])
-
-
-func _setup_player_actions(player_id: int) -> void:
-	var device := player_id - 1
-
-	var bindings := {
-		&"left": [JOY_AXIS_LEFT_X, -1.0, [KEY_A, KEY_LEFT]],
-		&"right": [JOY_AXIS_LEFT_X, 1.0, [KEY_D, KEY_RIGHT]],
-		&"up": [JOY_AXIS_LEFT_Y, -1.0, [KEY_W, KEY_UP]],
-		&"down": [JOY_AXIS_LEFT_Y, 1.0, [KEY_S, KEY_DOWN]],
-		# Caméra : au clavier, elle se contrôle à la souris (voir PlayerCamera).
+	var axes := {
+		&"move_left": [JOY_AXIS_LEFT_X, -1.0, [KEY_A, KEY_LEFT]],
+		&"move_right": [JOY_AXIS_LEFT_X, 1.0, [KEY_D, KEY_RIGHT]],
+		&"move_up": [JOY_AXIS_LEFT_Y, -1.0, [KEY_W, KEY_UP]],
+		&"move_down": [JOY_AXIS_LEFT_Y, 1.0, [KEY_S, KEY_DOWN]],
 		&"look_left": [JOY_AXIS_RIGHT_X, -1.0, []],
 		&"look_right": [JOY_AXIS_RIGHT_X, 1.0, []],
 		&"look_up": [JOY_AXIS_RIGHT_Y, -1.0, []],
 		&"look_down": [JOY_AXIS_RIGHT_Y, 1.0, []],
 	}
-	for action_name in bindings:
-		var name := action(player_id, action_name)
-		_add_action(name, STICK_DEADZONE)
-		var axis: int = bindings[action_name][0]
-		var axis_value: float = bindings[action_name][1]
-		_add_joy_axis(name, device, axis, axis_value)
-		if player_id == KEYBOARD_PLAYER:
-			for keycode: Key in bindings[action_name][2]:
-				_add_key(name, keycode)
+	for action_name: StringName in axes:
+		_add_action(action_name, STICK_DEADZONE)
+		_add_joy_axis(action_name, axes[action_name][0], axes[action_name][1])
+		for keycode: Key in axes[action_name][2]:
+			_add_key(action_name, keycode)
 
-	var jump := action(player_id, &"jump")
-	_add_action(jump)
-	_add_joy_button(jump, device, JUMP_BUTTON)
-	if player_id == KEYBOARD_PLAYER:
-		_add_key(jump, KEY_SPACE)
+	_add_action(&"menu_left", MENU_DEADZONE)
+	_add_joy_axis(&"menu_left", JOY_AXIS_LEFT_X, -1.0)
+	_add_joy_button(&"menu_left", JOY_BUTTON_DPAD_LEFT)
+	_add_key(&"menu_left", KEY_A)
+	_add_key(&"menu_left", KEY_LEFT)
+
+	_add_action(&"menu_right", MENU_DEADZONE)
+	_add_joy_axis(&"menu_right", JOY_AXIS_LEFT_X, 1.0)
+	_add_joy_button(&"menu_right", JOY_BUTTON_DPAD_RIGHT)
+	_add_key(&"menu_right", KEY_D)
+	_add_key(&"menu_right", KEY_RIGHT)
+
+	_add_action(&"jump")
+	_add_joy_button(&"jump", JUMP_BUTTON)
+	_add_key(&"jump", KEY_SPACE)
+
+	_add_action(&"start")
+	_add_joy_button(&"start", JOY_BUTTON_START)
+
+	# ui_accept existe déjà (Entrée, Espace) : on y ajoute le A de la manette.
+	_add_joy_button(&"ui_accept", CONFIRM_BUTTON)
+
+	_add_action(&"menu_back")
+	_add_joy_button(&"menu_back", BACK_BUTTON)
+	_add_key(&"menu_back", KEY_BACKSPACE)
+
+	# Émis aussi au démarrage pour les manettes déjà branchées.
+	Input.joy_connection_changed.connect(_on_joy_connection_changed)
 
 
-func _add_action(name: StringName, deadzone := 0.5) -> void:
-	if InputMap.has_action(name):
-		InputMap.erase_action(name)
-	InputMap.add_action(name, deadzone)
+func _add_action(action_name: StringName, deadzone := 0.5) -> void:
+	if InputMap.has_action(action_name):
+		InputMap.erase_action(action_name)
+	InputMap.add_action(action_name, deadzone)
 
 
-func _add_key(name: StringName, keycode: Key) -> void:
+func _add_key(action_name: StringName, keycode: Key) -> void:
 	var event := InputEventKey.new()
 	event.physical_keycode = keycode
 	event.device = -1 # Tous les claviers.
-	InputMap.action_add_event(name, event)
+	InputMap.action_add_event(action_name, event)
 
 
-func _add_joy_axis(name: StringName, device: int, axis: JoyAxis, value: float) -> void:
+func _add_joy_axis(action_name: StringName, axis: JoyAxis, value: float) -> void:
 	var event := InputEventJoypadMotion.new()
-	event.device = device
+	event.device = -1 # Toutes les manettes.
 	event.axis = axis
 	event.axis_value = value
-	InputMap.action_add_event(name, event)
+	InputMap.action_add_event(action_name, event)
 
 
-func _add_joy_button(name: StringName, device: int, button: JoyButton) -> void:
+func _add_joy_button(action_name: StringName, button: JoyButton) -> void:
 	var event := InputEventJoypadButton.new()
-	event.device = device
+	event.device = -1 # Toutes les manettes.
 	event.button_index = button
-	InputMap.action_add_event(name, event)
+	InputMap.action_add_event(action_name, event)
 
 
 func _on_joy_connection_changed(device: int, connected: bool) -> void:
-	_log_joypad(device, connected)
-
-
-func _log_joypad(device: int, connected: bool) -> void:
 	if connected:
-		print("Manette %d connectée (%s) -> joueur %d" % [device, Input.get_joy_name(device), device + 1])
+		print("Manette %d connectée (%s)" % [device, Input.get_joy_name(device)])
 	else:
 		print("Manette %d déconnectée" % device)

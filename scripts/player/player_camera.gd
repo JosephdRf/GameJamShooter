@@ -1,12 +1,11 @@
 class_name PlayerCamera
 extends Node3D
 ## Caméra 3e personne, enfant d'un Player.
-## Le joystick droit (actions pN_look_*) fait tourner la caméra autour du joueur.
-## Pour le joueur au clavier, la souris / le trackpad la font aussi tourner.
+## Seule la caméra du cube contrôlé par cet ordinateur est affichée et réagit
+## aux entrées : joystick droit (actions look_*) et souris / trackpad.
 ##
 ## Hiérarchie : PlayerCamera (lacet / yaw) > Pitch (tangage) > SpringArm > Camera
 ## Le SpringArm rapproche la caméra si un mur se trouve entre elle et le joueur.
-## Pour choisir la caméra affichée, cocher `current` sur le nœud Camera.
 
 ## Vitesse de rotation en radians par seconde (stick poussé à fond).
 @export var look_sensitivity := 4.0
@@ -19,6 +18,7 @@ extends Node3D
 @onready var _player: Player = get_parent()
 @onready var _pitch: Node3D = $Pitch
 @onready var _spring_arm: SpringArm3D = $Pitch/SpringArm
+@onready var _camera: Camera3D = $Pitch/SpringArm/Camera
 
 
 func _ready() -> void:
@@ -26,12 +26,14 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	var look := Input.get_vector(_action(&"look_left"), _action(&"look_right"), _action(&"look_up"), _action(&"look_down"))
+	if not _player.is_local:
+		return
+	var look := Input.get_vector(&"look_left", &"look_right", &"look_up", &"look_down")
 	_rotate_view(look * look_sensitivity * delta)
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _player.player_id != InputManager.KEYBOARD_PLAYER:
+	if not _player.is_local:
 		return
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		_rotate_view(event.screen_relative * mouse_sensitivity)
@@ -49,6 +51,11 @@ func _rotate_view(amount: Vector2) -> void:
 	)
 
 
+## Affiche (ou non) le jeu depuis cette caméra.
+func set_view_active(view_active: bool) -> void:
+	_camera.current = view_active
+
+
 ## Oriente la caméra pour regarder dans la direction de `point` (sur le plan horizontal).
 func face(point: Vector3) -> void:
 	var direction := point - global_position
@@ -61,6 +68,3 @@ func face(point: Vector3) -> void:
 func get_yaw() -> float:
 	return global_rotation.y
 
-
-func _action(action_name: StringName) -> StringName:
-	return InputManager.action(_player.player_id, action_name)

@@ -6,4 +6,4 @@
 player_id = 1
 
 [node name="Camera" parent="PlayerCamera/Pitch/SpringArm" index="0"]
-current = true
+current = false

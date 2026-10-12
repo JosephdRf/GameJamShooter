@@ -1,0 +1,17 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/player_camera.gd" id="1_camera"]
+
+[node name="PlayerCamera" type="Node3D"]
+script = ExtResource("1_camera")
+
+[node name="Pitch" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.939693, 0.34202, 0, -0.34202, 0.939693, 0, 0, 0)
+
+[node name="SpringArm" type="SpringArm3D" parent="Pitch"]
+collision_mask = 1
+spring_length = 5.0
+margin = 0.2
+
+[node name="Camera" type="Camera3D" parent="Pitch/SpringArm"]
+fov = 70.0

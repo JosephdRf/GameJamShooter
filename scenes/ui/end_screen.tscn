@@ -1,0 +1,127 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/end_screen.gd" id="1_end"]
+
+[node name="EndScreen" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_end")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.08, 0.09, 0.12, 1)
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 64
+theme_override_constants/margin_top = 32
+theme_override_constants/margin_right = 64
+theme_override_constants/margin_bottom = 32
+
+[node name="Layout" type="VBoxContainer" parent="Margin"]
+layout_mode = 2
+theme_override_constants/separation = 24
+
+[node name="Title" type="Label" parent="Margin/Layout"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 48
+text = "Fin du combat"
+horizontal_alignment = 1
+
+[node name="Winner" type="Label" parent="Margin/Layout"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+horizontal_alignment = 1
+
+[node name="Teams" type="HBoxContainer" parent="Margin/Layout"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 64
+alignment = 1
+
+[node name="Team1" type="PanelContainer" parent="Margin/Layout/Teams"]
+custom_minimum_size = Vector2(380, 0)
+layout_mode = 2
+
+[node name="Content" type="VBoxContainer" parent="Margin/Layout/Teams/Team1"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Name" type="Label" parent="Margin/Layout/Teams/Team1/Content"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "Équipe 1"
+horizontal_alignment = 1
+
+[node name="Total" type="Label" parent="Margin/Layout/Teams/Team1/Content"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 56
+text = "0"
+horizontal_alignment = 1
+
+[node name="Players" type="VBoxContainer" parent="Margin/Layout/Teams/Team1/Content"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Team2" type="PanelContainer" parent="Margin/Layout/Teams"]
+custom_minimum_size = Vector2(380, 0)
+layout_mode = 2
+
+[node name="Content" type="VBoxContainer" parent="Margin/Layout/Teams/Team2"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Name" type="Label" parent="Margin/Layout/Teams/Team2/Content"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "Équipe 2"
+horizontal_alignment = 1
+
+[node name="Total" type="Label" parent="Margin/Layout/Teams/Team2/Content"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 56
+text = "0"
+horizontal_alignment = 1
+
+[node name="Players" type="VBoxContainer" parent="Margin/Layout/Teams/Team2/Content"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Note" type="Label" parent="Margin/Layout"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.72, 0.78, 1)
+text = "Scores fictifs (placeholders) en attendant le vrai système de score."
+horizontal_alignment = 1
+
+[node name="Buttons" type="HBoxContainer" parent="Margin/Layout"]
+layout_mode = 2
+theme_override_constants/separation = 24
+alignment = 1
+
+[node name="QuitButton" type="Button" parent="Margin/Layout/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 64)
+layout_mode = 2
+text = "Quitter"
+
+[node name="ReplayButton" type="Button" parent="Margin/Layout/Buttons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(320, 64)
+layout_mode = 2
+theme_override_font_sizes/font_size = 28
+text = "Rejouer"

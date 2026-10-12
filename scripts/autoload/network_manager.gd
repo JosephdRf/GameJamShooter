@@ -11,25 +11,29 @@ extends Node
 ## Déroulé : host() / join() -> choix des joueurs (move_my_slot) -> start_match()
 ## -> tous les ordinateurs chargent la scène de jeu -> chacun appelle
 ## notify_game_ready() -> quand tous sont prêts, match_started est émis partout.
+## Pendant la partie, l'hôte seul peut : mettre en pause (set_paused), revenir à
+## la sélection d'équipe (return_to_team_select) et terminer le combat (end_match).
+## Les changements d'écran sont faits ici pour que tous les ordinateurs suivent.
 
 signal slots_changed
 signal connection_succeeded
 signal connection_failed(reason: String)
 signal match_started
+signal pause_changed(paused: bool)
 
 const PORT := 7777
 const MAX_PLAYERS := 4
 ## Au-delà, on abandonne la tentative de connexion (hôte injoignable).
 const CONNECT_TIMEOUT := 6.0
-const LOBBY_SCENE := "res://scenes/ui/lobby.tscn"
-const GAME_SCENE := "res://scenes/game/game.tscn"
 
 ## Joueur (1 à 4) -> id réseau de l'ordinateur qui le contrôle (0 = libre).
 var slots := {}
 ## Joueur (1 à 4) -> vrai si l'ordinateur a validé ce choix (bouton A).
 var locked := {}
-## Message affiché par le lobby au retour d'une partie interrompue.
+## Message affiché par l'écran hôte/IP au retour d'une partie interrompue.
 var last_error := ""
+## Scores de la dernière partie (joueur 1 à 4 -> score), lus par l'écran de fin.
+var final_scores := {}
 
 var _ready_peers := {}
 var _match_begun := false
@@ -37,6 +41,7 @@ var _in_game := false
 
 
 func _ready() -> void:
+	process_mode = Node.PROCESS_MODE_ALWAYS # Reçoit les ordres de l'hôte même en pause.
 	_reset_session()
 	multiplayer.peer_connected.connect(_on_peer_connected)
 	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
@@ -52,7 +57,10 @@ func is_online() -> bool:
 	return peer is ENetMultiplayerPeer and peer.get_connection_status() == MultiplayerPeer.CONNECTION_CONNECTED
 
 
+## Refuse (ERR_ALREADY_EXISTS) si une partie est déjà hébergée sur le réseau local.
 func host() -> Error:
+	if not LanDiscovery.get_hosts().is_empty():
+		return ERR_ALREADY_EXISTS
 	var peer := ENetMultiplayerPeer.new()
 	var err := peer.create_server(PORT, MAX_PLAYERS - 1)
 	if err != OK:
@@ -125,6 +133,24 @@ func start_match() -> void:
 	_load_game.rpc()
 
 
+## Hôte uniquement : met en pause (ou reprend) la partie sur tous les ordinateurs.
+func set_paused(value: bool) -> void:
+	if multiplayer.is_server():
+		_set_paused.rpc(value)
+
+
+## Hôte uniquement : tous les ordinateurs reviennent à la sélection d'équipe.
+func return_to_team_select() -> void:
+	if multiplayer.is_server():
+		_load_team_select.rpc()
+
+
+## Hôte uniquement : fin du combat, tous les ordinateurs affichent l'écran de fin.
+func end_match(scores: Dictionary) -> void:
+	if multiplayer.is_server():
+		_end_match.rpc(scores)
+
+
 ## Appelé par la scène de jeu une fois chargée.
 func notify_game_ready() -> void:
 	if not is_online():
@@ -177,7 +203,7 @@ func _sync_slots(new_slots: Dictionary, new_locked: Dictionary) -> void:
 @rpc("authority", "call_local", "reliable")
 func _load_game() -> void:
 	_in_game = true
-	get_tree().change_scene_to_file(GAME_SCENE)
+	get_tree().change_scene_to_file(Screens.GAME)
 
 
 @rpc("any_peer", "reliable")
@@ -189,6 +215,25 @@ func _peer_ready() -> void:
 @rpc("authority", "call_local", "reliable")
 func _begin_match() -> void:
 	match_started.emit()
+
+
+@rpc("authority", "call_local", "reliable")
+func _set_paused(value: bool) -> void:
+	get_tree().paused = value
+	pause_changed.emit(value)
+
+
+@rpc("authority", "call_local", "reliable")
+func _load_team_select() -> void:
+	_leave_game()
+	get_tree().change_scene_to_file(Screens.TEAM_SELECT)
+
+
+@rpc("authority", "call_local", "reliable")
+func _end_match(scores: Dictionary) -> void:
+	final_scores = scores
+	_leave_game()
+	get_tree().change_scene_to_file(Screens.END)
 
 #endregion
 
@@ -262,17 +307,32 @@ func _reset_session() -> void:
 	_in_game = false
 
 
+## Sortie de la scène de jeu : on rouvre le salon (nouveaux ordinateurs acceptés,
+## choix des joueurs à valider de nouveau).
+func _leave_game() -> void:
+	get_tree().paused = false
+	_in_game = false
+	_ready_peers.clear()
+	_match_begun = false
+	if multiplayer.is_server() and is_online():
+		(multiplayer.multiplayer_peer as ENetMultiplayerPeer).refuse_new_connections = false
+		for player_id: int in locked:
+			locked[player_id] = false
+		_broadcast_slots()
+
+
 func _close_peer() -> void:
 	if multiplayer.multiplayer_peer:
 		multiplayer.multiplayer_peer.close()
 	multiplayer.multiplayer_peer = null
 
 
-func _return_to_lobby(reason: String) -> void:
+func _return_to_connect_screen(reason: String) -> void:
 	_close_peer()
 	_reset_session()
+	get_tree().paused = false
 	last_error = reason
-	get_tree().change_scene_to_file(LOBBY_SCENE)
+	get_tree().change_scene_to_file(Screens.CONNECT)
 
 
 func _on_peer_connected(peer_id: int) -> void:
@@ -310,4 +370,4 @@ func _on_connect_timeout(peer: ENetMultiplayerPeer) -> void:
 
 
 func _on_server_disconnected() -> void:
-	_return_to_lobby("L'hôte a quitté la partie.")
+	_return_to_connect_screen("L'hôte a quitté la partie.")

@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/game/game.gd" id="1_game"]
 [ext_resource type="PackedScene" path="res://scenes/levels/arena.tscn" id="2_arena"]
@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" path="res://scenes/player/player_2.tscn" id="4_player2"]
 [ext_resource type="PackedScene" path="res://scenes/player/player_3.tscn" id="5_player3"]
 [ext_resource type="PackedScene" path="res://scenes/player/player_4.tscn" id="6_player4"]
+[ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="7_pause"]
 
 [node name="Game" type="Node3D"]
 script = ExtResource("1_game")
@@ -25,3 +26,5 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3, 0.5, 3)
 
 [node name="Player4" parent="Players" instance=ExtResource("6_player4")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3, 0.5, 3)
+
+[node name="PauseMenu" parent="." instance=ExtResource("7_pause")]

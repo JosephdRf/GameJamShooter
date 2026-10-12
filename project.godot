@@ -11,8 +11,8 @@ config_version=5
 [application]
 
 config/name="GameJamShooter"
-config/description="Template Godot 4 - jeu local jusqu'à 4 joueurs."
-run/main_scene="res://scenes/ui/lobby.tscn"
+config/description="Bubble Shooter - 2v2 en réseau local, jusqu'à 4 joueurs."
+run/main_scene="res://scenes/ui/loading_screen.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://assets/icons/icon.svg"
 
@@ -20,6 +20,7 @@ config/icon="res://assets/icons/icon.svg"
 
 InputManager="*res://scripts/autoload/input_manager.gd"
 NetworkManager="*res://scripts/autoload/network_manager.gd"
+LanDiscovery="*res://scripts/autoload/lan_discovery.gd"
 
 [display]
 
@@ -28,12 +29,15 @@ window/size/viewport_height=720
 window/size/mode=3
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
-; Mailbox : pas de déchirement, moins de latence que la V-Sync classique.
 window/vsync/vsync_mode=2
 
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/godot_ai_mcp/plugin.cfg")
+
+[gui]
+
+theme/custom="res://assets/themes/ui_theme.tres"
 
 [input_devices]
 

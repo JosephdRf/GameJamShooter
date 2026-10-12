@@ -7,8 +7,9 @@ extends Node
 ##   look_left/right/up/down : joystick droit (la souris est gérée par PlayerCamera)
 ##   jump                    : Espace / bouton du bas (B sur Switch Pro)
 ##   start                   : bouton Start (+ sur Switch Pro)
+##   pause (en jeu, hôte)    : P / bouton Start (+ sur Switch Pro)
 ##   ui_accept (menus)       : Entrée / Espace / A sur Switch Pro (bouton de droite)
-##   menu_back (lobby)       : Retour arrière / B sur Switch Pro (bouton du bas)
+##   menu_back (menus)       : Retour arrière / B sur Switch Pro (bouton du bas)
 ##   menu_left/menu_right    : comme move_left/right, mais avec une zone morte
 ##                             plus large pour naviguer dans les menus
 ##
@@ -62,6 +63,10 @@ func _ready() -> void:
 
 	_add_action(&"start")
 	_add_joy_button(&"start", JOY_BUTTON_START)
+
+	_add_action(&"pause")
+	_add_joy_button(&"pause", JOY_BUTTON_START)
+	_add_key(&"pause", KEY_P)
 
 	# ui_accept existe déjà (Entrée, Espace) : on y ajoute le A de la manette.
 	_add_joy_button(&"ui_accept", CONFIRM_BUTTON)

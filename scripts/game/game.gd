@@ -1,6 +1,8 @@
 extends Node3D
-## Scène principale : l'arène + les 4 joueurs + le mode de jeu (défense de
-## zone) + le HUD + le menu pause.
+## Scène principale : l'arène + les 4 joueurs + leurs zones d'apparition + le
+## mode de jeu (défense de zone) + le HUD + le menu pause.
+## Au lancement, chaque joueur est placé sur la zone d'apparition (ZoneSpawn,
+## enfants de SpawnZones) de son équipe.
 ## Chaque ordinateur affiche la caméra du joueur qu'il a choisi dans le salon.
 ## Les joueurs non choisis restent sur place (contrôlés par personne).
 ## Échap (ui_cancel) quitte le jeu ; P / + (hôte) ouvre le menu pause.
@@ -25,6 +27,7 @@ var _time_sync_cooldown := 0.0
 
 @onready var _arena: Node3D = $Arena
 @onready var _players: Node3D = $Players
+@onready var _spawn_zones: Node3D = $SpawnZones
 @onready var _mode: ZoneDefenseMode = $ZoneDefenseMode
 @onready var _hud: CanvasLayer = $MatchHud
 @onready var _pause_menu: CanvasLayer = $PauseMenu
@@ -33,6 +36,7 @@ var _time_sync_cooldown := 0.0
 func _ready() -> void:
 	# La souris est capturée pour que le trackpad pilote la caméra.
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	_place_players_on_spawn_zones()
 	for player: Player in _players.get_children():
 		player.camera.face(_arena.global_position) # Au départ, chaque joueur regarde le centre.
 	_apply_slots()
@@ -66,6 +70,15 @@ func _process(delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed(&"ui_cancel"):
 		get_tree().quit()
+
+
+## Place chaque joueur sur un emplacement de la zone d'apparition de son équipe.
+func _place_players_on_spawn_zones() -> void:
+	for zone: ZoneSpawn in _spawn_zones.get_children():
+		var team_players := _players.get_children().filter(
+				func(player: Player) -> bool: return Player.team_of(player.player_id) == zone.team)
+		for i in team_players.size():
+			team_players[i].set_spawn_position(zone.get_spawn_position(i, team_players.size()))
 
 
 ## Donne à chaque ordinateur l'autorité sur le cube qu'il a choisi (l'hôte garde les autres).

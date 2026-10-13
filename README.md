@@ -58,7 +58,7 @@ Dans l'éditeur : **F5** lance le jeu depuis l'écran de chargement, **F6** sur 
 | Se déplacer | Z/Q/S/D (W/A/S/D en QWERTY) ou flèches | Joystick gauche |
 | Tourner la caméra | Souris / trackpad | Joystick droit |
 | Sauter | Espace | B (bouton du bas) |
-| Dash (toutes les 2 s, aussi en l'air) | K | Y (bouton de gauche ; Carré sur PlayStation) |
+| Dash (au sol, toutes les 2 s) | K | Y (bouton de gauche ; Carré sur PlayStation) |
 | **Menus** : naviguer / choisir son joueur | Flèches (Q/D) | Joystick gauche / croix |
 | **Menus** : valider | Entrée | A (bouton de droite) |
 | **Sélection** : changer de joueur après validation | Retour arrière | B (bouton du bas) |
@@ -97,8 +97,9 @@ Un joueur qui tombe de la plateforme réapparaît à son point de départ.
 │   │   ├── match_hud.tscn       # HUD en jeu : compte à rebours (instancié dans game.tscn)
 │   │   ├── pause_menu.tscn      # Menu pause (instancié dans game.tscn)
 │   │   └── end_screen.tscn      # Écran de fin : scores, équipe gagnante, Rejouer / Quitter
-│   ├── game/game.tscn       # Partie : Arena + Players/Player1..4 + ZoneDefenseMode (3 zones) + MatchHud + PauseMenu
+│   ├── game/game.tscn       # Partie : Arena + Players/Player1..4 + SpawnZones (2) + ZoneDefenseMode (3 zones) + MatchHud + PauseMenu
 │   ├── game/zone_defense.tscn   # Une zone à capturer (rayon, points, timeout, durée de capture)
+│   ├── game/zone_spawn.tscn     # Zone d'apparition d'une équipe (équipe, rayon)
 │   ├── levels/arena.tscn    # Salle de bain (.blend) + lumières + barrière invisible devant
 │   └── player/
 │       ├── player.tscn          # Scène de base : cube + caméra + synchro réseau (Sync)
@@ -114,6 +115,7 @@ Un joueur qui tombe de la plateforme réapparaît à son point de départ.
     ├── game/game.gd                 # Autorité réseau, caméras, compte à rebours, fin du combat
     ├── game/zone_defense.gd         # Règles de capture d'une zone (ZoneDefense)
     ├── game/zone_defense_mode.gd    # Rotation des zones + scores par équipe (ZoneDefenseMode)
+    ├── game/zone_spawn.gd           # Emplacements d'apparition d'une équipe (ZoneSpawn)
     ├── player/player.gd             # Mouvement, saut, dash, couleur, synchro réseau
     └── player/player_camera.gd      # Orbite de la caméra (joystick droit / souris)
 ```
@@ -164,7 +166,10 @@ Un joueur qui tombe de la plateforme réapparaît à son point de départ.
   couleur aux matériaux procéduraux (exportés en blanc), et ajoute des **collisions grossières**
   (une boîte par objet ; mousse, eau, gouttes, feuilles et petits détails n'en ont pas).
   Après modification : sélectionner le `.blend` › onglet Import › **Réimporter**.
-- Points d'apparition : équipe 1 devant (z = -16), équipe 2 côté baignoire (z = 17), dans `game.tscn`.
+- Points d'apparition : zones `SpawnZones/ZoneSpawnBlue` (z = -16) et `ZoneSpawnRed` (z = 17, côté
+  baignoire) dans `game.tscn`. Au lancement, `game.gd` place chaque joueur sur la zone de son équipe
+  (côte à côte, à mi-rayon) ; un joueur qui tombe réapparaît à son emplacement. Pour les déplacer :
+  bouger les zones dans la vue 3D (la position des nœuds `Player1..4` est ignorée).
 - Rendu 3D à 75 % + FSR (`rendering/scaling_3d`) : ~105-135 images/s sur un MacBook M3.
 
 ### Régler les zones

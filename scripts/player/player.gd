@@ -92,6 +92,14 @@ func _physics_process(delta: float) -> void:
 		_follow_network(delta)
 
 
+## Définit le point d'apparition (et y place le joueur), cf. ZoneSpawn.
+func set_spawn_position(point: Vector3) -> void:
+	_spawn_position = point
+	global_position = point
+	sync_position = position
+	reset_physics_interpolation()
+
+
 func respawn() -> void:
 	global_position = _spawn_position
 	velocity = Vector3.ZERO
@@ -108,16 +116,17 @@ func _simulate(delta: float) -> void:
 	var direction := Vector3(input.x, 0.0, input.y).rotated(Vector3.UP, camera.get_yaw())
 
 	_dash_cooldown_left = maxf(_dash_cooldown_left - delta, 0.0)
-	if is_local and Input.is_action_just_pressed(&"dash") and _dash_cooldown_left == 0.0:
+	if is_local and Input.is_action_just_pressed(&"dash") and is_on_floor() and _dash_cooldown_left == 0.0:
 		_start_dash(direction)
 
+	if not is_on_floor():
+		velocity.y -= _gravity * gravity_scale * delta
 	if _dash_time > 0.0:
-		# Dash : vitesse fixe, sans gravité (même en l'air).
+		# Dash : vitesse horizontale fixe (la gravité s'applique si on quitte le sol).
 		_dash_time -= delta
-		velocity = _dash_velocity
+		velocity.x = _dash_velocity.x
+		velocity.z = _dash_velocity.z
 	else:
-		if not is_on_floor():
-			velocity.y -= _gravity * gravity_scale * delta
 		var target := direction * move_speed
 		velocity.x = move_toward(velocity.x, target.x, acceleration * delta)
 		velocity.z = move_toward(velocity.z, target.z, acceleration * delta)
@@ -128,7 +137,7 @@ func _simulate(delta: float) -> void:
 		respawn()
 
 
-## Dash dans la direction du joystick, ou devant la caméra s'il est au repos.
+## Dash (au sol uniquement) dans la direction du joystick, ou devant la caméra s'il est au repos.
 func _start_dash(direction: Vector3) -> void:
 	if direction.is_zero_approx():
 		direction = Vector3.FORWARD.rotated(Vector3.UP, camera.get_yaw())

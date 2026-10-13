@@ -1,0 +1,45 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/game/zone_spawn.gd" id="1_spawn"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_disk"]
+resource_local_to_scene = true
+transparency = 1
+cull_mode = 2
+shading_mode = 0
+albedo_color = Color(1, 1, 1, 0.35)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_disk"]
+resource_local_to_scene = true
+top_radius = 3.0
+bottom_radius = 3.0
+height = 0.04
+radial_segments = 48
+rings = 1
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ring"]
+resource_local_to_scene = true
+shading_mode = 0
+albedo_color = Color(1, 1, 1, 1)
+
+[sub_resource type="TorusMesh" id="TorusMesh_ring"]
+resource_local_to_scene = true
+inner_radius = 2.8
+outer_radius = 3.0
+rings = 64
+ring_segments = 8
+
+[node name="ZoneSpawn" type="Node3D"]
+script = ExtResource("1_spawn")
+
+[node name="Disk" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.03, 0)
+cast_shadow = 0
+material_override = SubResource("StandardMaterial3D_disk")
+mesh = SubResource("CylinderMesh_disk")
+
+[node name="Ring" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.3, 0, 0, 0, 1, 0, 0.04, 0)
+cast_shadow = 0
+material_override = SubResource("StandardMaterial3D_ring")
+mesh = SubResource("TorusMesh_ring")

@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scripts/game/game.gd" id="1_game"]
 [ext_resource type="PackedScene" path="res://scenes/levels/arena.tscn" id="2_arena"]
@@ -10,6 +10,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/match_hud.tscn" id="8_hud"]
 [ext_resource type="Script" path="res://scripts/game/zone_defense_mode.gd" id="9_mode"]
 [ext_resource type="PackedScene" path="res://scenes/game/zone_defense.tscn" id="10_zone"]
+[ext_resource type="PackedScene" path="res://scenes/game/zone_spawn.tscn" id="11_spawn"]
 
 [node name="Game" type="Node3D"]
 script = ExtResource("1_game")
@@ -19,16 +20,21 @@ script = ExtResource("1_game")
 [node name="Players" type="Node3D" parent="."]
 
 [node name="Player1" parent="Players" instance=ExtResource("3_player1")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.5, -16)
 
 [node name="Player2" parent="Players" instance=ExtResource("4_player2")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.5, -16)
 
 [node name="Player3" parent="Players" instance=ExtResource("5_player3")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 0.5, 17)
 
 [node name="Player4" parent="Players" instance=ExtResource("6_player4")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.5, 17)
+
+[node name="SpawnZones" type="Node3D" parent="."]
+
+[node name="ZoneSpawnBlue" parent="SpawnZones" instance=ExtResource("11_spawn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, -16)
+
+[node name="ZoneSpawnRed" parent="SpawnZones" instance=ExtResource("11_spawn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 17)
+team = 2
 
 [node name="ZoneDefenseMode" type="Node3D" parent="."]
 script = ExtResource("9_mode")

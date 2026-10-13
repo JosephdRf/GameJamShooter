@@ -1,5 +1,5 @@
 extends Control
-## Sélection d'équipe : 4 cartes (joueurs 1-2 = équipe 1, 3-4 = équipe 2).
+## Sélection d'équipe : 4 cartes (joueurs 1-2 = équipe bleue, 3-4 = équipe rouge).
 ##
 ## Chaque ordinateur déplace son choix avec le joystick gauche ou ← →. Un joueur
 ## déjà pris par un autre ordinateur est grisé et sauté.
@@ -107,7 +107,7 @@ func _refresh() -> void:
 	for i in _cards.size():
 		var player_id := i + 1
 		var owner_id: int = NetworkManager.slots.get(player_id, 0)
-		var color := Player.PLAYER_COLORS[i]
+		var color := Player.color_of(player_id)
 		var style := _cards[i].get_theme_stylebox(&"panel") as StyleBoxFlat
 		style.set_corner_radius_all(16)
 		style.set_border_width_all(0)

@@ -28,16 +28,25 @@ Les chemins sont regroupés dans `scripts/ui/screens.gd` (`Screens.TITLE`, `Scre
    est détectée (sinon la saisir), puis **Rejoindre**.
 4. Chacun choisit son joueur avec le joystick gauche ou ← → (un joueur déjà pris est grisé),
    puis valide avec **A** : le curseur passe sur « Lancer la partie ».
-   Équipe 1 : rouge (J1) + jaune (J2) · Équipe 2 : bleu (J3) + vert (J4).
+   Équipe bleue : J1 + J2 · Équipe rouge : J3 + J4 (couleurs dans `Player.TEAM_COLORS`).
 5. L'hôte appuie sur **Start** (bouton +), ou A / Entrée sur « Lancer la partie » : la partie se lance pour tous,
    même s'il manque des joueurs (les cubes non choisis restent immobiles).
 
 6. En jeu, l'hôte peut mettre en pause (**P** ou **+**) : la partie est figée pour tous.
    « Quitter » ramène tout le monde à la sélection d'équipe.
-7. Fin du combat : écran des scores (fictifs pour l'instant), **Rejouer** (retour à la sélection
-   d'équipe) ou **Quitter** (ferme le jeu). En attendant la vraie règle de victoire, la fin se
-   déclenche avec le bouton « [Test] Terminer le combat » du menu pause (versions de développement
-   uniquement) ou après `match_duration` secondes (propriété de `Game`, 0 = pas de limite).
+7. Un **compte à rebours** (1:00 par défaut) est affiché en haut au centre ; il est figé pendant la
+   pause. À 0:00, tout le monde passe à l'écran de fin. L'hôte fait foi : il envoie le temps restant
+   aux autres toutes les 0,5 s. Durée réglable avec `match_duration` sur le nœud `Game`
+   (0 = pas de limite, chrono masqué).
+8. **Défense de zone** : une seule zone ronde est active à la fois (tirée au hasard, jamais la
+   même deux fois de suite). Une équipe qui y reste **seule 10 s** la capture et gagne **2 points** ;
+   la zone prend la couleur de l'équipe présente et une barre de progression s'affiche sous le
+   score. Si l'équipe sort, la barre repart à 0 ; si les deux équipes sont dedans, elle est en
+   pause. Une zone non capturée disparaît au bout de **20 s**. Scores : bleu à gauche du chrono,
+   rouge à droite.
+9. Fin du combat : écran des scores de chaque équipe, **Rejouer** (retour à la sélection
+   d'équipe) ou **Quitter** (ferme le jeu). Le bouton « [Test] Terminer le combat » du menu pause
+   (versions de développement uniquement) termine le combat immédiatement.
 
 Dans l'éditeur : **F5** lance le jeu depuis l'écran de chargement, **F6** sur `scenes/game/game.tscn` lance le jeu seul
 (hors ligne, on contrôle le joueur 1).
@@ -76,7 +85,7 @@ Un joueur qui tombe de la plateforme réapparaît à son point de départ.
 │   ├── fonts/
 │   ├── icons/               # icon.svg (icône du projet)
 │   ├── materials/
-│   ├── models/
+│   ├── models/              # bain-de-coin-coin.blend : l'arène (importée via Blender)
 │   └── textures/
 ├── scenes/                  # Scènes (.tscn), un sous-dossier par domaine
 │   ├── ui/                  # Un fichier par écran, modifiable indépendamment
@@ -84,10 +93,12 @@ Un joueur qui tombe de la plateforme réapparaît à son point de départ.
 │   │   ├── title_screen.tscn    # Écran d'accueil : « Bubble Shooter » + Démarrer
 │   │   ├── connect_screen.tscn  # Écran hôte/IP : Héberger / Rejoindre
 │   │   ├── team_select.tscn     # Sélection d'équipe (choix des joueurs)
+│   │   ├── match_hud.tscn       # HUD en jeu : compte à rebours (instancié dans game.tscn)
 │   │   ├── pause_menu.tscn      # Menu pause (instancié dans game.tscn)
 │   │   └── end_screen.tscn      # Écran de fin : scores, équipe gagnante, Rejouer / Quitter
-│   ├── game/game.tscn       # Partie : Arena + Players/Player1..4 + PauseMenu
-│   ├── levels/arena.tscn    # Sol, lumière, environnement
+│   ├── game/game.tscn       # Partie : Arena + Players/Player1..4 + ZoneDefenseMode (3 zones) + MatchHud + PauseMenu
+│   ├── game/zone_defense.tscn   # Une zone à capturer (rayon, points, timeout, durée de capture)
+│   ├── levels/arena.tscn    # Salle de bain (.blend) + lumières + barrière invisible devant
 │   └── player/
 │       ├── player.tscn          # Scène de base : cube + caméra + synchro réseau (Sync)
 │       ├── player_1.tscn … player_4.tscn  # Une scène héritée par joueur (id → couleur, équipe)
@@ -98,7 +109,10 @@ Un joueur qui tombe de la plateforme réapparaît à son point de départ.
     ├── autoload/lan_discovery.gd    # Annonce/détection de l'hôte sur le réseau local (UDP 7778)
     ├── ui/screens.gd                # Chemins de tous les écrans (Screens.*)
     ├── ui/<écran>.gd                # Un script par scène de scenes/ui/
-    ├── game/game.gd                 # Autorité réseau + caméra de chaque cube, fin du combat
+    ├── levels/bathroom_import.gd    # Import du .blend : échelle, couleurs, collisions
+    ├── game/game.gd                 # Autorité réseau, caméras, compte à rebours, fin du combat
+    ├── game/zone_defense.gd         # Règles de capture d'une zone (ZoneDefense)
+    ├── game/zone_defense_mode.gd    # Rotation des zones + scores par équipe (ZoneDefenseMode)
     ├── player/player.gd             # Mouvement, saut, couleur, synchro réseau
     └── player/player_camera.gd      # Orbite de la caméra (joystick droit / souris)
 ```
@@ -137,6 +151,27 @@ Un joueur qui tombe de la plateforme réapparaît à son point de départ.
 - Changer d'écran : `get_tree().change_scene_to_file(Screens.XXX)` (sauf les transitions
   réseau, faites par `NetworkManager` pour que tous les ordinateurs suivent).
 - Calques physiques : 1 = `world`, 2 = `players`.
+
+### L'arène salle de bain
+
+- Source : `assets/models/bain-de-coin-coin.blend`. Godot l'importe avec **Blender**
+  (Éditeur › Paramètres › Système de fichiers › Import › chemin de Blender) : chaque coéquipier qui
+  ouvre le projet doit avoir Blender installé.
+- Options d'import (onglet Import) : échelle **0,16** (le canard « hero » de Blender ≈ 1 m, la taille
+  d'un joueur), caméras et lumières de Blender ignorées.
+- `scripts/levels/bathroom_import.gd` s'exécute à chaque import : retire le canard héros, donne leur
+  couleur aux matériaux procéduraux (exportés en blanc), et ajoute des **collisions grossières**
+  (une boîte par objet ; mousse, eau, gouttes, feuilles et petits détails n'en ont pas).
+  Après modification : sélectionner le `.blend` › onglet Import › **Réimporter**.
+- Points d'apparition : équipe 1 devant (z = -16), équipe 2 côté baignoire (z = 17), dans `game.tscn`.
+- Rendu 3D à 75 % + FSR (`rendering/scaling_3d`) : ~105-135 images/s sur un MacBook M3.
+
+### Régler les zones
+
+Dans `scenes/game/game.tscn`, les zones sont les enfants de `ZoneDefenseMode` (`ZoneLeft`,
+`ZoneCenter`, `ZoneRight`) : les déplacer dans la vue 3D, régler `radius`, `points`, `timeout` et
+`capture_time` dans l'inspecteur, ou en ajouter / supprimer (instancier `zone_defense.tscn` sous
+`ZoneDefenseMode`). Placement actuel : sur la ligne à égale distance des deux points d'apparition.
 
 ### Ajouter un niveau
 

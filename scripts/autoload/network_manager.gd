@@ -32,7 +32,7 @@ var slots := {}
 var locked := {}
 ## Message affiché par l'écran hôte/IP au retour d'une partie interrompue.
 var last_error := ""
-## Scores de la dernière partie (joueur 1 à 4 -> score), lus par l'écran de fin.
+## Scores de la dernière partie (équipe 1 ou 2 -> points), lus par l'écran de fin.
 var final_scores := {}
 
 var _ready_peers := {}

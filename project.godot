@@ -52,3 +52,8 @@ buffering/agile_event_flushing=true
 
 common/physics_ticks_per_second=120
 common/physics_interpolation=true
+
+[rendering]
+
+scaling_3d/mode=1
+scaling_3d/scale=0.75

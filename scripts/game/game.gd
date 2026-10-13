@@ -1,17 +1,32 @@
 extends Node3D
-## Scène principale : l'arène + les 4 joueurs + le menu pause.
+## Scène principale : l'arène + les 4 joueurs + le mode de jeu (défense de
+## zone) + le HUD + le menu pause.
 ## Chaque ordinateur affiche la caméra du joueur qu'il a choisi dans le salon.
 ## Les joueurs non choisis restent sur place (contrôlés par personne).
 ## Échap (ui_cancel) quitte le jeu ; P / + (hôte) ouvre le menu pause.
 ##
-## Fin du combat (hôte) : après match_duration secondes, ou via le bouton de test
-## du menu pause. Les scores sont fictifs en attendant le vrai système de score.
+## Compte à rebours : l'hôte décompte match_duration secondes (figé pendant la
+## pause) et envoie régulièrement le temps restant aux autres ordinateurs, qui
+## décomptent de leur côté entre deux envois. À 0, l'hôte termine le combat.
+## Fin du combat aussi possible via le bouton de test du menu pause.
+## Les scores (par équipe) viennent du mode défense de zone.
 
-## Durée d'un combat en secondes (0 = pas de limite).
-@export var match_duration := 0.0
+## Intervalle (s) entre deux envois du temps restant par l'hôte.
+const TIME_SYNC_INTERVAL := 0.5
+
+## Durée d'un combat en secondes (0 = pas de limite, chrono masqué).
+@export var match_duration := 60.0
+
+## Temps restant (s). Ne diminue qu'une fois la partie lancée.
+var time_left := 0.0
+var _running := false
+var _ended := false
+var _time_sync_cooldown := 0.0
 
 @onready var _arena: Node3D = $Arena
 @onready var _players: Node3D = $Players
+@onready var _mode: ZoneDefenseMode = $ZoneDefenseMode
+@onready var _hud: CanvasLayer = $MatchHud
 @onready var _pause_menu: CanvasLayer = $PauseMenu
 
 
@@ -21,10 +36,31 @@ func _ready() -> void:
 	for player: Player in _players.get_children():
 		player.camera.face(_arena.global_position) # Au départ, chaque joueur regarde le centre.
 	_apply_slots()
+	time_left = match_duration
+	_hud.set_time_left(time_left if match_duration > 0.0 else -1.0)
+	_hud.set_scores(0, 0)
+	_mode.scores_changed.connect(func() -> void: _hud.set_scores(_mode.scores[1], _mode.scores[2]))
 	NetworkManager.slots_changed.connect(_apply_slots)
 	NetworkManager.match_started.connect(_on_match_started)
 	_pause_menu.end_match_requested.connect(_end_match)
 	NetworkManager.notify_game_ready()
+
+
+func _process(delta: float) -> void:
+	# Ne tourne pas pendant la pause (nœud "pausable") : le chrono est figé.
+	_update_capture_bar()
+	if not _running:
+		return
+	time_left = maxf(time_left - delta, 0.0)
+	_hud.set_time_left(time_left)
+	if not multiplayer.is_server():
+		return
+	_time_sync_cooldown -= delta
+	if _time_sync_cooldown <= 0.0:
+		_time_sync_cooldown = TIME_SYNC_INTERVAL
+		_sync_time_left.rpc(time_left)
+	if time_left <= 0.0:
+		_end_match()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -47,22 +83,30 @@ func _apply_slots() -> void:
 func _on_match_started() -> void:
 	for player: Player in _players.get_children():
 		player.activate()
-	if multiplayer.is_server() and match_duration > 0.0:
-		# Timer du nœud : il s'arrête pendant la pause.
-		var timer := Timer.new()
-		timer.one_shot = true
-		timer.timeout.connect(_end_match)
-		add_child(timer)
-		timer.start(match_duration)
+	_running = match_duration > 0.0
+	var players: Array[Player] = []
+	players.assign(_players.get_children())
+	_mode.start(players)
+
+
+func _update_capture_bar() -> void:
+	var zone := _mode.get_active_zone()
+	if zone == null:
+		_hud.set_capture(0, 0.0, false)
+	else:
+		_hud.set_capture(zone.capturing_team, zone.progress / zone.capture_time, zone.contested)
+
+
+## Hôte -> autres ordinateurs : recale leur chrono sur celui de l'hôte.
+@rpc("authority", "unreliable_ordered")
+func _sync_time_left(value: float) -> void:
+	time_left = value
+	_hud.set_time_left(time_left)
 
 
 func _end_match() -> void:
-	NetworkManager.end_match(_placeholder_scores())
-
-
-## TODO : remplacer par les vrais scores quand le combat sera implémenté.
-func _placeholder_scores() -> Dictionary:
-	var scores := {}
-	for player: Player in _players.get_children():
-		scores[player.player_id] = randi_range(0, 10)
-	return scores
+	if _ended:
+		return
+	_ended = true
+	_running = false
+	NetworkManager.end_match(_mode.scores.duplicate())

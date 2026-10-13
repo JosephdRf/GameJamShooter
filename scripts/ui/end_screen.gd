@@ -1,5 +1,5 @@
 extends Control
-## Écran de fin : scores (NetworkManager.final_scores, envoyés par l'hôte),
+## Écran de fin : score de chaque équipe (NetworkManager.final_scores, envoyés par l'hôte),
 ## équipe gagnante, puis Rejouer (-> sélection d'équipe) ou Quitter (ferme le jeu).
 ## Rejouer est individuel : chaque ordinateur revient au salon quand il veut.
 
@@ -26,17 +26,15 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_tree().quit()
 
 
+## `scores` : équipe (1 ou 2) -> points.
 func _show_scores(scores: Dictionary) -> void:
-	var totals := [0, 0]
+	var totals := [int(scores.get(1, 0)), int(scores.get(2, 0))]
 	for player_id in range(1, NetworkManager.MAX_PLAYERS + 1):
 		var team_index := Player.team_of(player_id) - 1
-		var score: int = scores.get(player_id, 0)
-		totals[team_index] += score
-
 		var row := Label.new()
-		row.text = "Joueur %d  :  %d" % [player_id, score]
+		row.text = "Joueur %d" % player_id
 		row.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		row.add_theme_color_override(&"font_color", Player.PLAYER_COLORS[player_id - 1])
+		row.add_theme_color_override(&"font_color", Player.color_of(player_id).lightened(0.4))
 		_team_panels[team_index].get_node(^"Content/Players").add_child(row)
 
 	for i in totals.size():
@@ -46,7 +44,7 @@ func _show_scores(scores: Dictionary) -> void:
 	if winner == -1:
 		_winner.text = "Égalité !"
 	else:
-		_winner.text = "Victoire de l'équipe %d !" % (winner + 1)
+		_winner.text = "Victoire de l'équipe %s !" % Player.TEAM_NAMES[winner]
 		_winner.add_theme_color_override(&"font_color", _team_color(winner))
 	for i in _team_panels.size():
 		var style := StyleBoxFlat.new()
@@ -59,9 +57,9 @@ func _show_scores(scores: Dictionary) -> void:
 		_team_panels[i].add_theme_stylebox_override(&"panel", style)
 
 
-## Couleur d'une équipe (0 ou 1) : celle de son premier joueur.
+## Couleur d'une équipe (0 ou 1).
 func _team_color(team_index: int) -> Color:
-	return Player.PLAYER_COLORS[team_index * 2]
+	return Player.TEAM_COLORS[team_index]
 
 
 func _replay() -> void:

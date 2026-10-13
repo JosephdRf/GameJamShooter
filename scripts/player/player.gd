@@ -1,18 +1,19 @@
 @tool
 class_name Player
 extends CharacterBody3D
-## Joueur (cube). La couleur et l'équipe dépendent de `player_id`.
+## Joueur (cube). L'équipe (et donc la couleur) dépend de `player_id` :
+## joueurs 1-2 = équipe bleue, joueurs 3-4 = équipe rouge.
 ##
 ## En réseau, l'ordinateur qui a l'autorité sur ce nœud simule le cube et
 ## diffuse `sync_position` (nœud Sync) ; les autres ordinateurs lissent le
 ## cube vers cette position.
 
-const PLAYER_COLORS: Array[Color] = [
-	Color("e5484d"), # Joueur 1 : rouge
-	Color("f5c400"), # Joueur 2 : jaune
-	Color("3b82f6"), # Joueur 3 : bleu
-	Color("30a46c"), # Joueur 4 : vert
+## Couleur de chaque équipe (index 0 = équipe 1).
+const TEAM_COLORS: Array[Color] = [
+	Color("3b82f6"), # Équipe 1 : bleue
+	Color("e5484d"), # Équipe 2 : rouge
 ]
+const TEAM_NAMES: Array[String] = ["bleue", "rouge"]
 ## Vitesse de rattrapage des cubes distants (plus élevé = plus réactif, moins lisse).
 const REMOTE_SMOOTHING := 25.0
 ## Au-delà de cet écart, un cube distant est téléporté (ex. réapparition).
@@ -48,8 +49,13 @@ var _spawn_position: Vector3
 @onready var _sync: MultiplayerSynchronizer = $Sync
 
 
+## Équipe (1 ou 2) du joueur `id`.
 static func team_of(id: int) -> int:
 	return 1 if id <= 2 else 2
+
+
+static func color_of(id: int) -> Color:
+	return TEAM_COLORS[team_of(id) - 1]
 
 
 func _ready() -> void:
@@ -112,5 +118,5 @@ func _apply_color() -> void:
 	if _mesh == null: # Setter appelé avant que le nœud soit prêt.
 		return
 	var material := StandardMaterial3D.new()
-	material.albedo_color = PLAYER_COLORS[player_id - 1]
+	material.albedo_color = color_of(player_id)
 	_mesh.material_override = material

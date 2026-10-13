@@ -61,7 +61,7 @@ theme_override_constants/separation = 12
 [node name="Label" type="Label" parent="Margin/Layout/Teams/Team1"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
-text = "Équipe 1"
+text = "Équipe bleue"
 horizontal_alignment = 1
 
 [node name="Slots" type="HBoxContainer" parent="Margin/Layout/Teams/Team1"]
@@ -76,7 +76,7 @@ theme_override_constants/separation = 12
 [node name="Label" type="Label" parent="Margin/Layout/Teams/Team2"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
-text = "Équipe 2"
+text = "Équipe rouge"
 horizontal_alignment = 1
 
 [node name="Slots" type="HBoxContainer" parent="Margin/Layout/Teams/Team2"]

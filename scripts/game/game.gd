@@ -179,6 +179,8 @@ func _update_crosshair() -> void:
 		if player.is_local:
 			_crosshair.visible = player.is_alive() and not _ended
 			_crosshair.set_on_target(_crosshair.visible and player.is_aiming_at_enemy())
+			_crosshair.set_aim(player.camera.aim_offset,
+					player.aim_assist.box_size if player.aim_assist.show_box and player.aim_assist.enabled else Vector2.ZERO)
 			return
 	_crosshair.visible = false
 

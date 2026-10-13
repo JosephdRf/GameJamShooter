@@ -77,12 +77,16 @@ par commande, avec sa touche clavier et son bouton de manette. Le code n'utilise
 
 La souris est capturée au lancement (curseur invisible) pour piloter la caméra.
 Chaque ordinateur contrôle son canard au clavier/trackpad **ou** avec n'importe quelle manette branchée. Les déplacements sont relatifs à la caméra.
+Un canard monte en marchant sur les reliefs de 50 cm au plus (`max_step_height`), sans sauter.
 Un joueur qui tombe de la plateforme meurt.
 
 ### Tir
 
 - **Viseur** au centre de l'écran (`scenes/ui/crosshair.tscn`) : il se resserre et passe au rouge sur un
   adversaire. La caméra est placée façon Splatoon : derrière et au-dessus du canard, presque horizontale.
+- **Aide à la visée** (`scripts/player/aim_assist.gd`, nœud `AimAssist` du joueur) : si un adversaire visible
+  entre dans un rectangle de 200 × 150 px autour du centre de l'écran (affiché pour l'instant, `show_box`),
+  le viseur glisse vers lui sans bouger la caméra, et les bulles partent vers le viseur.
 - Chaque appui tire une bulle vers le point visé (aussi vers le haut ou le bas), avec au moins 0,15 s entre
   deux appuis ; touche maintenue, une bulle toutes les 0,2 s. Elle sort
   du bout du canon du canard, petite, et atteint sa taille en 0,12 s.
@@ -230,7 +234,7 @@ Un joueur qui tombe de la plateforme meurt.
   l'ouvrir dans le panneau du bas. Les transitions (fondus, priorités) se règlent en cliquant sur les
   flèches. `player.gd` ne fait que renseigner les conditions : `idle` / `walk` / `run` selon la
   vitesse (`MOVING_SPEED`, `RUN_SPEED`), `dashing` pendant le dash puis `dash_over`.
-- Dash : `dash_start` est jouée en 0,15 s (timeline personnalisée de son nœud, la moitié de
+- Dash : `dash_start` est jouée en 0,2 s (timeline personnalisée de son nœud, la moitié de
   `dash_duration`), puis `dash` en boucle jusqu'à la fin du dash, puis `dash_end` avant de revenir à
   la marche. Le début du dash est envoyé aux autres ordinateurs (RPC `_play_dash`).
 

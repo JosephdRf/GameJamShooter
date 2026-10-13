@@ -34,10 +34,8 @@ extends Node3D
 
 ## Rayon de la bulle (m) : garder égal au rayon du SphereMesh de la scène.
 ## Sert à la détection et à la visée (Player vise avec la surface de la bulle).
-const RADIUS := 0.35
+const RADIUS := 0.455
 
-## Forme de détection, partagée par toutes les bulles.
-static var _hit_shape: SphereShape3D
 ## Matériau de chaque équipe (index 0 = équipe 1), partagé par toutes ses bulles :
 ## celui de la scène, teinté à la couleur de l'équipe (même transparence).
 static var _team_materials: Array[StandardMaterial3D] = []
@@ -47,6 +45,9 @@ var _travelled := 0.0
 var _shooter_team := 0
 var _deals_damage := false
 var _query: PhysicsShapeQueryParameters3D
+## Forme de détection : grandit avec la bulle (sinon, à sa sortie du canon tenu bas,
+## elle toucherait déjà le sol avec son rayon final).
+var _hit_shape := SphereShape3D.new()
 var _grow_tween: Tween
 
 
@@ -65,9 +66,6 @@ func launch(shooter: Player, origin: Vector3, direction: Vector3, deals_damage: 
 			_team_materials.append(material)
 	mesh.material_override = _team_materials[_shooter_team - 1]
 	_deals_damage = deals_damage
-	if _hit_shape == null:
-		_hit_shape = SphereShape3D.new()
-		_hit_shape.radius = RADIUS
 	_query = PhysicsShapeQueryParameters3D.new()
 	_query.shape = _hit_shape
 	_query.collision_mask = Player.WORLD_LAYER | Player.PLAYERS_LAYER | Player.enemy_spawn_layer(_shooter_team)
@@ -81,6 +79,7 @@ func launch(shooter: Player, origin: Vector3, direction: Vector3, deals_damage: 
 func _physics_process(delta: float) -> void:
 	var step := minf(speed * delta, max_distance - _travelled)
 	var space := get_world_3d().direct_space_state
+	_hit_shape.radius = RADIUS * minf(scale.x, 1.0)
 	_query.transform = Transform3D(Basis.IDENTITY, global_position)
 	if _travelled == 0.0:
 		# Premier pas : cast_motion ignore ce qui touche déjà la bulle (canon collé à un mur, à un adversaire…).

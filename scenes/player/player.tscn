@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://bpbpwppaq4fmw" path="res://scripts/player/player.gd" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/player/player_camera.tscn" id="2_camera"]
 [ext_resource type="PackedScene" uid="uid://dbbvnlau4bc6d" path="res://assets/models/duck_v3.glb" id="3_duck"]
+[ext_resource type="Script" path="res://scripts/player/aim_assist.gd" id="4_aim_assist"]
 
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_gmlin"]
 animation = &"dash"
@@ -13,7 +14,7 @@ animation = &"dash_end"
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_p47bc"]
 animation = &"dash_start"
 use_custom_timeline = true
-timeline_length = 0.15
+timeline_length = 0.2
 stretch_time_scale = true
 start_offset = 0.0
 loop_mode = 0
@@ -162,3 +163,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.15, 0)
 [node name="Sync" type="MultiplayerSynchronizer" parent="." unique_id=167297076]
 replication_config = SubResource("SceneReplicationConfig_sync")
 public_visibility = false
+
+[node name="AimAssist" type="Node" parent="."]
+script = ExtResource("4_aim_assist")

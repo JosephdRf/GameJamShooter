@@ -7,7 +7,8 @@ extends Node3D
 ## Hiérarchie : PlayerCamera (lacet / yaw) > Pitch (tangage) > SpringArm > Camera
 ## Cadrage façon Splatoon : pivot 1,15 m au-dessus du centre du canard (au-dessus
 ## de sa tête), bras de 3,2 m presque horizontal (-2°) : le canard est en bas au
-## centre de l'écran, le viseur (centre de l'écran) juste au-dessus de lui.
+## centre de l'écran, le viseur (centre de l'écran, sauf aide à la visée : cf.
+## AimAssist) juste au-dessus de lui.
 ## Au repos, le viseur vise donc au loin à hauteur de tête : les bulles portent
 ## (incliné vers le bas, il viserait le sol et les bulles s'y écraseraient).
 ## Le SpringArm rapproche la caméra si un mur se trouve entre elle et le joueur.
@@ -19,6 +20,13 @@ extends Node3D
 @export_range(-89.0, 0.0) var min_pitch_degrees := -70.0
 @export_range(0.0, 89.0) var max_pitch_degrees := 45.0
 @export var invert_y := false
+
+## Hauteur d'écran de référence des décalages en pixels (comme le viseur).
+const REFERENCE_HEIGHT := 1080.0
+
+## Décalage du viseur par rapport au centre de l'écran (px, à 1080 px de haut),
+## réglé par AimAssist. La caméra, elle, ne bouge pas.
+var aim_offset := Vector2.ZERO
 
 @onready var _player: Player = get_parent()
 @onready var _pitch: Node3D = $Pitch
@@ -69,9 +77,21 @@ func face(point: Vector3) -> void:
 	global_rotation.y = atan2(-direction.x, -direction.z)
 
 
-## Rayon de visée : part du centre de l'écran, dans l'axe de la caméra.
+## Rayon de visée : part de la caméra et passe par le viseur (centre de l'écran
+## décalé de aim_offset).
 func get_aim_ray() -> Array[Vector3]:
-	return [_camera.global_position, -_camera.global_basis.z]
+	var rect := get_viewport().get_visible_rect()
+	var point := rect.get_center() + aim_offset * rect.size.y / REFERENCE_HEIGHT
+	return [_camera.project_ray_origin(point), _camera.project_ray_normal(point)]
+
+
+## Position de `world_point` à l'écran, en décalage depuis le centre (px, à 1080 px
+## de haut) ; null s'il est derrière la caméra.
+func screen_offset_of(world_point: Vector3) -> Variant:
+	if _camera.is_position_behind(world_point):
+		return null
+	var rect := get_viewport().get_visible_rect()
+	return (_camera.unproject_position(world_point) - rect.get_center()) * REFERENCE_HEIGHT / rect.size.y
 
 
 ## Rotation horizontale de la caméra, utilisée pour orienter les déplacements du joueur.

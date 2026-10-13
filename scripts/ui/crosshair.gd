@@ -1,8 +1,8 @@
 extends CanvasLayer
-## Viseur au centre de l'écran (instancié dans scenes/game/game.tscn) : un petit
-## cercle et quatre traits en diagonale. Sur un adversaire, il se resserre et
-## prend `target_color`. Game le masque quand le joueur local est mort.
-## Les bulles partent vers le point visé (Player.aim()).
+## Viseur (instancié dans scenes/game/game.tscn) : un petit cercle et quatre traits
+## en diagonale, au centre de l'écran ou décalé par l'aide à la visée (AimAssist).
+## Sur un adversaire, il se resserre et prend `target_color`. Game le masque quand
+## le joueur local est mort. Les bulles partent vers le point visé (Player.aim()).
 
 @export var color := Color(1, 1, 1, 0.95)
 @export var target_color := Color("ff5a5f")
@@ -13,9 +13,15 @@ extends CanvasLayer
 @export var tick_distance := 40.0
 @export var tick_distance_on_target := 26.0
 @export var tick_length := 18.0
+## DEBUG : couleur du rectangle de l'aide à la visée.
+@export var assist_box_color := Color(1, 1, 1, 0.35)
 
 var _on_target := false
 var _spread := 1.0 # 1 = au repos, 0 = sur une cible.
+## Décalage du viseur depuis le centre de l'écran (px, à 1080 px de haut).
+var _offset := Vector2.ZERO
+## DEBUG : rectangle de l'aide à la visée (px, à 1080 px de haut ; zéro = caché).
+var _assist_box := Vector2.ZERO
 
 @onready var _canvas: Control = $Canvas
 
@@ -28,6 +34,14 @@ func set_on_target(on_target: bool) -> void:
 	_on_target = on_target
 
 
+## Position du viseur (décalage depuis le centre) et rectangle de l'aide à la visée à afficher.
+func set_aim(offset: Vector2, assist_box: Vector2) -> void:
+	if offset != _offset or assist_box != _assist_box:
+		_offset = offset
+		_assist_box = assist_box
+		_canvas.queue_redraw()
+
+
 func _process(delta: float) -> void:
 	var target_spread := 0.0 if _on_target else 1.0
 	if not is_equal_approx(_spread, target_spread):
@@ -36,8 +50,11 @@ func _process(delta: float) -> void:
 
 
 func _draw_crosshair() -> void:
-	var center := _canvas.size / 2.0
 	var ui_scale := _canvas.size.y / 1080.0
+	if _assist_box != Vector2.ZERO: # DEBUG
+		var box := _assist_box * ui_scale
+		_canvas.draw_rect(Rect2(_canvas.size / 2.0 - box / 2.0, box), assist_box_color, false, 2.0 * ui_scale)
+	var center := _canvas.size / 2.0 + _offset * ui_scale
 	var tint := target_color.lerp(color, _spread)
 	_ring(center, dot_radius * ui_scale, tint, 2.5 * ui_scale)
 	_canvas.draw_circle(center, 2.5 * ui_scale, tint)

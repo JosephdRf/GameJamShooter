@@ -64,6 +64,10 @@ const TEAM_MATERIALS: Array[Material] = [
 	preload("res://assets/materials/duck_container_red.tres"),
 ]
 const REMOTE_SNAP_DISTANCE := 3.0
+## Montée des marches : en dessous de cette hauteur (m), la capsule passe d'elle-même.
+const STEP_MIN_HEIGHT := 0.01
+## Vitesse à laquelle le modèle et la caméra rattrapent une marche montée d'un coup.
+const STEP_SMOOTHING := 18.0
 
 @export_range(1, 4) var player_id := 1:
 	set(value):
@@ -76,13 +80,16 @@ const REMOTE_SNAP_DISTANCE := 3.0
 @export var jump_velocity := 8.5
 ## Multiplicateur de la gravité du projet (plus élevé = saut moins flottant).
 @export var gravity_scale := 1.8
+## Hauteur maximale d'un relief (marche, rebord…) que le canard monte en marchant, sans sauter (m).
+@export var max_step_height := 0.5
 @export_group("Dash")
 ## Vitesse de pointe du dash (m/s).
-@export var dash_speed := 22.0
+@export var dash_speed := 25.0
 ## Durée du dash (s). Courbe de vitesse : montée douce jusqu'à dash_speed
 ## (DASH_RAMP), plateau, puis ralentissement doux jusqu'à move_speed.
-## Distance ≈ 4 m avec les valeurs par défaut.
-@export var dash_duration := 0.3
+## Distance ≈ 6,8 m avec les valeurs par défaut. Si on la change, ajuster aussi la durée
+## de dash_start dans l'AnimationTree (timeline de son nœud, la moitié de dash_duration).
+@export var dash_duration := 0.4
 ## Temps minimum entre deux dashs (s).
 @export var dash_cooldown := 2.0
 @export_group("Tir")
@@ -139,9 +146,16 @@ var _since_last_shot := INF
 var _regen_cooldown_left := 0.0
 ## Temps restant avant la réapparition, quand le joueur est mort (s).
 var _respawn_left := 0.0
+## Décalage vertical du modèle et de la caméra après une marche montée d'un coup,
+## ramené en douceur à 0 (cf. _step_up).
+var _step_offset := 0.0
+var _model_base_y: float
+var _camera_base_y: float
 
 ## Caméra du joueur : les déplacements sont relatifs à son orientation.
 @onready var camera: PlayerCamera = $PlayerCamera
+## Aide à la visée (déplace le viseur vers un adversaire proche du centre de l'écran).
+@onready var aim_assist: AimAssist = $AimAssist
 @onready var _model: Node3D = $Model
 @onready var _animation_tree: AnimationTree = $AnimationTree
 @onready var _animation_playback: AnimationNodeStateMachinePlayback = _animation_tree.get(&"parameters/playback")
@@ -167,6 +181,8 @@ func _ready() -> void:
 	_apply_color()
 	if not Engine.is_editor_hint():
 		_create_muzzle()
+	_model_base_y = _model.position.y
+	_camera_base_y = camera.position.y
 	_spawn_position = global_position
 	sync_position = position
 	health = max_health
@@ -237,6 +253,7 @@ func respawn() -> void:
 	global_position = _spawn_position
 	velocity = Vector3.ZERO
 	_dash_time = 0.0
+	_step_offset = 0.0
 	_regen_cooldown_left = 0.0
 	health = max_health
 	reset_physics_interpolation()
@@ -287,7 +304,8 @@ func _simulate(delta: float) -> void:
 		velocity.x = move_toward(velocity.x, target.x, acceleration * delta)
 		velocity.z = move_toward(velocity.z, target.z, acceleration * delta)
 
-	move_and_slide()
+	if not _step_up(delta):
+		move_and_slide()
 
 	if global_position.y < kill_height:
 		_apply_damage(health)
@@ -353,6 +371,9 @@ func _create_muzzle() -> void:
 
 ## Animation et orientation du canard selon sa vitesse (et le dash en cours).
 func _update_model(velocity_now: Vector3, delta: float) -> void:
+	_step_offset *= exp(-STEP_SMOOTHING * delta)
+	_model.position.y = _model_base_y + _step_offset
+	camera.position.y = _camera_base_y + _step_offset
 	var horizontal := Vector3(velocity_now.x, 0.0, velocity_now.z)
 	var speed := horizontal.length()
 	var moving := speed > MOVING_SPEED and is_alive()
@@ -413,6 +434,48 @@ func _start_dash(direction: Vector3) -> void:
 	_dash_time = dash_duration
 	_dash_cooldown_left = dash_cooldown
 	_play_dash.rpc()
+
+
+## Monte sur un relief d'au plus max_step_height (marche, rebord…) qui bloque le canard
+## au sol : on rejoue le déplacement prévu max_step_height plus haut, puis on redescend
+## dessus. Vrai si le canard a été posé sur la marche (move_and_slide est alors inutile).
+## Les pentes praticables (≤ floor_max_angle) restent gérées par move_and_slide.
+func _step_up(delta: float) -> bool:
+	var motion := Vector3(velocity.x, 0.0, velocity.z) * delta
+	if not is_on_floor() or velocity.y > 0.0 or motion.is_zero_approx():
+		return false
+	var blocked := KinematicCollision3D.new()
+	if not test_move(global_transform, motion, blocked) \
+			or blocked.get_normal().angle_to(Vector3.UP) <= floor_max_angle \
+			or blocked.get_collider() is CharacterBody3D:
+		return false # Rien devant, une pente praticable ou un autre canard.
+	var lift := Vector3.UP * max_step_height
+	var raised := global_transform.translated(lift)
+	if test_move(global_transform, lift) or test_move(raised, motion):
+		return false # Plafond au-dessus, ou obstacle plus haut qu'une marche.
+	var drop := KinematicCollision3D.new()
+	var above := raised.translated(motion)
+	if not test_move(above, -lift, drop) or drop.get_collider() is CharacterBody3D:
+		return false
+	var landing := above.origin + drop.get_travel()
+	var height := landing.y - global_position.y
+	if height < STEP_MIN_HEIGHT or height > max_step_height:
+		return false
+	# Le dessus de la marche (juste après le point de contact) doit être praticable.
+	var probe := drop.get_position() + motion.normalized() * 0.1 + Vector3.UP * 0.1
+	var hit := get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(
+			probe, probe + Vector3.DOWN * 0.3, collision_mask & ~PLAYERS_LAYER, [get_rid()]))
+	if hit.is_empty() or hit.normal.angle_to(Vector3.UP) > floor_max_angle:
+		return false
+	# Hauteur réelle de la marche sous les pieds : le bas arrondi de la capsule, posé
+	# sur l'arête, dépasse sinon max_step_height (et monterait de proche en proche).
+	var feet := global_position.y - (_collision_shape.shape as CapsuleShape3D).height / 2.0
+	if hit.position.y - feet > max_step_height:
+		return false
+	global_position = landing
+	_step_offset -= height # Le modèle et la caméra rattrapent la hauteur en douceur.
+	apply_floor_snap()
+	return true
 
 
 func _follow_network(delta: float) -> void:

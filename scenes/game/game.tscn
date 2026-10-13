@@ -1,14 +1,14 @@
-[gd_scene load_steps=16 format=3]
+[gd_scene format=3 uid="uid://8frli3h0t7l"]
 
-[ext_resource type="Script" path="res://scripts/game/game.gd" id="1_game"]
-[ext_resource type="PackedScene" path="res://scenes/levels/arena.tscn" id="2_arena"]
+[ext_resource type="Script" uid="uid://ct6xu3fx6l8rk" path="res://scripts/game/game.gd" id="1_game"]
+[ext_resource type="PackedScene" uid="uid://flgmol2ni2u" path="res://scenes/levels/arena2.tscn" id="2_otnwt"]
 [ext_resource type="PackedScene" path="res://scenes/player/player_1.tscn" id="3_player1"]
-[ext_resource type="PackedScene" path="res://scenes/player/player_2.tscn" id="4_player2"]
+[ext_resource type="PackedScene" uid="uid://comxab82c6pea" path="res://scenes/player/player_2.tscn" id="4_player2"]
 [ext_resource type="PackedScene" path="res://scenes/player/player_3.tscn" id="5_player3"]
 [ext_resource type="PackedScene" path="res://scenes/player/player_4.tscn" id="6_player4"]
 [ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="7_pause"]
 [ext_resource type="PackedScene" path="res://scenes/ui/match_hud.tscn" id="8_hud"]
-[ext_resource type="Script" path="res://scripts/game/zone_defense_mode.gd" id="9_mode"]
+[ext_resource type="Script" uid="uid://ctqmd1u3hiupw" path="res://scripts/game/zone_defense_mode.gd" id="9_mode"]
 [ext_resource type="PackedScene" path="res://scenes/game/zone_defense.tscn" id="10_zone"]
 [ext_resource type="PackedScene" path="res://scenes/game/zone_spawn.tscn" id="11_spawn"]
 [ext_resource type="PackedScene" path="res://scenes/ui/damage_overlay.tscn" id="12_damage"]
@@ -16,58 +16,62 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/announcer.tscn" id="14_announcer"]
 [ext_resource type="PackedScene" path="res://scenes/ui/crosshair.tscn" id="15_crosshair"]
 
-[node name="Game" type="Node3D"]
+[node name="Game" type="Node3D" unique_id=234620878]
 script = ExtResource("1_game")
 
-[node name="Arena" parent="." instance=ExtResource("2_arena")]
+[node name="Arena2" parent="." unique_id=1642305965 instance=ExtResource("2_otnwt")]
 
-[node name="Players" type="Node3D" parent="."]
+[node name="Players" type="Node3D" parent="." unique_id=2089681798]
 
-[node name="Player1" parent="Players" instance=ExtResource("3_player1")]
+[node name="Player1" parent="Players" unique_id=363915168 instance=ExtResource("3_player1")]
+collision_mask = 11
 
-[node name="Player2" parent="Players" instance=ExtResource("4_player2")]
+[node name="Player2" parent="Players" unique_id=576926686 instance=ExtResource("4_player2")]
+collision_mask = 11
 
-[node name="Player3" parent="Players" instance=ExtResource("5_player3")]
+[node name="Player3" parent="Players" unique_id=203794921 instance=ExtResource("5_player3")]
+collision_mask = 7
 
-[node name="Player4" parent="Players" instance=ExtResource("6_player4")]
+[node name="Player4" parent="Players" unique_id=1550382644 instance=ExtResource("6_player4")]
+collision_mask = 7
 
-[node name="SpawnZones" type="Node3D" parent="."]
+[node name="SpawnZones" type="Node3D" parent="." unique_id=618915540]
 
-[node name="ZoneSpawnBlue" parent="SpawnZones" instance=ExtResource("11_spawn")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, -16)
+[node name="ZoneSpawnBlue" parent="SpawnZones" unique_id=850163800 instance=ExtResource("11_spawn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42.563774, 4.9269485, 12.618617)
 
-[node name="ZoneSpawnRed" parent="SpawnZones" instance=ExtResource("11_spawn")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 17)
+[node name="ZoneSpawnRed" parent="SpawnZones" unique_id=1839208674 instance=ExtResource("11_spawn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -55.245754, 0, -10.405991)
 team = 2
 
-[node name="Projectiles" type="Node3D" parent="."]
+[node name="Projectiles" type="Node3D" parent="." unique_id=1331130396]
 
-[node name="ZoneDefenseMode" type="Node3D" parent="."]
+[node name="ZoneDefenseMode" type="Node3D" parent="." unique_id=126924625]
 script = ExtResource("9_mode")
 
-[node name="ZoneLeft" parent="ZoneDefenseMode" instance=ExtResource("10_zone")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.5, 0, 0.5)
+[node name="ZoneLeft" parent="ZoneDefenseMode" unique_id=1765327171 instance=ExtResource("10_zone")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.868975, 1.480391, -24.019016)
 
-[node name="ZoneCenter" parent="ZoneDefenseMode" instance=ExtResource("10_zone")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, 0.5)
+[node name="ZoneCenter" parent="ZoneDefenseMode" unique_id=211882194 instance=ExtResource("10_zone")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.7873335, 0, 1.9407368)
 
-[node name="ZoneRight" parent="ZoneDefenseMode" instance=ExtResource("10_zone")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 0.5)
+[node name="ZoneRight" parent="ZoneDefenseMode" unique_id=1842881901 instance=ExtResource("10_zone")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.60273, 0, 18.89371)
 
-[node name="DamageOverlay" parent="." instance=ExtResource("12_damage")]
+[node name="DamageOverlay" parent="." unique_id=1423110258 instance=ExtResource("12_damage")]
 
-[node name="Crosshair" parent="." instance=ExtResource("15_crosshair")]
+[node name="Crosshair" parent="." unique_id=1023062242 instance=ExtResource("15_crosshair")]
 
-[node name="MatchHud" parent="." instance=ExtResource("8_hud")]
+[node name="MatchHud" parent="." unique_id=369232033 instance=ExtResource("8_hud")]
 
-[node name="DeathScreen" parent="." instance=ExtResource("13_death")]
+[node name="DeathScreen" parent="." unique_id=1319785265 instance=ExtResource("13_death")]
 
-[node name="Announcer" parent="." instance=ExtResource("14_announcer")]
+[node name="Announcer" parent="." unique_id=713698235 instance=ExtResource("14_announcer")]
 
-[node name="DebugHealth" type="CanvasLayer" parent="."]
+[node name="DebugHealth" type="CanvasLayer" parent="." unique_id=448044908]
 layer = 5
 
-[node name="Label" type="Label" parent="DebugHealth"]
+[node name="Label" type="Label" parent="DebugHealth" unique_id=438831081]
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
@@ -76,7 +80,6 @@ offset_top = -64.0
 offset_right = 224.0
 offset_bottom = -16.0
 grow_vertical = 0
-mouse_filter = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0.08, 0.09, 0.12, 1)
 theme_override_constants/outline_size = 8
@@ -84,4 +87,4 @@ theme_override_font_sizes/font_size = 30
 text = "PV : 100"
 vertical_alignment = 1
 
-[node name="PauseMenu" parent="." instance=ExtResource("7_pause")]
+[node name="PauseMenu" parent="." unique_id=179496749 instance=ExtResource("7_pause")]

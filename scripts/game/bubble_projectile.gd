@@ -3,7 +3,8 @@ extends Node3D
 ## Bulle tirée par un joueur (scène instanciée par Game sous Projectiles).
 ##
 ## Avance tout droit à `speed` m/s et éclate (pop) au premier de ces événements :
-##   - elle touche un obstacle (calque « world » : sol, murs, plafond, objets) ;
+##   - elle touche un obstacle (calque « world » : sol, murs, plafond, objets),
+##     ou le mur invisible de la zone d'apparition adverse ;
 ##   - elle touche un joueur : `damage` PV de dégâts s'il est de l'autre équipe ;
 ##   - elle a parcouru `max_distance` mètres.
 ## Puis le nœud est supprimé (queue_free) à la fin de l'animation d'éclatement.
@@ -18,9 +19,6 @@ extends Node3D
 ## départ, même trajectoire) ; seule celle de l'ordinateur du tireur inflige
 ## les dégâts (Player.take_damage les transmet au bon ordinateur).
 
-const WORLD_LAYER := 1
-const PLAYERS_LAYER := 2
-
 ## Vitesse (m/s).
 @export var speed := 30.0
 ## Portée (m) : la bulle éclate au-delà.
@@ -30,6 +28,9 @@ const PLAYERS_LAYER := 2
 @export var friendly_fire := false
 ## Durée de l'animation d'éclatement (s).
 @export var pop_duration := 0.12
+## La bulle sort du canon petite et atteint sa taille en `grow_duration` s.
+@export var grow_duration := 0.12
+@export var start_scale := 0.2
 
 ## Forme de détection, partagée par toutes les bulles : même rayon que le mesh.
 static var _hit_shape: SphereShape3D
@@ -39,6 +40,7 @@ var _travelled := 0.0
 var _shooter_team := 0
 var _deals_damage := false
 var _query: PhysicsShapeQueryParameters3D
+var _grow_tween: Tween
 
 
 ## À appeler juste après l'ajout à la scène. `deals_damage` : vrai seulement
@@ -53,15 +55,25 @@ func launch(shooter: Player, origin: Vector3, direction: Vector3, deals_damage: 
 		_hit_shape.radius = (($Mesh as MeshInstance3D).mesh as SphereMesh).radius
 	_query = PhysicsShapeQueryParameters3D.new()
 	_query.shape = _hit_shape
-	_query.collision_mask = WORLD_LAYER | PLAYERS_LAYER
+	_query.collision_mask = Player.WORLD_LAYER | Player.PLAYERS_LAYER | Player.enemy_spawn_layer(_shooter_team)
 	_query.exclude = [shooter.get_rid()] # Ne se touche pas soi-même au départ.
 	reset_physics_interpolation()
+	scale = Vector3.ONE * start_scale
+	_grow_tween = create_tween()
+	_grow_tween.tween_property(self, ^"scale", Vector3.ONE, grow_duration).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 
 
 func _physics_process(delta: float) -> void:
 	var step := minf(speed * delta, max_distance - _travelled)
 	var space := get_world_3d().direct_space_state
 	_query.transform = Transform3D(Basis.IDENTITY, global_position)
+	if _travelled == 0.0:
+		# Premier pas : cast_motion ignore ce qui touche déjà la bulle (canon collé à un mur, à un adversaire…).
+		_query.motion = Vector3.ZERO
+		var overlap := space.get_rest_info(_query)
+		if not overlap.is_empty():
+			_on_hit(instance_from_id(overlap.collider_id))
+			return
 	_query.motion = _direction * step
 	# [fraction sans contact, fraction au contact] du déplacement ; 1 = aucun obstacle.
 	var fractions := space.cast_motion(_query)
@@ -87,6 +99,8 @@ func _on_hit(collider: Object) -> void:
 ## Éclatement : la bulle gonfle et s'efface, puis le nœud est supprimé.
 func _pop() -> void:
 	set_physics_process(false)
+	if _grow_tween:
+		_grow_tween.kill()
 	var mesh := $Mesh as GeometryInstance3D
 	var tween := create_tween().set_parallel()
 	tween.tween_property(self, ^"scale", Vector3.ONE * 1.8, pop_duration)

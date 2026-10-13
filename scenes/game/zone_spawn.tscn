@@ -29,6 +29,11 @@ outer_radius = 3.0
 rings = 64
 ring_segments = 8
 
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_barrier"]
+resource_local_to_scene = true
+height = 8.0
+radius = 3.0
+
 [node name="ZoneSpawn" type="Node3D"]
 script = ExtResource("1_spawn")
 
@@ -43,3 +48,11 @@ transform = Transform3D(1, 0, 0, 0, 0.3, 0, 0, 0, 1, 0, 0.04, 0)
 cast_shadow = 0
 material_override = SubResource("StandardMaterial3D_ring")
 mesh = SubResource("TorusMesh_ring")
+
+[node name="Barrier" type="StaticBody3D" parent="."]
+collision_layer = 4
+collision_mask = 0
+
+[node name="Shape" type="CollisionShape3D" parent="Barrier"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, 0)
+shape = SubResource("CylinderShape3D_barrier")

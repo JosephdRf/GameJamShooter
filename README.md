@@ -79,9 +79,12 @@ Un joueur qui tombe de la plateforme meurt.
 
 ### Tir
 
-- Chaque appui tire une bulle tout droit devant la caméra (à l'horizontale), 4 tirs/s au plus.
+- Chaque appui tire une bulle tout droit devant la caméra (à l'horizontale), 4 tirs/s au plus. Elle sort
+  du bout du canon du canard, petite, et atteint sa taille en 0,12 s.
 - La bulle éclate au premier contact : obstacle (sol, mur, objet…), joueur (**40 dégâts** à un adversaire,
-  rien à un coéquipier) ou au bout de **25 m**. Le nœud est alors supprimé.
+  rien à un coéquipier), mur de la zone d'apparition adverse, ou au bout de **25 m**. Le nœud est alors supprimé.
+- **Zones d'apparition** : un mur invisible (calques 3 « spawn_blue » / 4 « spawn_red ») empêche les joueurs
+  et les bulles de l'équipe adverse d'y entrer.
 - Réglages : sur `scenes/game/bubble_projectile.tscn` (`speed`, `max_distance`, `damage`, `friendly_fire`,
   taille du mesh = taille de la zone de contact) et sur le joueur (`fire_cooldown`, groupe « Tir »).
 

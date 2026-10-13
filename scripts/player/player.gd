@@ -27,6 +27,12 @@ const TEAM_COLORS: Array[Color] = [
 	Color("e5484d"), # Équipe 2 : rouge
 ]
 const TEAM_NAMES: Array[String] = ["bleue", "rouge"]
+## Calques physiques des murs invisibles des zones d'apparition (ZoneSpawn) :
+## calque 3 « spawn_blue » (valeur 4), calque 4 « spawn_red » (valeur 8). Un joueur
+## (et ses bulles) est bloqué par la zone d'apparition de l'équipe adverse.
+const WORLD_LAYER := 1
+const PLAYERS_LAYER := 2
+const SPAWN_LAYERS: Array[int] = [4, 8]
 ## Vitesse de rattrapage des cubes distants (plus élevé = plus réactif, moins lisse).
 const REMOTE_SMOOTHING := 25.0
 ## Au-delà de cet écart, un cube distant est téléporté (ex. réapparition).
@@ -36,6 +42,12 @@ const RUN_SPEED := 4.0
 const ANIMATION_BLEND := 0.15
 ## Vitesse à laquelle le canard se tourne vers sa direction de déplacement.
 const TURN_SPEED := 14.0
+## Courbe du dash (fractions de dash_duration) : fin de la montée en vitesse,
+## début du ralentissement.
+const DASH_RAMP := 0.15
+const DASH_SLOWDOWN_START := 0.3
+## Mesh du pistolet dans le modèle (les bulles partent du bout de son canon).
+const GUN_MESH := "Gun"
 ## Mesh teint à la couleur de l'équipe (dans le modèle du canard).
 const TEAM_COLORED_MESH := "Water_Container"
 const REMOTE_SNAP_DISTANCE := 3.0
@@ -52,10 +64,12 @@ const REMOTE_SNAP_DISTANCE := 3.0
 ## Multiplicateur de la gravité du projet (plus élevé = saut moins flottant).
 @export var gravity_scale := 1.8
 @export_group("Dash")
-## Vitesse horizontale pendant le dash (m/s).
-@export var dash_speed := 24.0
-## Durée du dash (s) : distance parcourue ≈ dash_speed × dash_duration.
-@export var dash_duration := 0.18
+## Vitesse de pointe du dash (m/s).
+@export var dash_speed := 22.0
+## Durée du dash (s). Courbe de vitesse : montée douce jusqu'à dash_speed
+## (DASH_RAMP), plateau, puis ralentissement doux jusqu'à move_speed.
+## Distance ≈ 4 m avec les valeurs par défaut.
+@export var dash_duration := 0.3
 ## Temps minimum entre deux dashs (s).
 @export var dash_cooldown := 2.0
 @export_group("Tir")
@@ -96,7 +110,11 @@ var _spawn_position: Vector3
 var _dash_time := 0.0
 ## Temps restant avant de pouvoir dasher à nouveau (s).
 var _dash_cooldown_left := 0.0
-var _dash_velocity: Vector3
+var _dash_direction: Vector3
+## Vitesse horizontale au moment du dash (point de départ de la courbe).
+var _dash_start_speed := 0.0
+## Bout du canon (Marker3D créé dans _ready sur le mesh du pistolet) : départ des bulles.
+var _muzzle: Marker3D
 ## Temps restant avant de pouvoir tirer à nouveau (s).
 var _fire_cooldown_left := 0.0
 ## Temps restant avant que la vie remonte (s).
@@ -121,6 +139,11 @@ static func color_of(id: int) -> Color:
 	return TEAM_COLORS[team_of(id) - 1]
 
 
+## Calque de la zone d'apparition adverse de l'équipe `team`.
+static func enemy_spawn_layer(team: int) -> int:
+	return SPAWN_LAYERS[2 - team]
+
+
 func _ready() -> void:
 	_apply_color()
 	if not Engine.is_editor_hint():
@@ -128,6 +151,7 @@ func _ready() -> void:
 		for animation_name: StringName in [&"idle", &"walk", &"run"]:
 			_animation.get_animation(animation_name).loop_mode = Animation.LOOP_LINEAR
 		_animation.play(&"idle")
+		_create_muzzle()
 	_spawn_position = global_position
 	sync_position = position
 	health = max_health
@@ -219,15 +243,19 @@ func _simulate(delta: float) -> void:
 	if is_local and Input.is_action_just_pressed(&"shoot") and _fire_cooldown_left == 0.0:
 		_fire_cooldown_left = fire_cooldown
 		# Tout droit devant la caméra (à l'horizontale), depuis le centre du cube.
-		_shoot.rpc(global_position, Vector3.FORWARD.rotated(Vector3.UP, camera.get_yaw()))
+		var shot_direction := Vector3.FORWARD.rotated(Vector3.UP, camera.get_yaw())
+		_turn_model_towards(shot_direction, 1.0) # D'abord tourner le canard : le canon pointe vers le tir.
+		var origin := _muzzle.global_position if _muzzle else global_position
+		_shoot.rpc(origin, shot_direction)
 
 	if not is_on_floor():
 		velocity.y -= _gravity * gravity_scale * delta
 	if _dash_time > 0.0:
-		# Dash : vitesse horizontale fixe (la gravité s'applique si on quitte le sol).
-		_dash_time -= delta
-		velocity.x = _dash_velocity.x
-		velocity.z = _dash_velocity.z
+		# Dash : vitesse horizontale selon la courbe (la gravité s'applique si on quitte le sol).
+		_dash_time = maxf(_dash_time - delta, 0.0)
+		var speed := _dash_speed_at(1.0 - _dash_time / dash_duration)
+		velocity.x = _dash_direction.x * speed
+		velocity.z = _dash_direction.z * speed
 	else:
 		var target := direction * move_speed
 		velocity.x = move_toward(velocity.x, target.x, acceleration * delta)
@@ -250,6 +278,22 @@ func _regenerate(delta: float) -> void:
 func _shoot(origin: Vector3, direction: Vector3) -> void:
 	_turn_model_towards(direction, 1.0) # Le canard se tourne d'un coup vers son tir.
 	shot.emit(origin, direction)
+
+
+## Crée un repère au bout du canon : extrémité du mesh du pistolet, côté avant du canard.
+func _create_muzzle() -> void:
+	var gun := _model.find_child(GUN_MESH, true, false) as MeshInstance3D
+	if gun == null:
+		return
+	var box := gun.get_aabb()
+	var half := box.get_longest_axis() * box.get_longest_axis_size() / 2.0
+	var end_a := box.get_center() + half
+	var end_b := box.get_center() - half
+	var forward := _model.global_basis.z # Le canard regarde vers +Z.
+	_muzzle = Marker3D.new()
+	_muzzle.name = &"Muzzle"
+	gun.add_child(_muzzle)
+	_muzzle.position = end_a if (gun.to_global(end_a) - gun.to_global(end_b)).dot(forward) > 0.0 else end_b
 
 
 ## Animation et orientation du canard selon sa vitesse.
@@ -293,11 +337,18 @@ func _on_respawned() -> void:
 	respawned.emit()
 
 
+## Vitesse du dash à l'instant `t` (0 = début, 1 = fin).
+func _dash_speed_at(t: float) -> float:
+	var cruise := lerpf(dash_speed, move_speed, smoothstep(DASH_SLOWDOWN_START, 1.0, t))
+	return lerpf(_dash_start_speed, cruise, smoothstep(0.0, DASH_RAMP, t))
+
+
 ## Dash (au sol uniquement) dans la direction du joystick, ou devant la caméra s'il est au repos.
 func _start_dash(direction: Vector3) -> void:
 	if direction.is_zero_approx():
 		direction = Vector3.FORWARD.rotated(Vector3.UP, camera.get_yaw())
-	_dash_velocity = direction.normalized() * dash_speed
+	_dash_direction = direction.normalized()
+	_dash_start_speed = Vector2(velocity.x, velocity.z).length()
 	_dash_time = dash_duration
 	_dash_cooldown_left = dash_cooldown
 
@@ -311,6 +362,7 @@ func _follow_network(delta: float) -> void:
 
 
 func _apply_color() -> void:
+	collision_mask = WORLD_LAYER | PLAYERS_LAYER | enemy_spawn_layer(team_of(player_id))
 	if _model == null: # Setter appelé avant que le nœud soit prêt.
 		return
 	var mesh := _model.find_child(TEAM_COLORED_MESH, true, false) as MeshInstance3D

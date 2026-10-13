@@ -7,6 +7,9 @@ extends Node3D
 ## des emplacements de cette zone (répartis en cercle autour du centre) ; un
 ## joueur qui tombe de l'arène réapparaît à son emplacement.
 ## Position, rayon et équipe se règlent sur chaque instance, dans la scène de jeu.
+##
+## Mur invisible (Barrier, cylindre de 8 m de haut) : sur le calque de l'équipe
+## (Player.SPAWN_LAYERS), il bloque les joueurs et les bulles de l'équipe adverse.
 
 @export_range(1, 2) var team := 1:
 	set(value):
@@ -16,11 +19,13 @@ extends Node3D
 	set(value):
 		radius = value
 		_update_shape()
-## Hauteur des joueurs au-dessus du sol à l'apparition (m) : moitié du cube.
-@export var spawn_height := 0.5
+## Hauteur du centre des joueurs au-dessus du sol à l'apparition (m) : moitié du canard.
+@export var spawn_height := 0.65
 
 @onready var _disk: MeshInstance3D = $Disk
 @onready var _ring: MeshInstance3D = $Ring
+@onready var _barrier: StaticBody3D = $Barrier
+@onready var _barrier_shape: CylinderShape3D = $Barrier/Shape.shape
 
 
 func _ready() -> void:
@@ -41,6 +46,7 @@ func get_spawn_position(index: int, count: int) -> Vector3:
 func _update_visuals() -> void:
 	if not is_node_ready():
 		return
+	_barrier.collision_layer = Player.SPAWN_LAYERS[team - 1]
 	var color := Player.TEAM_COLORS[team - 1]
 	(_disk.material_override as StandardMaterial3D).albedo_color = Color(color, 0.35)
 	(_ring.material_override as StandardMaterial3D).albedo_color = color
@@ -53,3 +59,4 @@ func _update_shape() -> void:
 	(_disk.mesh as CylinderMesh).bottom_radius = radius
 	(_ring.mesh as TorusMesh).outer_radius = radius
 	(_ring.mesh as TorusMesh).inner_radius = radius - 0.2
+	_barrier_shape.radius = radius

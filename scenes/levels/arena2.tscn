@@ -1,3 +1,210 @@
 [gd_scene format=3 uid="uid://flgmol2ni2u"]
 
+[ext_resource type="Texture2D" uid="uid://bk8bd11xbsdfn" path="res://scenes/levels/mapv1.svg" id="1_4ka2m"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dbi1a"]
+transparency = 1
+albedo_color = Color(0.7490196, 0.95686275, 1, 0.3529412)
+metallic = 0.2
+roughness = 0.0
+emission_enabled = true
+emission = Color(0.7490196, 0.95686275, 1, 1)
+emission_energy_multiplier = 0.3
+
+[sub_resource type="BoxMesh" id="BoxMesh_vj1es"]
+material = SubResource("StandardMaterial3D_dbi1a")
+size = Vector3(0.86, 0.76, 0.01)
+
 [node name="Arena2" type="Node3D" unique_id=1642305965]
+
+[node name="Sprite3D" type="Sprite3D" parent="." unique_id=1175920662]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 0, 0, 0)
+pixel_size = 0.0048
+alpha_cut = 1
+texture = ExtResource("1_4ka2m")
+
+[node name="Structure" type="CSGCombiner3D" parent="." unique_id=1480785371]
+use_collision = true
+
+[node name="Sol" type="CSGBox3D" parent="Structure" unique_id=211071891]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.025, 0)
+size = Vector3(4.2, 0.05, 3.4)
+
+[node name="Mur1" type="CSGBox3D" parent="Structure" unique_id=368021370]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.3527527, 0.57095945, -1.1666088)
+size = Vector3(1.9616333, 1.1419189, 0.06)
+
+[node name="Trou_arche" type="CSGCylinder3D" parent="Structure/Mur1" unique_id=1472461809]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0.57085705, -0.49658203, 0.0026122332)
+operation = 2
+radius = 0.07
+height = 0.091992185
+sides = 24
+
+[node name="Mur2" type="CSGBox3D" parent="Structure" unique_id=247457873]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -1.322876, 0.5696777, -1.0223567)
+size = Vector3(0.34868467, 1.1419189, 0.06)
+
+[node name="Mur17" type="CSGBox3D" parent="Structure" unique_id=1305854043]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0.6236572, 0.5696777, -1.0223567)
+size = Vector3(0.34868467, 1.1419189, 0.06)
+
+[node name="Mur18" type="CSGBox3D" parent="Structure" unique_id=282059579]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 1.3659058, 0.5696777, -0.06112972)
+size = Vector3(0.32424468, 1.1419189, 0.06)
+
+[node name="Mur5" type="CSGBox3D" parent="Structure" unique_id=148427141]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -1.9832764, 0.5696777, -0.35776895)
+size = Vector3(0.77735674, 1.1419189, 0.06)
+
+[node name="Mur6" type="CSGBox3D" parent="Structure" unique_id=1208954528]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -1.9832764, 0.5696777, 0.8162712)
+size = Vector3(0.62366045, 1.1419189, 0.06)
+
+[node name="Mur10" type="CSGBox3D" parent="Structure" unique_id=647327233]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -1.1229494, 0.5696777, 1.2969774)
+size = Vector3(0.38417095, 1.1419189, 0.06)
+
+[node name="Mur11" type="CSGBox3D" parent="Structure" unique_id=1192636564]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0.86018085, 0.5696777, 1.2011256)
+size = Vector3(0.57587457, 1.1419189, 0.06)
+
+[node name="Mur14" type="CSGBox3D" parent="Structure" unique_id=274346412]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 1.6237968, 0.5696777, 0.45039985)
+size = Vector3(0.7814198, 1.1419189, 0.06)
+
+[node name="Mur13" type="CSGBox3D" parent="Structure" unique_id=1627781151]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 1.3723106, 0.5696777, 0.88689804)
+size = Vector3(0.14103895, 1.1419189, 0.06)
+
+[node name="Mur3" type="CSGBox3D" parent="Structure" unique_id=1719567717]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5231097, 0.5501251, -0.87910724)
+size = Vector3(0.4338444, 1.1732972, 0.06)
+
+[node name="Mur8" type="CSGBox3D" parent="Structure" unique_id=549894575]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5418012, 0.5501251, 1.1330786)
+size = Vector3(0.8942574, 1.1732972, 0.06)
+
+[node name="Mur9" type="CSGBox3D" parent="Structure" unique_id=582019361]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.13072574, 0.5501251, 1.4811256)
+size = Vector3(1.9603808, 1.1732972, 0.06)
+
+[node name="CSGBox3D" type="CSGBox3D" parent="Structure/Mur9" unique_id=1701769227]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.36180115, 0.1469757, 0)
+operation = 2
+size = Vector3(0.7, 0.6, 0.2)
+
+[node name="Mur12" type="CSGBox3D" parent="Structure" unique_id=784959445]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.1087372, 0.5580597, 0.94323266)
+size = Vector3(0.5272046, 1.1732972, 0.06)
+
+[node name="Mur15" type="CSGBox3D" parent="Structure" unique_id=2089457511]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4976859, 0.5580597, 0.84596384)
+size = Vector3(0.26357603, 1.1732972, 0.06)
+
+[node name="Mur16" type="CSGBox3D" parent="Structure" unique_id=611484983]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.472692, 0.5580597, 0.08833444)
+size = Vector3(0.26357603, 1.1732972, 0.06)
+
+[node name="Mur19" type="CSGBox3D" parent="Structure" unique_id=417139335]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.6573724, 0.5580597, -0.8800989)
+size = Vector3(0.10666549, 1.1732972, 0.06)
+
+[node name="Mur7" type="CSGBox3D" parent="Structure" unique_id=1904321025]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8498622, 0.5501251, -0.7498938)
+size = Vector3(0.30279702, 1.1732972, 0.06)
+
+[node name="Mur4" type="CSGBox3D" parent="Structure" unique_id=162993798]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -1.7288673, 0.5149154, -0.8028583)
+size = Vector3(0.16357747, 1.2391449, 0.06)
+
+[node name="Mur_douche" type="CSGCylinder3D" parent="Structure" unique_id=357262617]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3389995, 0.571875, -0.8354167)
+radius = 0.68
+height = 1.14375
+sides = 48
+
+[node name="Creux_douche" type="CSGCylinder3D" parent="Structure/Mur_douche" unique_id=2046800797]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.00036621094, 0, -0.00030517578)
+operation = 2
+radius = 0.62
+height = 1.5
+sides = 48
+
+[node name="Ouverture_douche" type="CSGBox3D" parent="Structure/Mur_douche" unique_id=1062717874]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.2919159, 0, 0.33241272)
+operation = 2
+size = Vector3(0.78271484, 1, 0.70150757)
+
+[node name="Bac_douche" type="CSGCylinder3D" parent="Structure" unique_id=1485820373]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.3328152, 0.05, -0.82545555)
+radius = 0.62
+height = 0.1
+sides = 48
+
+[node name="Mur_tuyau" type="CSGCylinder3D" parent="Structure" unique_id=2056627631]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0.57956696, 0.07940673, -1.3045754)
+radius = 0.08
+height = 0.8886719
+sides = 48
+
+[node name="Mur_tuyau2" type="CSGCylinder3D" parent="Structure" unique_id=314103297]
+transform = Transform3D(1.9106855e-15, 4.371139e-08, 1, 1, -4.371139e-08, 0, 4.371139e-08, 1, -4.371139e-08, 0.21678807, 0.05535888, -1.2940774)
+radius = 0.092285156
+height = 0.25708008
+sides = 48
+
+[node name="Tuyau_trou" type="CSGCylinder3D" parent="Structure" unique_id=1366967562]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0.60082245, 0.07638551, -1.3031006)
+operation = 2
+radius = 0.07
+height = 0.84698486
+sides = 48
+
+[node name="Douche_trou_1" type="CSGCylinder3D" parent="Structure" unique_id=532308612]
+transform = Transform3D(-0.5, -0.8660253, 0, 0.8660253, -0.5, 0, 0, 0, 1, 1.0983155, 0.11065066, -1.3031006)
+operation = 2
+radius = 0.05419922
+height = 0.1996582
+sides = 48
+
+[node name="Douche_trou_2" type="CSGCylinder3D" parent="Structure" unique_id=2059756625]
+transform = Transform3D(-0.3420201, -0.93969256, 0, 0.93969256, -0.3420201, 0, 0, 0, 1, 1.0193524, 0.06767712, -1.3031006)
+operation = 2
+radius = 0.056640625
+height = 0.031445313
+sides = 48
+
+[node name="Tuyau_trou_2" type="CSGCylinder3D" parent="Structure" unique_id=868010963]
+transform = Transform3D(1.9106853e-15, 4.3711385e-08, 1, 0.99999994, -4.3711385e-08, 0, 4.3711385e-08, 0.99999994, -4.371139e-08, 0.21637249, 0.07019727, -1.2489868)
+operation = 2
+radius = 0.07
+height = 0.24436036
+sides = 48
+
+[node name="Fenêtre" type="CSGCombiner3D" parent="." unique_id=615395294]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.22965416, 0.67229617, 1.4828455)
+
+[node name="Cadre" type="CSGBox3D" parent="Fenêtre" unique_id=154795809]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02433598, 0)
+size = Vector3(0.98, 0.83132815, 0.08)
+
+[node name="Cadre_creux" type="CSGBox3D" parent="Fenêtre" unique_id=718310846]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02474606, 0)
+operation = 2
+size = Vector3(0.86, 0.7105078, 0.2)
+
+[node name="Montant" type="CSGBox3D" parent="Fenêtre" unique_id=1079507830]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.000333786, 0, 0)
+size = Vector3(0.04, 0.76, 0.05)
+
+[node name="Traverse" type="CSGBox3D" parent="Fenêtre" unique_id=271851750]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.020578384, 0)
+size = Vector3(0.86, 0.04, 0.05)
+
+[node name="Rebord" type="CSGBox3D" parent="Fenêtre" unique_id=848595610]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.39418212, 0)
+size = Vector3(1, 0.04, 0.15)
+
+[node name="Vitre" type="MeshInstance3D" parent="Fenêtre" unique_id=1853177915]
+mesh = SubResource("BoxMesh_vj1es")

@@ -11,6 +11,8 @@
 [ext_resource type="PackedScene" uid="uid://bky74exs260n2" path="res://scenes/props/rouleaux_papier.tscn" id="9_bsj62"]
 [ext_resource type="PackedScene" uid="uid://dcq5tklgkc1bl" path="res://scenes/props/pese_personne.tscn" id="10_6xc1t"]
 [ext_resource type="PackedScene" uid="uid://cvmpvxxgcn0vk" path="res://scenes/props/mini_toboggan.tscn" id="11_dj4vv"]
+[ext_resource type="PackedScene" uid="uid://rgduqwwaena5" path="res://scenes/props/bateau_pirate.tscn" id="12_bsj62"]
+[ext_resource type="PackedScene" uid="uid://bdi7sb0cuk0h0" path="res://scenes/props/produits_salle_de_bain.tscn" id="13_6xc1t"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dbi1a"]
 transparency = 1
@@ -29,6 +31,7 @@ size = Vector3(25.800001, 22.8, 0.29999998)
 
 [node name="Sprite3D" type="Sprite3D" parent="." unique_id=1175920662]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, -3.5762787e-06, 0.11999285, 3.5762787e-06)
+visible = false
 pixel_size = 0.144
 alpha_cut = 1
 texture = ExtResource("1_4ka2m")
@@ -263,7 +266,7 @@ transform = Transform3D(-9.572794e-07, 0, -30, 0, 30, 0, 21.900002, 0, -1.311341
 [node name="Obstacles" type="Node3D" parent="." unique_id=2084297212]
 
 [node name="PileServiettes" parent="Obstacles" unique_id=273039949 instance=ExtResource("8_s6ml8")]
-transform = Transform3D(30, 0, 0, 0, 30, 0, 0, 0, 30, 12.599999, 0, 28.332676)
+transform = Transform3D(28.69103, -1.05263, -8.701529, 0.275146, 29.87636, -2.706942, 8.760647, 2.509026, 28.58244, 10.82485, 0, 30.96622)
 
 [node name="RouleauxPapier" parent="Obstacles" unique_id=177877123 instance=ExtResource("9_bsj62")]
 transform = Transform3D(19.852364, 0, 13.486424, 0, 24, 0, -13.486424, 0, 19.852364, -26.419674, 0, 18.540552)
@@ -273,3 +276,9 @@ transform = Transform3D(-30, 0, -4.529874e-06, 0, 30, 0, 4.529874e-06, 0, -30, -
 
 [node name="Toboggan" parent="Obstacles" unique_id=209257861 instance=ExtResource("11_dj4vv")]
 transform = Transform3D(22.009537, 0, -9.569754, 0, 23.999998, 0, 9.569754, 0, 22.009537, -26.026709, 0, -11.291979)
+
+[node name="BateauPirate" parent="Obstacles" unique_id=1386043014 instance=ExtResource("12_bsj62")]
+transform = Transform3D(-27.66173, 0, 11.61157, 0, 30, 0, -11.61157, 0, -27.66173, 4.045935, 0, 1.37467)
+
+[node name="ProduitsSalleDeBain" parent="Obstacles" unique_id=155777768 instance=ExtResource("13_6xc1t")]
+transform = Transform3D(30, 0, 0, 0, 30, 0, 0, 0, 30, 0, 0, -2.587958)

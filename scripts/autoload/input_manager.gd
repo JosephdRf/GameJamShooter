@@ -6,6 +6,7 @@ extends Node
 ##   move_left/right/up/down : Z/Q/S/D (ou flèches) / joystick gauche
 ##   look_left/right/up/down : joystick droit (la souris est gérée par PlayerCamera)
 ##   jump                    : Espace / bouton du bas (B sur Switch Pro)
+##   dash                    : K / bouton de gauche (Y sur Switch Pro, Carré sur PlayStation)
 ##   start                   : bouton Start (+ sur Switch Pro)
 ##   pause (en jeu, hôte)    : P / bouton Start (+ sur Switch Pro)
 ##   ui_accept (menus)       : Entrée / Espace / A sur Switch Pro (bouton de droite)
@@ -22,6 +23,8 @@ const MENU_DEADZONE := 0.5
 ## JOY_BUTTON_A = bouton du BAS, soit le bouton "B" d'une manette Switch Pro
 ## (et A sur Xbox, Croix sur PlayStation). Cf. doc de JoyButton.
 const JUMP_BUTTON := JOY_BUTTON_A
+## Bouton de GAUCHE : Y sur Switch Pro, Carré sur PlayStation, X sur Xbox.
+const DASH_BUTTON := JOY_BUTTON_X
 ## Bouton "A" d'une manette Switch Pro (bouton de DROITE) pour valider dans les menus.
 const CONFIRM_BUTTON := JOY_BUTTON_B
 ## Bouton "B" d'une manette Switch Pro (bouton du BAS) pour revenir en arrière.
@@ -60,6 +63,10 @@ func _ready() -> void:
 	_add_action(&"jump")
 	_add_joy_button(&"jump", JUMP_BUTTON)
 	_add_key(&"jump", KEY_SPACE)
+
+	_add_action(&"dash")
+	_add_joy_button(&"dash", DASH_BUTTON)
+	_add_key(&"dash", KEY_K)
 
 	_add_action(&"start")
 	_add_joy_button(&"start", JOY_BUTTON_START)

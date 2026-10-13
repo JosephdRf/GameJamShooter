@@ -30,6 +30,14 @@ const REMOTE_SNAP_DISTANCE := 3.0
 @export var jump_velocity := 8.5
 ## Multiplicateur de la gravité du projet (plus élevé = saut moins flottant).
 @export var gravity_scale := 1.8
+@export_group("Dash")
+## Vitesse horizontale pendant le dash (m/s).
+@export var dash_speed := 24.0
+## Durée du dash (s) : distance parcourue ≈ dash_speed × dash_duration.
+@export var dash_duration := 0.18
+## Temps minimum entre deux dashs (s).
+@export var dash_cooldown := 2.0
+@export_group("")
 ## En dessous de cette hauteur, le joueur réapparaît à sa position de départ.
 @export var kill_height := -10.0
 
@@ -42,6 +50,11 @@ var sync_position: Vector3
 
 var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var _spawn_position: Vector3
+## Temps restant du dash en cours (s), 0 si pas de dash.
+var _dash_time := 0.0
+## Temps restant avant de pouvoir dasher à nouveau (s).
+var _dash_cooldown_left := 0.0
+var _dash_velocity: Vector3
 
 ## Caméra du joueur : les déplacements sont relatifs à son orientation.
 @onready var camera: PlayerCamera = $PlayerCamera
@@ -82,28 +95,46 @@ func _physics_process(delta: float) -> void:
 func respawn() -> void:
 	global_position = _spawn_position
 	velocity = Vector3.ZERO
+	_dash_time = 0.0
 	reset_physics_interpolation()
 
 
 func _simulate(delta: float) -> void:
-	if not is_on_floor():
-		velocity.y -= _gravity * gravity_scale * delta
-
 	var input := Vector2.ZERO
 	if is_local:
 		input = Input.get_vector(&"move_left", &"move_right", &"move_up", &"move_down")
 		if Input.is_action_just_pressed(&"jump") and is_on_floor():
 			velocity.y = jump_velocity
-
 	var direction := Vector3(input.x, 0.0, input.y).rotated(Vector3.UP, camera.get_yaw())
-	var target := direction * move_speed
-	velocity.x = move_toward(velocity.x, target.x, acceleration * delta)
-	velocity.z = move_toward(velocity.z, target.z, acceleration * delta)
+
+	_dash_cooldown_left = maxf(_dash_cooldown_left - delta, 0.0)
+	if is_local and Input.is_action_just_pressed(&"dash") and _dash_cooldown_left == 0.0:
+		_start_dash(direction)
+
+	if _dash_time > 0.0:
+		# Dash : vitesse fixe, sans gravité (même en l'air).
+		_dash_time -= delta
+		velocity = _dash_velocity
+	else:
+		if not is_on_floor():
+			velocity.y -= _gravity * gravity_scale * delta
+		var target := direction * move_speed
+		velocity.x = move_toward(velocity.x, target.x, acceleration * delta)
+		velocity.z = move_toward(velocity.z, target.z, acceleration * delta)
 
 	move_and_slide()
 
 	if global_position.y < kill_height:
 		respawn()
+
+
+## Dash dans la direction du joystick, ou devant la caméra s'il est au repos.
+func _start_dash(direction: Vector3) -> void:
+	if direction.is_zero_approx():
+		direction = Vector3.FORWARD.rotated(Vector3.UP, camera.get_yaw())
+	_dash_velocity = direction.normalized() * dash_speed
+	_dash_time = dash_duration
+	_dash_cooldown_left = dash_cooldown
 
 
 func _follow_network(delta: float) -> void:

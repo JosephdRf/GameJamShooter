@@ -42,8 +42,8 @@ Les chemins sont regroupés dans `scripts/ui/screens.gd` (`Screens.TITLE`, `Scre
    même deux fois de suite). Une équipe qui y reste **seule 10 s** la capture et gagne **2 points** ;
    la zone prend la couleur de l'équipe présente et une barre de progression s'affiche sous le
    score. Si l'équipe sort, la barre repart à 0 ; si les deux équipes sont dedans, elle est en
-   pause. Une zone non capturée disparaît au bout de **20 s**. Scores : bleu à gauche du chrono,
-   rouge à droite.
+   pause. Une zone non capturée disparaît au bout de **20 s** (décompte en pause tant qu'une
+   équipe la capture). Scores : bleu à gauche du chrono, rouge à droite.
 9. Fin du combat : écran des scores de chaque équipe, **Rejouer** (retour à la sélection
    d'équipe) ou **Quitter** (ferme le jeu). Le bouton « [Test] Terminer le combat » du menu pause
    (versions de développement uniquement) termine le combat immédiatement.
@@ -58,6 +58,7 @@ Dans l'éditeur : **F5** lance le jeu depuis l'écran de chargement, **F6** sur 
 | Se déplacer | Z/Q/S/D (W/A/S/D en QWERTY) ou flèches | Joystick gauche |
 | Tourner la caméra | Souris / trackpad | Joystick droit |
 | Sauter | Espace | B (bouton du bas) |
+| Dash (toutes les 2 s, aussi en l'air) | K | Y (bouton de gauche ; Carré sur PlayStation) |
 | **Menus** : naviguer / choisir son joueur | Flèches (Q/D) | Joystick gauche / croix |
 | **Menus** : valider | Entrée | A (bouton de droite) |
 | **Sélection** : changer de joueur après validation | Retour arrière | B (bouton du bas) |
@@ -71,7 +72,7 @@ La souris est capturée au lancement (curseur invisible) pour piloter la caméra
 Chaque ordinateur contrôle son cube au clavier/trackpad **ou** avec n'importe quelle manette branchée. Les déplacements sont relatifs à la caméra.
 Un joueur qui tombe de la plateforme réapparaît à son point de départ.
 
-> **Note sur les boutons :** Godot utilise une disposition *positionnelle* (style Xbox). Le saut est sur le bouton du **bas** (`JOY_BUTTON_A` dans Godot) : B sur Switch Pro, A sur Xbox, Croix sur PlayStation. Modifiable via `JUMP_BUTTON` dans `scripts/autoload/input_manager.gd`.
+> **Note sur les boutons :** Godot utilise une disposition *positionnelle* (style Xbox). Le saut est sur le bouton du **bas** (`JOY_BUTTON_A` dans Godot) : B sur Switch Pro, A sur Xbox, Croix sur PlayStation. Le dash est sur le bouton de **gauche** (`JOY_BUTTON_X`) : Y sur Switch Pro, X sur Xbox, Carré sur PlayStation. Modifiables via `JUMP_BUTTON` / `DASH_BUTTON` dans `scripts/autoload/input_manager.gd`.
 
 ## Architecture
 
@@ -113,7 +114,7 @@ Un joueur qui tombe de la plateforme réapparaît à son point de départ.
     ├── game/game.gd                 # Autorité réseau, caméras, compte à rebours, fin du combat
     ├── game/zone_defense.gd         # Règles de capture d'une zone (ZoneDefense)
     ├── game/zone_defense_mode.gd    # Rotation des zones + scores par équipe (ZoneDefenseMode)
-    ├── player/player.gd             # Mouvement, saut, couleur, synchro réseau
+    ├── player/player.gd             # Mouvement, saut, dash, couleur, synchro réseau
     └── player/player_camera.gd      # Orbite de la caméra (joystick droit / souris)
 ```
 
@@ -146,7 +147,7 @@ Un joueur qui tombe de la plateforme réapparaît à son point de départ.
 
 - Fichiers et dossiers en `snake_case`, nœuds en `PascalCase`.
 - Un script dans `scripts/<domaine>/` pour une scène dans `scenes/<domaine>/`.
-- Les actions d'entrée (`move_*`, `look_*`, `jump`, `pause`, `menu_*`…) sont créées par l'autoload
+- Les actions d'entrée (`move_*`, `look_*`, `jump`, `dash`, `pause`, `menu_*`…) sont créées par l'autoload
   `InputManager` ; elles acceptent le clavier et toutes les manettes.
 - Changer d'écran : `get_tree().change_scene_to_file(Screens.XXX)` (sauf les transitions
   réseau, faites par `NetworkManager` pour que tous les ordinateurs suivent).

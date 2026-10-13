@@ -3,8 +3,9 @@ class_name ZoneDefense
 extends Node3D
 ## Zone ronde à capturer (mode défense de zone, cf. ZoneDefenseMode).
 ##
-## Une fois activée, la zone reste `timeout` secondes. Pour la capturer, une
-## équipe doit y rester seule `capture_time` secondes :
+## Une fois activée, la zone reste `timeout` secondes (décompte en pause tant
+## qu'une équipe la capture). Pour la capturer, une équipe doit y rester seule
+## `capture_time` secondes :
 ##   - la zone prend la couleur de l'équipe présente ;
 ##   - si l'équipe qui capture quitte la zone, la progression repart à 0 ;
 ##   - si les deux équipes sont dans la zone, la progression est en pause.
@@ -29,9 +30,14 @@ const IDLE_COLOR := Color(1, 0.95, 0.7) # Jaune pâle : visible sur le sol clair
 	set(value):
 		radius = value
 		_update_shape()
+## Hauteur du mur translucide qui entoure la zone (m), pour la voir de loin.
+@export var wall_height := 5.0:
+	set(value):
+		wall_height = value
+		_update_shape()
 ## Points gagnés par l'équipe qui capture la zone.
 @export var points := 2
-## Durée de vie de la zone une fois activée (s).
+## Durée de vie de la zone une fois activée (s), en pause pendant une capture.
 @export var timeout := 20.0
 ## Temps à passer seul dans la zone pour la capturer (s).
 @export var capture_time := 10.0
@@ -43,7 +49,7 @@ var capturing_team := 0
 var contested := false
 ## Progression de la capture (s), de 0 à capture_time.
 var progress := 0.0
-## Temps restant avant disparition (s).
+## Temps restant avant disparition (s), figé pendant une capture.
 var time_left := 0.0
 
 var _sync_cooldown := 0.0
@@ -93,7 +99,8 @@ func update_capture(players: Array[Player], delta: float) -> void:
 		contested = false
 		progress += delta
 
-	time_left -= delta
+	if capturing_team == 0:
+		time_left -= delta
 	if capturing_team != 0 and progress >= capture_time:
 		var winner := capturing_team
 		deactivate()
@@ -126,10 +133,13 @@ func teams_inside(players: Array[Player]) -> Array[int]:
 func _process(delta: float) -> void:
 	if Engine.is_editor_hint():
 		return
-	# Autres ordinateurs : la barre avance entre deux envois de l'hôte.
-	if active and not multiplayer.is_server() and capturing_team != 0 and not contested:
-		progress = minf(progress + delta, capture_time)
+	# Autres ordinateurs : la barre et le décompte avancent entre deux envois de l'hôte.
+	if not active or multiplayer.is_server():
+		return
+	if capturing_team == 0:
 		time_left = maxf(time_left - delta, 0.0)
+	elif not contested:
+		progress = minf(progress + delta, capture_time)
 
 
 @rpc("authority", "call_remote", "reliable")
@@ -163,8 +173,8 @@ func _update_visuals() -> void:
 	disk_material.albedo_color = Color(color, 0.55 if lit else 0.3)
 	disk_material.emission = color
 	disk_material.emission_energy_multiplier = 1.5 if lit else 0.3
-	var wall_material := _wall.material_override as StandardMaterial3D
-	wall_material.albedo_color = Color(color, 0.25 if lit else 0.12)
+	var wall_material := _wall.material_override as ShaderMaterial
+	wall_material.set_shader_parameter(&"color", Color(color, 0.5 if lit else 0.3))
 	(_ring.material_override as StandardMaterial3D).albedo_color = color
 	_light.light_color = color
 	_light.light_energy = 3.0 if lit else 0.0
@@ -177,6 +187,9 @@ func _update_shape() -> void:
 	(_disk.mesh as CylinderMesh).bottom_radius = radius
 	(_wall.mesh as CylinderMesh).top_radius = radius
 	(_wall.mesh as CylinderMesh).bottom_radius = radius
+	(_wall.mesh as CylinderMesh).height = wall_height
+	_wall.position.y = wall_height / 2.0
+	(_wall.material_override as ShaderMaterial).set_shader_parameter(&"height", wall_height)
 	(_ring.mesh as TorusMesh).outer_radius = radius
 	(_ring.mesh as TorusMesh).inner_radius = radius - 0.2
 	_light.omni_range = radius * 2.0

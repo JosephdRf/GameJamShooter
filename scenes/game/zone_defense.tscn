@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/game/zone_defense.gd" id="1_zone"]
+[ext_resource type="Shader" path="res://assets/shaders/zone_wall.gdshader" id="2_wall"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_disk"]
 resource_local_to_scene = true
@@ -18,18 +19,18 @@ height = 0.04
 radial_segments = 48
 rings = 1
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wall"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_wall"]
 resource_local_to_scene = true
-transparency = 1
-cull_mode = 2
-shading_mode = 0
-albedo_color = Color(1, 1, 1, 0.12)
+render_priority = 0
+shader = ExtResource("2_wall")
+shader_parameter/color = Color(1, 1, 1, 0.3)
+shader_parameter/height = 5.0
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_wall"]
 resource_local_to_scene = true
 top_radius = 3.5
 bottom_radius = 3.5
-height = 1.5
+height = 5.0
 radial_segments = 48
 rings = 1
 cap_top = false
@@ -57,9 +58,9 @@ material_override = SubResource("StandardMaterial3D_disk")
 mesh = SubResource("CylinderMesh_disk")
 
 [node name="Wall" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 cast_shadow = 0
-material_override = SubResource("StandardMaterial3D_wall")
+material_override = SubResource("ShaderMaterial_wall")
 mesh = SubResource("CylinderMesh_wall")
 
 [node name="Ring" type="MeshInstance3D" parent="."]

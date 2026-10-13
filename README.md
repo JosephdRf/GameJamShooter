@@ -59,20 +59,47 @@ Dans l'éditeur : **F5** lance le jeu depuis l'écran de chargement, **F6** sur 
 | Tourner la caméra | Souris / trackpad | Joystick droit |
 | Sauter | Espace | B (bouton du bas) |
 | Dash (au sol, toutes les 2 s) | K | Y (bouton de gauche ; Carré sur PlayStation) |
+| Tirer une bulle | T | ZL / ZR (L2 / R2 sur PlayStation) |
 | **Menus** : naviguer / choisir son joueur | Flèches (Q/D) | Joystick gauche / croix |
 | **Menus** : valider | Entrée | A (bouton de droite) |
 | **Sélection** : changer de joueur après validation | Retour arrière | B (bouton du bas) |
 | **Sélection** : lancer la partie (hôte) | Entrée sur « Lancer la partie » | Start (+) |
 | **En jeu** : pause (hôte uniquement) | P | Start (+) |
+| **En jeu** : test, s'infliger 10 dégâts (version de développement) | H | — |
 | **Pause** : reprendre (hôte) | P / Échap / Retour arrière | + / B |
 | Retour à l'écran précédent (menus) | Échap | — |
 | Quitter le jeu (accueil, en jeu, écran de fin) | Échap | — |
 
 La souris est capturée au lancement (curseur invisible) pour piloter la caméra.
 Chaque ordinateur contrôle son cube au clavier/trackpad **ou** avec n'importe quelle manette branchée. Les déplacements sont relatifs à la caméra.
-Un joueur qui tombe de la plateforme réapparaît à son point de départ.
+Un joueur qui tombe de la plateforme meurt.
+
+### Tir
+
+- Chaque appui tire une bulle tout droit devant la caméra (à l'horizontale), 4 tirs/s au plus.
+- La bulle éclate au premier contact : obstacle (sol, mur, objet…), joueur (**40 dégâts** à un adversaire,
+  rien à un coéquipier) ou au bout de **25 m**. Le nœud est alors supprimé.
+- Réglages : sur `scenes/game/bubble_projectile.tscn` (`speed`, `max_distance`, `damage`, `friendly_fire`,
+  taille du mesh = taille de la zone de contact) et sur le joueur (`fire_cooldown`, groupe « Tir »).
+
+### Vie
+
+- Chaque joueur a **100 PV**. Pas de barre de vie : plus il en a perdu, plus l'écran se couvre de bulles,
+  autour d'une ellipse dégagée au centre (3 écrans de dégâts : 100→67, 67→33, 33→0 PV ; les grosses
+  bulles n'arrivent qu'avec le 3e). Les bulles restent en place, grossissent quand on perd des PV et
+  rétrécissent jusqu'à disparaître quand on en regagne.
+- Sans dégâts pendant 2 s, la vie remonte de **10 PV/s**.
+- À 0 PV : l'écran passe en gris avec « You died », le cube disparaît, puis il réapparaît 2 s plus tard sur sa
+  zone d'apparition avec 100 PV.
+- Pour infliger des dégâts (futures armes) : `player.take_damage(montant)`, depuis n'importe quel ordinateur.
+- Réglages (inspecteur du joueur, groupe « Vie ») : `max_health`, `regen_rate`, `regen_delay`, `respawn_delay`.
 
 > **Note sur les boutons :** Godot utilise une disposition *positionnelle* (style Xbox). Le saut est sur le bouton du **bas** (`JOY_BUTTON_A` dans Godot) : B sur Switch Pro, A sur Xbox, Croix sur PlayStation. Le dash est sur le bouton de **gauche** (`JOY_BUTTON_X`) : Y sur Switch Pro, X sur Xbox, Carré sur PlayStation. Modifiables via `JUMP_BUTTON` / `DASH_BUTTON` dans `scripts/autoload/input_manager.gd`.
+
+> **Manettes qui envoient de fausses valeurs** (vu avec une Switch Pro sous macOS : stick gauche annoncé
+> poussé et ZR enfoncée alors que personne n'y touche) : les sticks d'une manette ne sont pris en compte
+> qu'une fois vus au repos, et une gâchette qu'une fois vue relâchée. Sinon le cube avancerait tout seul.
+> Les boutons de cette manette marchent toujours ; la débrancher / rebrancher relance la vérification.
 
 ## Architecture
 
@@ -96,10 +123,14 @@ Un joueur qui tombe de la plateforme réapparaît à son point de départ.
 │   │   ├── team_select.tscn     # Sélection d'équipe (choix des joueurs)
 │   │   ├── match_hud.tscn       # HUD en jeu : compte à rebours (instancié dans game.tscn)
 │   │   ├── pause_menu.tscn      # Menu pause (instancié dans game.tscn)
-│   │   └── end_screen.tscn      # Écran de fin : scores, équipe gagnante, Rejouer / Quitter
-│   ├── game/game.tscn       # Partie : Arena + Players/Player1..4 + SpawnZones (2) + ZoneDefenseMode (3 zones) + MatchHud + PauseMenu
+│   │   ├── end_screen.tscn      # Écran de fin : scores, équipe gagnante, Rejouer / Quitter
+│   │   ├── death_screen.tscn    # « You died » + image grisée (instancié dans game.tscn)
+│   │   ├── damage_overlay.tscn  # Regroupe les écrans de dégâts (instancié dans game.tscn)
+│   │   └── damage/damage_screen_1..3.tscn  # Bulles sur les bords, de plus en plus couvrantes
+│   ├── game/game.tscn       # Partie : Arena + Players/Player1..4 + SpawnZones (2) + Projectiles + ZoneDefenseMode (3 zones) + MatchHud + PauseMenu
 │   ├── game/zone_defense.tscn   # Une zone à capturer (rayon, points, timeout, durée de capture)
 │   ├── game/zone_spawn.tscn     # Zone d'apparition d'une équipe (équipe, rayon)
+│   ├── game/bubble_projectile.tscn  # Bulle tirée (vitesse, portée, dégâts)
 │   ├── levels/arena.tscn    # Salle de bain (.blend) + lumières + barrière invisible devant
 │   └── player/
 │       ├── player.tscn          # Scène de base : cube + caméra + synchro réseau (Sync)
@@ -116,7 +147,8 @@ Un joueur qui tombe de la plateforme réapparaît à son point de départ.
     ├── game/zone_defense.gd         # Règles de capture d'une zone (ZoneDefense)
     ├── game/zone_defense_mode.gd    # Rotation des zones + scores par équipe (ZoneDefenseMode)
     ├── game/zone_spawn.gd           # Emplacements d'apparition d'une équipe (ZoneSpawn)
-    ├── player/player.gd             # Mouvement, saut, dash, couleur, synchro réseau
+    ├── game/bubble_projectile.gd    # Vol, contact, dégâts et éclatement d'une bulle (BubbleProjectile)
+    ├── player/player.gd             # Mouvement, saut, dash, tir, vie, couleur, synchro réseau
     └── player/player_camera.gd      # Orbite de la caméra (joystick droit / souris)
 ```
 
@@ -149,7 +181,7 @@ Un joueur qui tombe de la plateforme réapparaît à son point de départ.
 
 - Fichiers et dossiers en `snake_case`, nœuds en `PascalCase`.
 - Un script dans `scripts/<domaine>/` pour une scène dans `scenes/<domaine>/`.
-- Les actions d'entrée (`move_*`, `look_*`, `jump`, `dash`, `pause`, `menu_*`…) sont créées par l'autoload
+- Les actions d'entrée (`move_*`, `look_*`, `jump`, `dash`, `shoot`, `pause`, `menu_*`…) sont créées par l'autoload
   `InputManager` ; elles acceptent le clavier et toutes les manettes.
 - Changer d'écran : `get_tree().change_scene_to_file(Screens.XXX)` (sauf les transitions
   réseau, faites par `NetworkManager` pour que tous les ordinateurs suivent).

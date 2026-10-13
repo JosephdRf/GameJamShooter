@@ -3,6 +3,12 @@ extends Node3D
 ## mode de jeu (défense de zone) + le HUD + le menu pause.
 ## Au lancement, chaque joueur est placé sur la zone d'apparition (ZoneSpawn,
 ## enfants de SpawnZones) de son équipe.
+## La vie du joueur local s'affiche via DamageOverlay (bulles) et DeathScreen.
+## Tirs : chaque bulle tirée (signal Player.shot) est créée sous Projectiles et
+## se supprime d'elle-même en éclatant.
+## Test (version de développement) : H inflige 10 dégâts à son propre cube.
+## DEBUG : DebugHealth affiche les PV du joueur local (à supprimer : le nœud et
+## les lignes marquées « DEBUG »).
 ## Chaque ordinateur affiche la caméra du joueur qu'il a choisi dans le salon.
 ## Les joueurs non choisis restent sur place (contrôlés par personne).
 ## Échap (ui_cancel) quitte le jeu ; P / + (hôte) ouvre le menu pause.
@@ -15,6 +21,9 @@ extends Node3D
 
 ## Intervalle (s) entre deux envois du temps restant par l'hôte.
 const TIME_SYNC_INTERVAL := 0.5
+const PROJECTILE_SCENE := preload("res://scenes/game/bubble_projectile.tscn")
+## Dégâts infligés par la touche de test H.
+const DEBUG_DAMAGE := 10.0
 
 ## Durée d'un combat en secondes (0 = pas de limite, chrono masqué).
 @export var match_duration := 60.0
@@ -28,8 +37,12 @@ var _time_sync_cooldown := 0.0
 @onready var _arena: Node3D = $Arena
 @onready var _players: Node3D = $Players
 @onready var _spawn_zones: Node3D = $SpawnZones
+@onready var _projectiles: Node3D = $Projectiles
 @onready var _mode: ZoneDefenseMode = $ZoneDefenseMode
 @onready var _hud: CanvasLayer = $MatchHud
+@onready var _damage_overlay: CanvasLayer = $DamageOverlay
+@onready var _death_screen: CanvasLayer = $DeathScreen
+@onready var _debug_health: Label = $DebugHealth/Label # DEBUG
 @onready var _pause_menu: CanvasLayer = $PauseMenu
 
 
@@ -39,6 +52,10 @@ func _ready() -> void:
 	_place_players_on_spawn_zones()
 	for player: Player in _players.get_children():
 		player.camera.face(_arena.global_position) # Au départ, chaque joueur regarde le centre.
+		player.health_changed.connect(_on_player_health_changed.bind(player))
+		player.died.connect(_on_player_died.bind(player))
+		player.respawned.connect(_on_player_respawned.bind(player))
+		player.shot.connect(_on_player_shot.bind(player))
 	_apply_slots()
 	time_left = match_duration
 	_hud.set_time_left(time_left if match_duration > 0.0 else -1.0)
@@ -70,6 +87,34 @@ func _process(delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed(&"ui_cancel"):
 		get_tree().quit()
+	elif OS.is_debug_build() and event is InputEventKey and event.pressed and not event.echo \
+			and event.physical_keycode == KEY_H:
+		for player: Player in _players.get_children():
+			if player.is_local and player.active:
+				player.take_damage(DEBUG_DAMAGE)
+
+
+func _on_player_health_changed(health: float, player: Player) -> void:
+	if player.is_local:
+		_damage_overlay.set_health_ratio(health / player.max_health)
+		_debug_health.text = "PV : %d" % ceili(health) # DEBUG
+
+
+## Sur tous les ordinateurs ; seule la bulle de l'ordinateur du tireur inflige des dégâts.
+func _on_player_shot(origin: Vector3, direction: Vector3, player: Player) -> void:
+	var bubble: BubbleProjectile = PROJECTILE_SCENE.instantiate()
+	_projectiles.add_child(bubble)
+	bubble.launch(player, origin, direction, player.is_multiplayer_authority())
+
+
+func _on_player_died(player: Player) -> void:
+	if player.is_local:
+		_death_screen.show_death()
+
+
+func _on_player_respawned(player: Player) -> void:
+	if player.is_local:
+		_death_screen.hide_death()
 
 
 ## Place chaque joueur sur un emplacement de la zone d'apparition de son équipe.

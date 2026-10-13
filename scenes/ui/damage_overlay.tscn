@@ -1,0 +1,16 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/damage_overlay.gd" id="1_overlay"]
+[ext_resource type="PackedScene" path="res://scenes/ui/damage/damage_screen_1.tscn" id="2_screen1"]
+[ext_resource type="PackedScene" path="res://scenes/ui/damage/damage_screen_2.tscn" id="3_screen2"]
+[ext_resource type="PackedScene" path="res://scenes/ui/damage/damage_screen_3.tscn" id="4_screen3"]
+
+[node name="DamageOverlay" type="CanvasLayer"]
+layer = 4
+script = ExtResource("1_overlay")
+
+[node name="DamageScreen1" parent="." instance=ExtResource("2_screen1")]
+
+[node name="DamageScreen2" parent="." instance=ExtResource("3_screen2")]
+
+[node name="DamageScreen3" parent="." instance=ExtResource("4_screen3")]

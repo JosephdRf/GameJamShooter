@@ -122,6 +122,8 @@ func update_capture(players: Array[Player], delta: float) -> void:
 func teams_inside(players: Array[Player]) -> Array[int]:
 	var teams: Array[int] = []
 	for player in players:
+		if not player.is_alive():
+			continue
 		var offset := player.global_position - global_position
 		var inside := Vector2(offset.x, offset.z).length() <= radius and offset.y > -1.0 and offset.y < MAX_HEIGHT
 		var team := Player.team_of(player.player_id)

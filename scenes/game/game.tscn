@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://scripts/game/game.gd" id="1_game"]
 [ext_resource type="PackedScene" path="res://scenes/levels/arena.tscn" id="2_arena"]
@@ -11,6 +11,8 @@
 [ext_resource type="Script" path="res://scripts/game/zone_defense_mode.gd" id="9_mode"]
 [ext_resource type="PackedScene" path="res://scenes/game/zone_defense.tscn" id="10_zone"]
 [ext_resource type="PackedScene" path="res://scenes/game/zone_spawn.tscn" id="11_spawn"]
+[ext_resource type="PackedScene" path="res://scenes/ui/damage_overlay.tscn" id="12_damage"]
+[ext_resource type="PackedScene" path="res://scenes/ui/death_screen.tscn" id="13_death"]
 
 [node name="Game" type="Node3D"]
 script = ExtResource("1_game")
@@ -36,6 +38,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, -16)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 17)
 team = 2
 
+[node name="Projectiles" type="Node3D" parent="."]
+
 [node name="ZoneDefenseMode" type="Node3D" parent="."]
 script = ExtResource("9_mode")
 
@@ -48,6 +52,30 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, 0.5)
 [node name="ZoneRight" parent="ZoneDefenseMode" instance=ExtResource("10_zone")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 0.5)
 
+[node name="DamageOverlay" parent="." instance=ExtResource("12_damage")]
+
 [node name="MatchHud" parent="." instance=ExtResource("8_hud")]
+
+[node name="DeathScreen" parent="." instance=ExtResource("13_death")]
+
+[node name="DebugHealth" type="CanvasLayer" parent="."]
+layer = 5
+
+[node name="Label" type="Label" parent="DebugHealth"]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = -64.0
+offset_right = 224.0
+offset_bottom = -16.0
+grow_vertical = 0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.08, 0.09, 0.12, 1)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 30
+text = "PV : 100"
+vertical_alignment = 1
 
 [node name="PauseMenu" parent="." instance=ExtResource("7_pause")]

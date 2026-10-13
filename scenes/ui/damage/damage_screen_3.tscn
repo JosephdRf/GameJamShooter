@@ -1,0 +1,23 @@
+[gd_scene format=3]
+
+[ext_resource type="Shader" path="res://assets/shaders/bubbles.gdshader" id="1_bubbles"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_bubbles"]
+shader = ExtResource("1_bubbles")
+shader_parameter/band = 0.55
+shader_parameter/size_min = 0.04
+shader_parameter/size_max = 0.22
+shader_parameter/density = 0.85
+shader_parameter/amount = 1.0
+shader_parameter/seed = 3.0
+shader_parameter/tint = Color(0.88, 0.96, 1, 1)
+shader_parameter/veil = 0.35
+
+[node name="DamageScreen3" type="ColorRect"]
+material = SubResource("ShaderMaterial_bubbles")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2

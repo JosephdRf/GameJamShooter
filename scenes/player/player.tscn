@@ -2,10 +2,11 @@
 
 [ext_resource type="Script" path="res://scripts/player/player.gd" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/player/player_camera.tscn" id="2_camera"]
+[ext_resource type="PackedScene" uid="uid://bapqgkm4aa104" path="res://assets/models/duck_v0.glb" id="3_duck"]
 
-[sub_resource type="BoxMesh" id="BoxMesh_cube"]
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_cube"]
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_duck"]
+radius = 0.38
+height = 0.96
 
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_sync"]
 properties/0/path = NodePath(".:sync_position")
@@ -20,11 +21,12 @@ collision_layer = 2
 collision_mask = 3
 script = ExtResource("1_player")
 
-[node name="Mesh" type="MeshInstance3D" parent="."]
-mesh = SubResource("BoxMesh_cube")
+[node name="Model" parent="." instance=ExtResource("3_duck")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 
 [node name="CollisionShape" type="CollisionShape3D" parent="."]
-shape = SubResource("BoxShape3D_cube")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.02, 0)
+shape = SubResource("CapsuleShape3D_duck")
 
 [node name="PlayerCamera" parent="." instance=ExtResource("2_camera")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)

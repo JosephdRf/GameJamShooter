@@ -1,7 +1,8 @@
 @tool
 class_name Player
 extends CharacterBody3D
-## Joueur (cube). L'équipe (et donc la couleur) dépend de `player_id` :
+## Joueur (canard, modèle assets/models/duck_v0.glb). L'équipe (et donc la
+## couleur du réservoir d'eau sur le dos) dépend de `player_id` :
 ## joueurs 1-2 = équipe bleue, joueurs 3-4 = équipe rouge.
 ##
 ## En réseau, l'ordinateur qui a l'autorité sur ce nœud simule le cube et
@@ -29,6 +30,14 @@ const TEAM_NAMES: Array[String] = ["bleue", "rouge"]
 ## Vitesse de rattrapage des cubes distants (plus élevé = plus réactif, moins lisse).
 const REMOTE_SMOOTHING := 25.0
 ## Au-delà de cet écart, un cube distant est téléporté (ex. réapparition).
+## Animations du canard : idle à l'arrêt, walk en dessous de RUN_SPEED (m/s), run au-delà.
+const MOVING_SPEED := 0.3
+const RUN_SPEED := 4.0
+const ANIMATION_BLEND := 0.15
+## Vitesse à laquelle le canard se tourne vers sa direction de déplacement.
+const TURN_SPEED := 14.0
+## Mesh teint à la couleur de l'équipe (dans le modèle du canard).
+const TEAM_COLORED_MESH := "Water_Container"
 const REMOTE_SNAP_DISTANCE := 3.0
 
 @export_range(1, 4) var player_id := 1:
@@ -97,7 +106,8 @@ var _respawn_left := 0.0
 
 ## Caméra du joueur : les déplacements sont relatifs à son orientation.
 @onready var camera: PlayerCamera = $PlayerCamera
-@onready var _mesh: MeshInstance3D = $Mesh
+@onready var _model: Node3D = $Model
+@onready var _animation: AnimationPlayer = $Model/AnimationPlayer
 @onready var _collision_shape: CollisionShape3D = $CollisionShape
 @onready var _sync: MultiplayerSynchronizer = $Sync
 
@@ -113,6 +123,11 @@ static func color_of(id: int) -> Color:
 
 func _ready() -> void:
 	_apply_color()
+	if not Engine.is_editor_hint():
+		# Les animations du .glb ne sont pas en boucle : on les y met.
+		for animation_name: StringName in [&"idle", &"walk", &"run"]:
+			_animation.get_animation(animation_name).loop_mode = Animation.LOOP_LINEAR
+		_animation.play(&"idle")
 	_spawn_position = global_position
 	sync_position = position
 	health = max_health
@@ -130,8 +145,12 @@ func freeze() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if Engine.is_editor_hint() or not active:
+	if Engine.is_editor_hint():
 		return
+	if not active:
+		_update_model(Vector3.ZERO, delta)
+		return
+	var previous_position := position
 	if is_multiplayer_authority():
 		if is_alive():
 			_simulate(delta)
@@ -143,6 +162,14 @@ func _physics_process(delta: float) -> void:
 		sync_position = position
 	else:
 		_follow_network(delta)
+	# Vitesse réelle (aussi pour les canards des autres ordinateurs, qui ne reçoivent que la position).
+	_update_model((position - previous_position) / delta, delta)
+
+
+## Oriente la caméra et le canard vers `point` (sur le plan horizontal).
+func face(point: Vector3) -> void:
+	camera.face(point)
+	_turn_model_towards(Vector3.FORWARD.rotated(Vector3.UP, camera.get_yaw()), 1.0)
 
 
 ## Définit le point d'apparition (et y place le joueur), cf. ZoneSpawn.
@@ -221,7 +248,27 @@ func _regenerate(delta: float) -> void:
 ## Sur tous les ordinateurs (appelé par celui qui contrôle ce cube).
 @rpc("authority", "call_local", "reliable")
 func _shoot(origin: Vector3, direction: Vector3) -> void:
+	_turn_model_towards(direction, 1.0) # Le canard se tourne d'un coup vers son tir.
 	shot.emit(origin, direction)
+
+
+## Animation et orientation du canard selon sa vitesse.
+func _update_model(velocity_now: Vector3, delta: float) -> void:
+	var horizontal := Vector3(velocity_now.x, 0.0, velocity_now.z)
+	var speed := horizontal.length()
+	var animation_name := &"idle"
+	if speed > MOVING_SPEED and is_alive():
+		animation_name = &"run" if speed > RUN_SPEED else &"walk"
+		_turn_model_towards(horizontal, 1.0 - exp(-TURN_SPEED * delta))
+	if _animation.current_animation != animation_name:
+		_animation.play(animation_name, ANIMATION_BLEND)
+
+
+## Le modèle regarde vers +Z : on l'aligne sur `direction` (weight = 1 : d'un coup).
+func _turn_model_towards(direction: Vector3, weight: float) -> void:
+	if Vector2(direction.x, direction.z).is_zero_approx():
+		return
+	_model.rotation.y = lerp_angle(_model.rotation.y, atan2(direction.x, direction.z), weight)
 
 
 @rpc("any_peer", "call_remote", "reliable")
@@ -235,13 +282,13 @@ func _apply_damage(amount: float) -> void:
 ## Sur tous les ordinateurs : le cube mort disparaît et ne bloque plus personne.
 func _on_died() -> void:
 	_respawn_left = respawn_delay
-	_mesh.visible = false
+	_model.visible = false
 	_collision_shape.set_deferred(&"disabled", true)
 	died.emit()
 
 
 func _on_respawned() -> void:
-	_mesh.visible = true
+	_model.visible = true
 	_collision_shape.set_deferred(&"disabled", false)
 	respawned.emit()
 
@@ -264,8 +311,12 @@ func _follow_network(delta: float) -> void:
 
 
 func _apply_color() -> void:
-	if _mesh == null: # Setter appelé avant que le nœud soit prêt.
+	if _model == null: # Setter appelé avant que le nœud soit prêt.
+		return
+	var mesh := _model.find_child(TEAM_COLORED_MESH, true, false) as MeshInstance3D
+	if mesh == null:
 		return
 	var material := StandardMaterial3D.new()
 	material.albedo_color = color_of(player_id)
-	_mesh.material_override = material
+	material.roughness = 0.4
+	mesh.material_override = material

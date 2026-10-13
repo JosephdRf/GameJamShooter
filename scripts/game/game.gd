@@ -63,7 +63,7 @@ func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	_place_players_on_spawn_zones()
 	for player: Player in _players.get_children():
-		player.camera.face(_arena.global_position) # Au départ, chaque joueur regarde le centre.
+		player.face(_arena.global_position) # Au départ, chaque joueur regarde le centre.
 		player.health_changed.connect(_on_player_health_changed.bind(player))
 		player.died.connect(_on_player_died.bind(player))
 		player.respawned.connect(_on_player_respawned.bind(player))

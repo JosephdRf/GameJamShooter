@@ -1,6 +1,6 @@
 # Bubble Shooter
 
-Jeu Godot **4.7** **2v2 en réseau local** : 4 ordinateurs, chacun contrôle un cube,
+Jeu Godot **4.7** **2v2 en réseau local** : 4 ordinateurs, chacun contrôle un canard,
 caméra à la 3e personne. Un des joueurs héberge la partie (« listen server »).
 
 ## Parcours des écrans
@@ -30,7 +30,7 @@ Les chemins sont regroupés dans `scripts/ui/screens.gd` (`Screens.TITLE`, `Scre
    puis valide avec **A** : le curseur passe sur « Lancer la partie ».
    Équipe bleue : J1 + J2 · Équipe rouge : J3 + J4 (couleurs dans `Player.TEAM_COLORS`).
 5. L'hôte appuie sur **Start** (bouton +), ou A / Entrée sur « Lancer la partie » : la partie se lance pour tous,
-   même s'il manque des joueurs (les cubes non choisis restent immobiles).
+   même s'il manque des joueurs (les canards non choisis restent immobiles).
    « **Attention…** » s'affiche 2 s (joueurs figés), puis « **C'est parti !** » : on peut bouger, le
    chrono et les zones démarrent.
 
@@ -74,7 +74,7 @@ Dans l'éditeur : **F5** lance le jeu depuis l'écran de chargement, **F6** sur 
 | Quitter le jeu (accueil, en jeu, écran de fin) | Échap | — |
 
 La souris est capturée au lancement (curseur invisible) pour piloter la caméra.
-Chaque ordinateur contrôle son cube au clavier/trackpad **ou** avec n'importe quelle manette branchée. Les déplacements sont relatifs à la caméra.
+Chaque ordinateur contrôle son canard au clavier/trackpad **ou** avec n'importe quelle manette branchée. Les déplacements sont relatifs à la caméra.
 Un joueur qui tombe de la plateforme meurt.
 
 ### Tir
@@ -92,7 +92,7 @@ Un joueur qui tombe de la plateforme meurt.
   bulles n'arrivent qu'avec le 3e). Les bulles restent en place, grossissent quand on perd des PV et
   rétrécissent jusqu'à disparaître quand on en regagne.
 - Sans dégâts pendant 2 s, la vie remonte de **10 PV/s**.
-- À 0 PV : l'écran passe en gris avec « You died », le cube disparaît, puis il réapparaît 2 s plus tard sur sa
+- À 0 PV : l'écran passe en gris avec « You died », le canard disparaît, puis il réapparaît 2 s plus tard sur sa
   zone d'apparition avec 100 PV.
 - Pour infliger des dégâts (futures armes) : `player.take_damage(montant)`, depuis n'importe quel ordinateur.
 - Réglages (inspecteur du joueur, groupe « Vie ») : `max_health`, `regen_rate`, `regen_delay`, `respawn_delay`.
@@ -101,7 +101,7 @@ Un joueur qui tombe de la plateforme meurt.
 
 > **Manettes qui envoient de fausses valeurs** (vu avec une Switch Pro sous macOS : stick gauche annoncé
 > poussé et ZR enfoncée alors que personne n'y touche) : les sticks d'une manette ne sont pris en compte
-> qu'une fois vus au repos, et une gâchette qu'une fois vue relâchée. Sinon le cube avancerait tout seul.
+> qu'une fois vus au repos, et une gâchette qu'une fois vue relâchée. Sinon le canard avancerait tout seul.
 > Les boutons de cette manette marchent toujours ; la débrancher / rebrancher relance la vérification.
 
 ## Architecture
@@ -137,7 +137,7 @@ Un joueur qui tombe de la plateforme meurt.
 │   ├── game/bubble_projectile.tscn  # Bulle tirée (vitesse, portée, dégâts)
 │   ├── levels/arena.tscn    # Salle de bain (.blend) + lumières + barrière invisible devant
 │   └── player/
-│       ├── player.tscn          # Scène de base : cube + caméra + synchro réseau (Sync)
+│       ├── player.tscn          # Scène de base : canard (assets/models/duck_v0.glb, animations idle/walk/run) + caméra + synchro réseau
 │       ├── player_1.tscn … player_4.tscn  # Une scène héritée par joueur (id → couleur, équipe)
 │       └── player_camera.tscn   # Caméra 3e personne (SpringArm3D)
 └── scripts/                 # Scripts GDScript, même découpage que scenes/
@@ -160,9 +160,9 @@ Un joueur qui tombe de la plateforme meurt.
 
 - **Listen server** (ENet, port **UDP 7777**) : l'hôte est serveur et joueur.
 - L'hôte décide de l'attribution des joueurs (`NetworkManager.slots`) et du lancement.
-- **Chaque ordinateur fait autorité sur son propre cube** : réponse instantanée, la position
+- **Chaque ordinateur fait autorité sur son propre canard** : réponse instantanée, la position
   est diffusée aux autres par le `MultiplayerSynchronizer` « Sync » (propriété `sync_position`),
-  et les cubes distants sont lissés (`REMOTE_SMOOTHING`). Pas d'anti-triche : prévu pour jouer entre amis.
+  et les canards distants sont lissés (`REMOTE_SMOOTHING`). Pas d'anti-triche : prévu pour jouer entre amis.
 - Les joueurs non choisis (ou dont l'ordinateur se déconnecte) passent sous l'autorité de l'hôte.
 - Pause, retour à la sélection d'équipe et fin du combat sont décidés par l'hôte et appliqués
   sur tous les ordinateurs (RPC de `NetworkManager`).

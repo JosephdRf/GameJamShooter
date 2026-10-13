@@ -5,6 +5,11 @@ extends Node3D
 ## aux entrées : joystick droit (actions look_*) et souris / trackpad.
 ##
 ## Hiérarchie : PlayerCamera (lacet / yaw) > Pitch (tangage) > SpringArm > Camera
+## Cadrage façon Splatoon : pivot 1,15 m au-dessus du centre du canard (au-dessus
+## de sa tête), bras de 3,2 m presque horizontal (-2°) : le canard est en bas au
+## centre de l'écran, le viseur (centre de l'écran) juste au-dessus de lui.
+## Au repos, le viseur vise donc au loin à hauteur de tête : les bulles portent
+## (incliné vers le bas, il viserait le sol et les bulles s'y écraseraient).
 ## Le SpringArm rapproche la caméra si un mur se trouve entre elle et le joueur.
 
 ## Vitesse de rotation en radians par seconde (stick poussé à fond).
@@ -12,7 +17,7 @@ extends Node3D
 ## Radians par pixel de déplacement de la souris / du trackpad.
 @export var mouse_sensitivity := 0.004
 @export_range(-89.0, 0.0) var min_pitch_degrees := -70.0
-@export_range(0.0, 89.0) var max_pitch_degrees := 30.0
+@export_range(0.0, 89.0) var max_pitch_degrees := 45.0
 @export var invert_y := false
 
 @onready var _player: Player = get_parent()
@@ -62,6 +67,11 @@ func face(point: Vector3) -> void:
 	if Vector2(direction.x, direction.z).is_zero_approx():
 		return
 	global_rotation.y = atan2(-direction.x, -direction.z)
+
+
+## Rayon de visée : part du centre de l'écran, dans l'axe de la caméra.
+func get_aim_ray() -> Array[Vector3]:
+	return [_camera.global_position, -_camera.global_basis.z]
 
 
 ## Rotation horizontale de la caméra, utilisée pour orienter les déplacements du joueur.

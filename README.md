@@ -79,7 +79,9 @@ Un joueur qui tombe de la plateforme meurt.
 
 ### Tir
 
-- Chaque appui tire une bulle tout droit devant la caméra (à l'horizontale), 4 tirs/s au plus. Elle sort
+- **Viseur** au centre de l'écran (`scenes/ui/crosshair.tscn`) : il se resserre et passe au rouge sur un
+  adversaire. La caméra est placée façon Splatoon : derrière et au-dessus du canard, presque horizontale.
+- Chaque appui tire une bulle vers le point visé (aussi vers le haut ou le bas), 4 tirs/s au plus. Elle sort
   du bout du canon du canard, petite, et atteint sa taille en 0,12 s.
 - La bulle éclate au premier contact : obstacle (sol, mur, objet…), joueur (**40 dégâts** à un adversaire,
   rien à un coéquipier), mur de la zone d'apparition adverse, ou au bout de **25 m**. Le nœud est alors supprimé.
@@ -132,6 +134,7 @@ Un joueur qui tombe de la plateforme meurt.
 │   │   ├── end_screen.tscn      # Écran de fin : scores, équipe gagnante, Rejouer / Quitter
 │   │   ├── death_screen.tscn    # « You died » + image grisée (instancié dans game.tscn)
 │   │   ├── announcer.tscn       # Messages de match (Attention…, C'est parti !, zone, Terminé !)
+│   │   ├── crosshair.tscn       # Viseur (rouge sur un adversaire)
 │   │   ├── damage_overlay.tscn  # Regroupe les écrans de dégâts (instancié dans game.tscn)
 │   │   └── damage/damage_screen_1..3.tscn  # Bulles sur les bords, de plus en plus couvrantes
 │   ├── game/game.tscn       # Partie : Arena + Players/Player1..4 + SpawnZones (2) + Projectiles + ZoneDefenseMode (3 zones) + MatchHud + PauseMenu

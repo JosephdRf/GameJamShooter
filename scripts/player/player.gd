@@ -46,6 +46,8 @@ const TURN_SPEED := 14.0
 ## début du ralentissement.
 const DASH_RAMP := 0.15
 const DASH_SLOWDOWN_START := 0.3
+## Portée de la visée (m) : au-delà, on vise un point à cette distance.
+const AIM_DISTANCE := 80.0
 ## Mesh du pistolet dans le modèle (les bulles partent du bout de son canon).
 const GUN_MESH := "Gun"
 ## Mesh teint à la couleur de l'équipe (dans le modèle du canard).
@@ -243,9 +245,16 @@ func _simulate(delta: float) -> void:
 	if is_local and Input.is_action_just_pressed(&"shoot") and _fire_cooldown_left == 0.0:
 		_fire_cooldown_left = fire_cooldown
 		# Tout droit devant la caméra (à l'horizontale), depuis le centre du cube.
-		var shot_direction := Vector3.FORWARD.rotated(Vector3.UP, camera.get_yaw())
-		_turn_model_towards(shot_direction, 1.0) # D'abord tourner le canard : le canon pointe vers le tir.
+		var target := aim()
+		# La bulle vise avec sa surface : son centre s'arrête à un rayon de la surface
+		# visée, sinon son bas frôlerait le sol (ou le mur) et elle éclaterait avant.
+		var aim_point: Vector3 = target.point + target.normal * BubbleProjectile.RADIUS
+		_turn_model_towards(aim_point - global_position, 1.0) # D'abord tourner le canard : le canon pointe vers la cible.
 		var origin := _muzzle.global_position if _muzzle else global_position
+		var shot_direction := (aim_point - origin).normalized()
+		# Cible trop proche (derrière le canon) : on tire simplement dans l'axe de la caméra.
+		if shot_direction.dot(camera.get_aim_ray()[1]) < 0.5:
+			shot_direction = camera.get_aim_ray()[1]
 		_shoot.rpc(origin, shot_direction)
 
 	if not is_on_floor():
@@ -278,6 +287,28 @@ func _regenerate(delta: float) -> void:
 func _shoot(origin: Vector3, direction: Vector3) -> void:
 	_turn_model_towards(direction, 1.0) # Le canard se tourne d'un coup vers son tir.
 	shot.emit(origin, direction)
+
+
+## Ce que vise le joueur (centre de l'écran) : { point, normal, collider (ou null) }.
+## Le rayon part de la hauteur du canard (pas de la caméra) pour ignorer ce qui
+## se trouve entre la caméra et lui.
+func aim() -> Dictionary:
+	var ray := camera.get_aim_ray()
+	var origin: Vector3 = ray[0]
+	var direction: Vector3 = ray[1]
+	origin += direction * maxf((global_position - origin).dot(direction), 0.0)
+	var query := PhysicsRayQueryParameters3D.create(origin, origin + direction * AIM_DISTANCE,
+			WORLD_LAYER | PLAYERS_LAYER | enemy_spawn_layer(team_of(player_id)), [get_rid()])
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	if hit.is_empty():
+		return {"point": origin + direction * AIM_DISTANCE, "normal": Vector3.ZERO, "collider": null}
+	return {"point": hit.position, "normal": hit.normal, "collider": hit.collider}
+
+
+## Vrai si le viseur est sur un adversaire vivant.
+func is_aiming_at_enemy() -> bool:
+	var target := aim().collider as Player
+	return target != null and target.is_alive() and team_of(target.player_id) != team_of(player_id)
 
 
 ## Crée un repère au bout du canon : extrémité du mesh du pistolet, côté avant du canard.

@@ -172,14 +172,14 @@ func _update_visuals() -> void:
 	var color := IDLE_COLOR if capturing_team == 0 else Player.TEAM_COLORS[capturing_team - 1]
 	var lit := capturing_team != 0
 	var disk_material := _disk.material_override as StandardMaterial3D
-	disk_material.albedo_color = Color(color, 0.55 if lit else 0.3)
+	disk_material.albedo_color = Color(color, 0.4 if lit else 0.3)
 	disk_material.emission = color
-	disk_material.emission_energy_multiplier = 1.5 if lit else 0.3
+	disk_material.emission_energy_multiplier = 0.7 if lit else 0.3
 	var wall_material := _wall.material_override as ShaderMaterial
-	wall_material.set_shader_parameter(&"color", Color(color, 0.5 if lit else 0.3))
+	wall_material.set_shader_parameter(&"color", Color(color, 0.38 if lit else 0.3))
 	(_ring.material_override as StandardMaterial3D).albedo_color = color
 	_light.light_color = color
-	_light.light_energy = 3.0 if lit else 0.0
+	_light.light_energy = 1.5 if lit else 0.0
 
 
 func _update_shape() -> void:

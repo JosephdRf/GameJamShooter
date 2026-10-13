@@ -55,6 +55,7 @@ var _time_sync_cooldown := 0.0
 @onready var _damage_overlay: CanvasLayer = $DamageOverlay
 @onready var _death_screen: CanvasLayer = $DeathScreen
 @onready var _announcer: CanvasLayer = $Announcer
+@onready var _crosshair: CanvasLayer = $Crosshair
 @onready var _debug_health: Label = $DebugHealth/Label # DEBUG
 
 
@@ -82,6 +83,7 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	# Ne tourne pas pendant la pause (nœud "pausable") : le chrono est figé.
 	_update_capture_bar()
+	_update_crosshair()
 	if not _running:
 		return
 	time_left = maxf(time_left - delta, 0.0)
@@ -171,6 +173,15 @@ func _on_zone_captured(team: int) -> void:
 		if player.is_local:
 			local_team = Player.team_of(player.player_id)
 	_announcer.show_capture(team == local_team, Player.TEAM_COLORS[team - 1], capture_message_duration)
+
+
+func _update_crosshair() -> void:
+	for player: Player in _players.get_children():
+		if player.is_local:
+			_crosshair.visible = player.is_alive() and not _ended
+			_crosshair.set_on_target(_crosshair.visible and player.is_aiming_at_enemy())
+			return
+	_crosshair.visible = false
 
 
 func _update_capture_bar() -> void:

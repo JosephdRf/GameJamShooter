@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://scripts/game/game.gd" id="1_game"]
 [ext_resource type="PackedScene" path="res://scenes/levels/arena.tscn" id="2_arena"]
@@ -14,6 +14,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/damage_overlay.tscn" id="12_damage"]
 [ext_resource type="PackedScene" path="res://scenes/ui/death_screen.tscn" id="13_death"]
 [ext_resource type="PackedScene" path="res://scenes/ui/announcer.tscn" id="14_announcer"]
+[ext_resource type="PackedScene" path="res://scenes/ui/crosshair.tscn" id="15_crosshair"]
 
 [node name="Game" type="Node3D"]
 script = ExtResource("1_game")
@@ -54,6 +55,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, 0.5)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 0.5)
 
 [node name="DamageOverlay" parent="." instance=ExtResource("12_damage")]
+
+[node name="Crosshair" parent="." instance=ExtResource("15_crosshair")]
 
 [node name="MatchHud" parent="." instance=ExtResource("8_hud")]
 

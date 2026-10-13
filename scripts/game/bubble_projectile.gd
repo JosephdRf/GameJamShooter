@@ -32,8 +32,15 @@ extends Node3D
 @export var grow_duration := 0.12
 @export var start_scale := 0.2
 
-## Forme de détection, partagée par toutes les bulles : même rayon que le mesh.
+## Rayon de la bulle (m) : garder égal au rayon du SphereMesh de la scène.
+## Sert à la détection et à la visée (Player vise avec la surface de la bulle).
+const RADIUS := 0.35
+
+## Forme de détection, partagée par toutes les bulles.
 static var _hit_shape: SphereShape3D
+## Matériau de chaque équipe (index 0 = équipe 1), partagé par toutes ses bulles :
+## celui de la scène, teinté à la couleur de l'équipe (même transparence).
+static var _team_materials: Array[StandardMaterial3D] = []
 
 var _direction := Vector3.FORWARD
 var _travelled := 0.0
@@ -49,10 +56,18 @@ func launch(shooter: Player, origin: Vector3, direction: Vector3, deals_damage: 
 	global_position = origin
 	_direction = direction.normalized()
 	_shooter_team = Player.team_of(shooter.player_id)
+	var mesh := $Mesh as MeshInstance3D
+	if _team_materials.is_empty():
+		var base := mesh.get_active_material(0) as StandardMaterial3D
+		for team_color in Player.TEAM_COLORS:
+			var material := base.duplicate() as StandardMaterial3D
+			material.albedo_color = Color(team_color.lerp(Color.WHITE, 0.1), base.albedo_color.a + 0.25)
+			_team_materials.append(material)
+	mesh.material_override = _team_materials[_shooter_team - 1]
 	_deals_damage = deals_damage
 	if _hit_shape == null:
 		_hit_shape = SphereShape3D.new()
-		_hit_shape.radius = (($Mesh as MeshInstance3D).mesh as SphereMesh).radius
+		_hit_shape.radius = RADIUS
 	_query = PhysicsShapeQueryParameters3D.new()
 	_query.shape = _hit_shape
 	_query.collision_mask = Player.WORLD_LAYER | Player.PLAYERS_LAYER | Player.enemy_spawn_layer(_shooter_team)

@@ -6,12 +6,12 @@
 script = ExtResource("1_camera")
 
 [node name="Pitch" type="Node3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 0.939693, 0.34202, 0, -0.34202, 0.939693, 0, 0, 0)
+transform = Transform3D(1, 0, 0, 0, 0.999391, 0.034899, 0, -0.034899, 0.999391, 0, 0, 0)
 
 [node name="SpringArm" type="SpringArm3D" parent="Pitch"]
 collision_mask = 1
-spring_length = 5.0
+spring_length = 3.2
 margin = 0.2
 
 [node name="Camera" type="Camera3D" parent="Pitch/SpringArm"]
-fov = 70.0
+fov = 75.0

@@ -1,8 +1,8 @@
 @tool
 class_name Player
 extends CharacterBody3D
-## Joueur (canard, modèle assets/models/duck_v0.glb). L'équipe (et donc la
-## couleur du réservoir d'eau sur le dos) dépend de `player_id` :
+## Joueur (canard, modèle assets/models/duck_v3.glb, textures dans assets/materials).
+## L'équipe (et donc la couleur du réservoir d'eau sur le dos) dépend de `player_id` :
 ## joueurs 1-2 = équipe bleue, joueurs 3-4 = équipe rouge.
 ##
 ## En réseau, l'ordinateur qui a l'autorité sur ce nœud simule le cube et
@@ -40,6 +40,11 @@ const REMOTE_SMOOTHING := 25.0
 const MOVING_SPEED := 0.3
 const RUN_SPEED := 4.0
 const ANIMATION_BLEND := 0.15
+## Animations du dash : dash_start (accélérée pour tenir dans la première fraction
+## DASH_START_PART du dash), dash (en boucle) jusqu'à la fin du dash, puis dash_end.
+## Le .glb nomme la boucle « dash_loop » ; Godot retire le suffixe _loop à l'import.
+const DASH_START_PART := 0.5
+const DASH_ANIMATION_BLEND := 0.05
 ## Vitesse à laquelle le canard se tourne vers sa direction de déplacement.
 const TURN_SPEED := 14.0
 ## Courbe du dash (fractions de dash_duration) : fin de la montée en vitesse,
@@ -50,8 +55,17 @@ const DASH_SLOWDOWN_START := 0.3
 const AIM_DISTANCE := 80.0
 ## Mesh du pistolet dans le modèle (les bulles partent du bout de son canon).
 const GUN_MESH := "Gun"
-## Mesh teint à la couleur de l'équipe (dans le modèle du canard).
-const TEAM_COLORED_MESH := "Water_Container"
+## Matériaux texturés des meshes du modèle. Le réservoir, le tuyau et la ceinture
+## partagent la texture « container », à la couleur de l'équipe (index 0 = équipe 1).
+const MESH_MATERIALS := {
+	&"Duck_body": preload("res://assets/materials/duck_body.tres"),
+	&"Gun": preload("res://assets/materials/duck_gun.tres"),
+}
+const TEAM_COLORED_MESHES: Array[StringName] = [&"Water_Container", &"Tube", &"Belt"]
+const TEAM_MATERIALS: Array[Material] = [
+	preload("res://assets/materials/duck_container_blue.tres"),
+	preload("res://assets/materials/duck_container_red.tres"),
+]
 const REMOTE_SNAP_DISTANCE := 3.0
 
 @export_range(1, 4) var player_id := 1:
@@ -115,6 +129,9 @@ var _dash_cooldown_left := 0.0
 var _dash_direction: Vector3
 ## Vitesse horizontale au moment du dash (point de départ de la courbe).
 var _dash_start_speed := 0.0
+## Temps écoulé depuis le début du dash, pour ses animations (-1 : pas de dash).
+## Avancé sur tous les ordinateurs (cf. _play_dash).
+var _dash_animation_time := -1.0
 ## Bout du canon (Marker3D créé dans _ready sur le mesh du pistolet) : départ des bulles.
 var _muzzle: Marker3D
 ## Temps restant avant de pouvoir tirer à nouveau (s).
@@ -289,6 +306,13 @@ func _shoot(origin: Vector3, direction: Vector3) -> void:
 	shot.emit(origin, direction)
 
 
+## Sur tous les ordinateurs (appelé par celui qui contrôle ce cube) : lance les
+## animations du dash.
+@rpc("authority", "call_local", "reliable")
+func _play_dash() -> void:
+	_dash_animation_time = 0.0
+
+
 ## Ce que vise le joueur (centre de l'écran) : { point, normal, collider (ou null) }.
 ## Le rayon part de la hauteur du canard (pas de la caméra) pour ignorer ce qui
 ## se trouve entre la caméra et lui.
@@ -327,16 +351,37 @@ func _create_muzzle() -> void:
 	_muzzle.position = end_a if (gun.to_global(end_a) - gun.to_global(end_b)).dot(forward) > 0.0 else end_b
 
 
-## Animation et orientation du canard selon sa vitesse.
+## Animation et orientation du canard selon sa vitesse (et le dash en cours).
 func _update_model(velocity_now: Vector3, delta: float) -> void:
 	var horizontal := Vector3(velocity_now.x, 0.0, velocity_now.z)
 	var speed := horizontal.length()
-	var animation_name := &"idle"
-	if speed > MOVING_SPEED and is_alive():
-		animation_name = &"run" if speed > RUN_SPEED else &"walk"
+	var moving := speed > MOVING_SPEED and is_alive()
+	if moving:
 		_turn_model_towards(horizontal, 1.0 - exp(-TURN_SPEED * delta))
-	if _animation.current_animation != animation_name:
-		_animation.play(animation_name, ANIMATION_BLEND)
+	if _dash_animation_time >= 0.0 and is_alive():
+		_dash_animation_time += delta
+		var start_duration := dash_duration * DASH_START_PART
+		if _dash_animation_time < start_duration:
+			_play_animation(&"dash_start", DASH_ANIMATION_BLEND,
+					_animation.get_animation(&"dash_start").length / start_duration)
+			return
+		if _dash_animation_time < dash_duration:
+			_play_animation(&"dash", DASH_ANIMATION_BLEND)
+			return
+		if _dash_animation_time < dash_duration + _animation.get_animation(&"dash_end").length:
+			_play_animation(&"dash_end", DASH_ANIMATION_BLEND)
+			return
+	_dash_animation_time = -1.0
+	var animation_name := &"idle"
+	if moving:
+		animation_name = &"run" if speed > RUN_SPEED else &"walk"
+	_play_animation(animation_name, ANIMATION_BLEND)
+
+
+## Joue `animation_name`, sauf si c'est déjà l'animation en cours (ou celle qui vient de finir).
+func _play_animation(animation_name: StringName, blend: float, speed := 1.0) -> void:
+	if _animation.assigned_animation != animation_name:
+		_animation.play(animation_name, blend, speed)
 
 
 ## Le modèle regarde vers +Z : on l'aligne sur `direction` (weight = 1 : d'un coup).
@@ -382,6 +427,7 @@ func _start_dash(direction: Vector3) -> void:
 	_dash_start_speed = Vector2(velocity.x, velocity.z).length()
 	_dash_time = dash_duration
 	_dash_cooldown_left = dash_cooldown
+	_play_dash.rpc()
 
 
 func _follow_network(delta: float) -> void:
@@ -396,10 +442,8 @@ func _apply_color() -> void:
 	collision_mask = WORLD_LAYER | PLAYERS_LAYER | enemy_spawn_layer(team_of(player_id))
 	if _model == null: # Setter appelé avant que le nœud soit prêt.
 		return
-	var mesh := _model.find_child(TEAM_COLORED_MESH, true, false) as MeshInstance3D
-	if mesh == null:
-		return
-	var material := StandardMaterial3D.new()
-	material.albedo_color = color_of(player_id)
-	material.roughness = 0.4
-	mesh.material_override = material
+	for mesh: MeshInstance3D in _model.find_children("*", "MeshInstance3D", true, false):
+		if mesh.name in TEAM_COLORED_MESHES:
+			mesh.material_override = TEAM_MATERIALS[team_of(player_id) - 1]
+		else:
+			mesh.material_override = MESH_MATERIALS.get(mesh.name)

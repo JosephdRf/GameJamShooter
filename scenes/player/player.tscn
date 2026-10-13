@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/player/player.gd" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/player/player_camera.tscn" id="2_camera"]
-[ext_resource type="PackedScene" uid="uid://bapqgkm4aa104" path="res://assets/models/duck_v0.glb" id="3_duck"]
+[ext_resource type="PackedScene" uid="uid://dbbvnlau4bc6d" path="res://assets/models/duck_v3.glb" id="3_duck"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_duck"]
 radius = 0.49

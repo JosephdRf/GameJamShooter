@@ -120,9 +120,9 @@ Un joueur qui tombe de la plateforme meurt.
 │   ├── audio/{music,sfx}/
 │   ├── fonts/
 │   ├── icons/               # icon.svg (icône du projet)
-│   ├── materials/
-│   ├── models/              # bain-de-coin-coin.blend : l'arène (importée via Blender)
-│   └── textures/
+│   ├── materials/           # duck_*.tres : matériaux texturés du canard (corps, pistolet, réservoir bleu/rouge)
+│   ├── models/              # bain-de-coin-coin.blend : l'arène (importée via Blender) ; duck_v3.glb : le canard
+│   └── textures/            # Textures du canard (diffuse / normal / roughness)
 ├── scenes/                  # Scènes (.tscn), un sous-dossier par domaine
 │   ├── ui/                  # Un fichier par écran, modifiable indépendamment
 │   │   ├── loading_screen.tscn  # Écran de chargement (scène de départ)
@@ -143,7 +143,7 @@ Un joueur qui tombe de la plateforme meurt.
 │   ├── game/bubble_projectile.tscn  # Bulle tirée (vitesse, portée, dégâts)
 │   ├── levels/arena.tscn    # Salle de bain (.blend) + lumières + barrière invisible devant
 │   └── player/
-│       ├── player.tscn          # Scène de base : canard (assets/models/duck_v0.glb, animations idle/walk/run) + caméra + synchro réseau
+│       ├── player.tscn          # Scène de base : canard (assets/models/duck_v3.glb, animations idle/walk/run/dash) + caméra + synchro réseau
 │       ├── player_1.tscn … player_4.tscn  # Une scène héritée par joueur (id → couleur, équipe)
 │       └── player_camera.tscn   # Caméra 3e personne (SpringArm3D)
 └── scripts/                 # Scripts GDScript, même découpage que scenes/

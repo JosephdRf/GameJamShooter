@@ -56,22 +56,24 @@ Dans l'éditeur : **F5** lance le jeu depuis l'écran de chargement, **F6** sur 
 
 ## Contrôles
 
-| Action | Clavier + trackpad | Manette (Switch Pro) |
-|--------|-------------------------------|----------------------|
-| Se déplacer | Z/Q/S/D (W/A/S/D en QWERTY) ou flèches | Joystick gauche |
-| Tourner la caméra | Souris / trackpad | Joystick droit |
-| Sauter | Espace | B (bouton du bas) |
-| Dash (au sol, toutes les 2 s) | K | Y (bouton de gauche ; Carré sur PlayStation) |
-| Tirer une bulle | T | ZL / ZR (L2 / R2 sur PlayStation) |
-| **Menus** : naviguer / choisir son joueur | Flèches (Q/D) | Joystick gauche / croix |
-| **Menus** : valider | Entrée | A (bouton de droite) |
-| **Sélection** : changer de joueur après validation | Retour arrière | B (bouton du bas) |
-| **Sélection** : lancer la partie (hôte) | Entrée sur « Lancer la partie » | Start (+) |
-| **En jeu** : pause (hôte uniquement) | P | Start (+) |
-| **En jeu** : test, s'infliger 10 dégâts (version de développement) | H | — |
-| **Pause** : reprendre (hôte) | P / Échap / Retour arrière | + / B |
-| Retour à l'écran précédent (menus) | Échap | — |
-| Quitter le jeu (accueil, en jeu, écran de fin) | Échap | — |
+Les actions se modifient dans **Projet › Paramètres du projet › Contrôles** (Input Map) : une action
+par commande, avec sa touche clavier et son bouton de manette. Le code n'utilise que ces actions.
+
+| Commande | Action | Clavier + trackpad | Switch Pro | PlayStation |
+|----------|--------|--------------------|------------|-------------|
+| Se déplacer | `move_left/right/up/down` | Z/Q/S/D (W/A/S/D en QWERTY) ou flèches | Stick gauche | Stick gauche |
+| Tourner la caméra | `look_left/right/up/down` | Souris / trackpad | Stick droit | Stick droit |
+| Sauter | `jump` | Espace | B | Croix |
+| Dash (au sol, toutes les 2 s) | `dash` | K | Y | Carré |
+| Tirer une bulle (maintenir = en continu) | `shoot` | T | ZL / ZR | L2 / R2 |
+| **Menus** : naviguer / choisir son joueur | `menu_left/right` (+ `ui_*` de Godot) | Flèches (Q/D) | Stick gauche / croix | Stick gauche / croix |
+| **Menus** : valider | `ui_accept` | Entrée / Espace | A | Rond |
+| **Accueil** : démarrer ; **Sélection** : lancer la partie (hôte) | `start` | Entrée sur le bouton | + | Options |
+| **Sélection** : changer de joueur après validation | `menu_back` | Retour arrière | B | Croix |
+| **En jeu** : pause (hôte uniquement) | `pause` | P | + | Options |
+| **Pause** : reprendre (hôte) | `pause` / `menu_back` / `ui_cancel` | P / Retour arrière / Échap | + / B | Options / Croix |
+| **En jeu** : test, s'infliger 10 dégâts (version de développement) | `debug_damage` | H | — | — |
+| Retour à l'écran précédent (menus) / quitter le jeu | `ui_cancel` | Échap | — | — |
 
 La souris est capturée au lancement (curseur invisible) pour piloter la caméra.
 Chaque ordinateur contrôle son canard au clavier/trackpad **ou** avec n'importe quelle manette branchée. Les déplacements sont relatifs à la caméra.
@@ -81,14 +83,15 @@ Un joueur qui tombe de la plateforme meurt.
 
 - **Viseur** au centre de l'écran (`scenes/ui/crosshair.tscn`) : il se resserre et passe au rouge sur un
   adversaire. La caméra est placée façon Splatoon : derrière et au-dessus du canard, presque horizontale.
-- Chaque appui tire une bulle vers le point visé (aussi vers le haut ou le bas), 4 tirs/s au plus. Elle sort
+- Chaque appui tire une bulle vers le point visé (aussi vers le haut ou le bas), avec au moins 0,15 s entre
+  deux appuis ; touche maintenue, une bulle toutes les 0,2 s. Elle sort
   du bout du canon du canard, petite, et atteint sa taille en 0,12 s.
 - La bulle éclate au premier contact : obstacle (sol, mur, objet…), joueur (**40 dégâts** à un adversaire,
   rien à un coéquipier), mur de la zone d'apparition adverse, ou au bout de **25 m**. Le nœud est alors supprimé.
 - **Zones d'apparition** : un mur invisible (calques 3 « spawn_blue » / 4 « spawn_red ») empêche les joueurs
   et les bulles de l'équipe adverse d'y entrer.
 - Réglages : sur `scenes/game/bubble_projectile.tscn` (`speed`, `max_distance`, `damage`, `friendly_fire`,
-  taille du mesh = taille de la zone de contact) et sur le joueur (`fire_cooldown`, groupe « Tir »).
+  taille du mesh = taille de la zone de contact) et sur le joueur (`fire_cooldown`, `auto_fire_interval`, groupe « Tir »).
 
 ### Vie
 
@@ -102,11 +105,11 @@ Un joueur qui tombe de la plateforme meurt.
 - Pour infliger des dégâts (futures armes) : `player.take_damage(montant)`, depuis n'importe quel ordinateur.
 - Réglages (inspecteur du joueur, groupe « Vie ») : `max_health`, `regen_rate`, `regen_delay`, `respawn_delay`.
 
-> **Note sur les boutons :** Godot utilise une disposition *positionnelle* (style Xbox). Le saut est sur le bouton du **bas** (`JOY_BUTTON_A` dans Godot) : B sur Switch Pro, A sur Xbox, Croix sur PlayStation. Le dash est sur le bouton de **gauche** (`JOY_BUTTON_X`) : Y sur Switch Pro, X sur Xbox, Carré sur PlayStation. Modifiables via `JUMP_BUTTON` / `DASH_BUTTON` dans `scripts/autoload/input_manager.gd`.
+> **Note sur les boutons :** Godot repère les boutons de manette par leur *position* (noms Xbox) : un même réglage vaut pour toutes les manettes. Bouton du **bas** (`Joypad Button 0`) = B sur Switch Pro, Croix sur PlayStation, A sur Xbox ; bouton de **droite** (`1`) = A / Rond / B ; bouton de **gauche** (`2`) = Y / Carré / X ; gâchettes = axes 4 et 5.
 
 > **Manettes qui envoient de fausses valeurs** (vu avec une Switch Pro sous macOS : stick gauche annoncé
-> poussé et ZR enfoncée alors que personne n'y touche) : les sticks d'une manette ne sont pris en compte
-> qu'une fois vus au repos, et une gâchette qu'une fois vue relâchée. Sinon le canard avancerait tout seul.
+> poussé et ZR enfoncée alors que personne n'y touche) : `InputManager` ne prend en compte un axe d'une
+> manette (stick ou gâchette) qu'une fois vu au repos. Sinon le canard avancerait ou tirerait tout seul.
 > Les boutons de cette manette marchent toujours ; la débrancher / rebrancher relance la vérification.
 
 ## Architecture
@@ -147,7 +150,7 @@ Un joueur qui tombe de la plateforme meurt.
 │       ├── player_1.tscn … player_4.tscn  # Une scène héritée par joueur (id → couleur, équipe)
 │       └── player_camera.tscn   # Caméra 3e personne (SpringArm3D)
 └── scripts/                 # Scripts GDScript, même découpage que scenes/
-    ├── autoload/input_manager.gd    # Actions d'entrée (clavier + toutes les manettes)
+    ├── autoload/input_manager.gd    # Liste des actions ; filtre les axes des manettes défaillantes
     ├── autoload/network_manager.gd  # Héberger/rejoindre, joueurs, lancement, pause, fin de combat
     ├── autoload/lan_discovery.gd    # Annonce/détection de l'hôte sur le réseau local (UDP 7778)
     ├── ui/screens.gd                # Chemins de tous les écrans (Screens.*)
@@ -191,8 +194,9 @@ Un joueur qui tombe de la plateforme meurt.
 
 - Fichiers et dossiers en `snake_case`, nœuds en `PascalCase`.
 - Un script dans `scripts/<domaine>/` pour une scène dans `scenes/<domaine>/`.
-- Les actions d'entrée (`move_*`, `look_*`, `jump`, `dash`, `shoot`, `pause`, `menu_*`…) sont créées par l'autoload
-  `InputManager` ; elles acceptent le clavier et toutes les manettes.
+- Les actions d'entrée sont définies dans Projet › Paramètres du projet › Contrôles (section `[input]` de
+  `project.godot`) ; le code n'utilise que celles-ci (liste en tête de `scripts/autoload/input_manager.gd`).
+  Pas de touche ni de bouton écrits en dur dans le code.
 - Changer d'écran : `get_tree().change_scene_to_file(Screens.XXX)` (sauf les transitions
   réseau, faites par `NetworkManager` pour que tous les ordinateurs suivent).
 - Calques physiques : 1 = `world`, 2 = `players`.

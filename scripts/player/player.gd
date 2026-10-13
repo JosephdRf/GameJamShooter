@@ -86,8 +86,10 @@ const REMOTE_SNAP_DISTANCE := 3.0
 ## Temps minimum entre deux dashs (s).
 @export var dash_cooldown := 2.0
 @export_group("Tir")
-## Temps minimum entre deux tirs (s).
-@export var fire_cooldown := 0.25
+## Temps minimum entre deux appuis sur la touche de tir (s).
+@export var fire_cooldown := 0.15
+## Touche de tir maintenue : une bulle toutes les `auto_fire_interval` s.
+@export var auto_fire_interval := 0.2
 @export_group("Vie")
 @export var max_health := 100.0
 ## Vie regagnée par seconde (PV/s) quand le joueur ne prend pas de dégâts.
@@ -131,8 +133,8 @@ var _dash_start_speed := 0.0
 var _dash_animation_left := 0.0
 ## Bout du canon (Marker3D créé dans _ready sur le mesh du pistolet) : départ des bulles.
 var _muzzle: Marker3D
-## Temps restant avant de pouvoir tirer à nouveau (s).
-var _fire_cooldown_left := 0.0
+## Temps écoulé depuis le dernier tir (s).
+var _since_last_shot := INF
 ## Temps restant avant que la vie remonte (s).
 var _regen_cooldown_left := 0.0
 ## Temps restant avant la réapparition, quand le joueur est mort (s).
@@ -252,9 +254,13 @@ func _simulate(delta: float) -> void:
 	if is_local and Input.is_action_just_pressed(&"dash") and is_on_floor() and _dash_cooldown_left == 0.0:
 		_start_dash(direction)
 
-	_fire_cooldown_left = maxf(_fire_cooldown_left - delta, 0.0)
-	if is_local and Input.is_action_just_pressed(&"shoot") and _fire_cooldown_left == 0.0:
-		_fire_cooldown_left = fire_cooldown
+	# Petite marge : sans elle, 12 pas de 1/60 s font 0,19999… < 0,2 s (arrondis) et le tir prend une image de retard.
+	_since_last_shot += delta + 0.0001
+	# Nouvel appui : tir dès fire_cooldown écoulé ; touche maintenue : toutes les auto_fire_interval.
+	var pressed := Input.is_action_just_pressed(&"shoot") and _since_last_shot >= fire_cooldown
+	var held := Input.is_action_pressed(&"shoot") and _since_last_shot >= auto_fire_interval
+	if is_local and (pressed or held):
+		_since_last_shot = 0.0
 		# Tout droit devant la caméra (à l'horizontale), depuis le centre du cube.
 		var target := aim()
 		# La bulle vise avec sa surface : son centre s'arrête à un rayon de la surface

@@ -6,7 +6,7 @@ extends Node3D
 ## La vie du joueur local s'affiche via DamageOverlay (bulles) et DeathScreen.
 ## Tirs : chaque bulle tirée (signal Player.shot) est créée sous Projectiles et
 ## se supprime d'elle-même en éclatant.
-## Test (version de développement) : H inflige 10 dégâts à son propre cube.
+## Test (version de développement) : l'action debug_damage (H) inflige 10 dégâts à son propre cube.
 ## DEBUG : DebugHealth affiche les PV du joueur local (à supprimer : le nœud et
 ## les lignes marquées « DEBUG »).
 ## Chaque ordinateur affiche la caméra du joueur qu'il a choisi dans le salon.
@@ -27,7 +27,7 @@ extends Node3D
 ## Intervalle (s) entre deux envois du temps restant par l'hôte.
 const TIME_SYNC_INTERVAL := 0.5
 const PROJECTILE_SCENE := preload("res://scenes/game/bubble_projectile.tscn")
-## Dégâts infligés par la touche de test H.
+## Dégâts infligés par l'action de test debug_damage.
 const DEBUG_DAMAGE := 10.0
 
 ## Durée d'un combat en secondes (0 = pas de limite, chrono masqué).
@@ -101,8 +101,7 @@ func _process(delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed(&"ui_cancel"):
 		get_tree().quit()
-	elif OS.is_debug_build() and event is InputEventKey and event.pressed and not event.echo \
-			and event.physical_keycode == KEY_H:
+	elif OS.is_debug_build() and event.is_action_pressed(&"debug_damage"):
 		for player: Player in _players.get_children():
 			if player.is_local and player.active:
 				player.take_damage(DEBUG_DAMAGE)

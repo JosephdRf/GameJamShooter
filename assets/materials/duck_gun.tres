@@ -1,0 +1,12 @@
+[gd_resource type="StandardMaterial3D" load_steps=4 format=3]
+
+[ext_resource type="Texture2D" uid="uid://cri0581t2vstv" path="res://assets/textures/gun_diffuse.png" id="1_albedo"]
+[ext_resource type="Texture2D" uid="uid://voi6v0je7jsv" path="res://assets/textures/gun_normal.png" id="2_normal"]
+[ext_resource type="Texture2D" uid="uid://bi7mwx04kx0ur" path="res://assets/textures/gun_roughness.png" id="3_roughness"]
+
+[resource]
+resource_name = "duck_gun"
+albedo_texture = ExtResource("1_albedo")
+roughness_texture = ExtResource("3_roughness")
+normal_enabled = true
+normal_texture = ExtResource("2_normal")

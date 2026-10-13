@@ -36,15 +36,12 @@ const SPAWN_LAYERS: Array[int] = [4, 8]
 ## Vitesse de rattrapage des cubes distants (plus élevé = plus réactif, moins lisse).
 const REMOTE_SMOOTHING := 25.0
 ## Au-delà de cet écart, un cube distant est téléporté (ex. réapparition).
-## Animations du canard : idle à l'arrêt, walk en dessous de RUN_SPEED (m/s), run au-delà.
+## Animations du canard (machine à états du nœud AnimationTree, transitions et fondus
+## réglables dans l'éditeur). Le script ne fait que renseigner ses conditions :
+## idle à l'arrêt, walk en dessous de RUN_SPEED (m/s), run au-delà ; dashing pendant
+## le dash (dash_start → dash), dash_over ensuite (dash → dash_end).
 const MOVING_SPEED := 0.3
 const RUN_SPEED := 4.0
-const ANIMATION_BLEND := 0.15
-## Animations du dash : dash_start (accélérée pour tenir dans la première fraction
-## DASH_START_PART du dash), dash (en boucle) jusqu'à la fin du dash, puis dash_end.
-## Le .glb nomme la boucle « dash_loop » ; Godot retire le suffixe _loop à l'import.
-const DASH_START_PART := 0.5
-const DASH_ANIMATION_BLEND := 0.05
 ## Vitesse à laquelle le canard se tourne vers sa direction de déplacement.
 const TURN_SPEED := 14.0
 ## Courbe du dash (fractions de dash_duration) : fin de la montée en vitesse,
@@ -129,9 +126,9 @@ var _dash_cooldown_left := 0.0
 var _dash_direction: Vector3
 ## Vitesse horizontale au moment du dash (point de départ de la courbe).
 var _dash_start_speed := 0.0
-## Temps écoulé depuis le début du dash, pour ses animations (-1 : pas de dash).
-## Avancé sur tous les ordinateurs (cf. _play_dash).
-var _dash_animation_time := -1.0
+## Temps restant du dash pour ses animations (condition « dashing »), décompté sur
+## tous les ordinateurs (cf. _play_dash).
+var _dash_animation_left := 0.0
 ## Bout du canon (Marker3D créé dans _ready sur le mesh du pistolet) : départ des bulles.
 var _muzzle: Marker3D
 ## Temps restant avant de pouvoir tirer à nouveau (s).
@@ -144,7 +141,8 @@ var _respawn_left := 0.0
 ## Caméra du joueur : les déplacements sont relatifs à son orientation.
 @onready var camera: PlayerCamera = $PlayerCamera
 @onready var _model: Node3D = $Model
-@onready var _animation: AnimationPlayer = $Model/AnimationPlayer
+@onready var _animation_tree: AnimationTree = $AnimationTree
+@onready var _animation_playback: AnimationNodeStateMachinePlayback = _animation_tree.get(&"parameters/playback")
 @onready var _collision_shape: CollisionShape3D = $CollisionShape
 @onready var _sync: MultiplayerSynchronizer = $Sync
 
@@ -166,10 +164,6 @@ static func enemy_spawn_layer(team: int) -> int:
 func _ready() -> void:
 	_apply_color()
 	if not Engine.is_editor_hint():
-		# Les animations du .glb ne sont pas en boucle : on les y met.
-		for animation_name: StringName in [&"idle", &"walk", &"run"]:
-			_animation.get_animation(animation_name).loop_mode = Animation.LOOP_LINEAR
-		_animation.play(&"idle")
 		_create_muzzle()
 	_spawn_position = global_position
 	sync_position = position
@@ -310,7 +304,7 @@ func _shoot(origin: Vector3, direction: Vector3) -> void:
 ## animations du dash.
 @rpc("authority", "call_local", "reliable")
 func _play_dash() -> void:
-	_dash_animation_time = 0.0
+	_dash_animation_left = dash_duration
 
 
 ## Ce que vise le joueur (centre de l'écran) : { point, normal, collider (ou null) }.
@@ -358,30 +352,13 @@ func _update_model(velocity_now: Vector3, delta: float) -> void:
 	var moving := speed > MOVING_SPEED and is_alive()
 	if moving:
 		_turn_model_towards(horizontal, 1.0 - exp(-TURN_SPEED * delta))
-	if _dash_animation_time >= 0.0 and is_alive():
-		_dash_animation_time += delta
-		var start_duration := dash_duration * DASH_START_PART
-		if _dash_animation_time < start_duration:
-			_play_animation(&"dash_start", DASH_ANIMATION_BLEND,
-					_animation.get_animation(&"dash_start").length / start_duration)
-			return
-		if _dash_animation_time < dash_duration:
-			_play_animation(&"dash", DASH_ANIMATION_BLEND)
-			return
-		if _dash_animation_time < dash_duration + _animation.get_animation(&"dash_end").length:
-			_play_animation(&"dash_end", DASH_ANIMATION_BLEND)
-			return
-	_dash_animation_time = -1.0
-	var animation_name := &"idle"
-	if moving:
-		animation_name = &"run" if speed > RUN_SPEED else &"walk"
-	_play_animation(animation_name, ANIMATION_BLEND)
-
-
-## Joue `animation_name`, sauf si c'est déjà l'animation en cours (ou celle qui vient de finir).
-func _play_animation(animation_name: StringName, blend: float, speed := 1.0) -> void:
-	if _animation.assigned_animation != animation_name:
-		_animation.play(animation_name, blend, speed)
+	_dash_animation_left = maxf(_dash_animation_left - delta, 0.0)
+	var dashing := _dash_animation_left > 0.0
+	_animation_tree.set(&"parameters/conditions/dashing", dashing)
+	_animation_tree.set(&"parameters/conditions/dash_over", not dashing)
+	_animation_tree.set(&"parameters/conditions/idle", not moving)
+	_animation_tree.set(&"parameters/conditions/walk", moving and speed <= RUN_SPEED)
+	_animation_tree.set(&"parameters/conditions/run", moving and speed > RUN_SPEED)
 
 
 ## Le modèle regarde vers +Z : on l'aligne sur `direction` (weight = 1 : d'un coup).
@@ -408,6 +385,8 @@ func _on_died() -> void:
 
 
 func _on_respawned() -> void:
+	_dash_animation_left = 0.0
+	_animation_playback.start(&"idle") # Repart de l'arrêt, pas de l'animation au moment de la mort.
 	_model.visible = true
 	_collision_shape.set_deferred(&"disabled", false)
 	respawned.emit()

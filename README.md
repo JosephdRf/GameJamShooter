@@ -143,7 +143,7 @@ Un joueur qui tombe de la plateforme meurt.
 │   ├── game/bubble_projectile.tscn  # Bulle tirée (vitesse, portée, dégâts)
 │   ├── levels/arena.tscn    # Salle de bain (.blend) + lumières + barrière invisible devant
 │   └── player/
-│       ├── player.tscn          # Scène de base : canard (assets/models/duck_v3.glb, animations idle/walk/run/dash) + caméra + synchro réseau
+│       ├── player.tscn          # Scène de base : canard (assets/models/duck_v3.glb) + AnimationTree + caméra + synchro réseau
 │       ├── player_1.tscn … player_4.tscn  # Une scène héritée par joueur (id → couleur, équipe)
 │       └── player_camera.tscn   # Caméra 3e personne (SpringArm3D)
 └── scripts/                 # Scripts GDScript, même découpage que scenes/
@@ -213,6 +213,22 @@ Un joueur qui tombe de la plateforme meurt.
   (côte à côte, à mi-rayon) ; un joueur qui tombe réapparaît à son emplacement. Pour les déplacer :
   bouger les zones dans la vue 3D (la position des nœuds `Player1..4` est ignorée).
 - Rendu 3D à 75 % + FSR (`rendering/scaling_3d`) : ~105-135 images/s sur un MacBook M3.
+
+### Le canard et ses animations
+
+- Modèle `assets/models/duck_v3.glb` (exporté de Blender avec son armature `Duck_Rig`) ; textures
+  appliquées par `player.gd` avec les matériaux `assets/materials/duck_*.tres` (réservoir, tuyau et
+  ceinture en `duck_container_blue` / `duck_container_red` selon l'équipe).
+- `idle`, `walk` et `run` sont mises en boucle dans les options d'import du `.glb` (double-clic sur le
+  fichier › onglet Animation › Loop Mode). `dash_loop` devient `dash` à l'import (le suffixe `_loop`
+  la met en boucle).
+- Le nœud `AnimationTree` de `player.tscn` est une machine à états : sélectionner le nœud pour
+  l'ouvrir dans le panneau du bas. Les transitions (fondus, priorités) se règlent en cliquant sur les
+  flèches. `player.gd` ne fait que renseigner les conditions : `idle` / `walk` / `run` selon la
+  vitesse (`MOVING_SPEED`, `RUN_SPEED`), `dashing` pendant le dash puis `dash_over`.
+- Dash : `dash_start` est jouée en 0,15 s (timeline personnalisée de son nœud, la moitié de
+  `dash_duration`), puis `dash` en boucle jusqu'à la fin du dash, puis `dash_end` avant de revenir à
+  la marche. Le début du dash est envoyé aux autres ordinateurs (RPC `_play_dash`).
 
 ### Régler les zones
 

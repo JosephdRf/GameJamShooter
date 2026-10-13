@@ -1,8 +1,127 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene format=3 uid="uid://es6b5cgffbtg"]
 
-[ext_resource type="Script" path="res://scripts/player/player.gd" id="1_player"]
+[ext_resource type="Script" uid="uid://bpbpwppaq4fmw" path="res://scripts/player/player.gd" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/player/player_camera.tscn" id="2_camera"]
 [ext_resource type="PackedScene" uid="uid://dbbvnlau4bc6d" path="res://assets/models/duck_v3.glb" id="3_duck"]
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_gmlin"]
+animation = &"dash"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_lvxji"]
+animation = &"dash_end"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_p47bc"]
+animation = &"dash_start"
+use_custom_timeline = true
+timeline_length = 0.15
+stretch_time_scale = true
+start_offset = 0.0
+loop_mode = 0
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_75vfm"]
+animation = &"idle"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_0owmy"]
+animation = &"run"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_qek5x"]
+animation = &"walk"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_5gtgg"]
+advance_mode = 2
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_h17s1"]
+xfade_time = 0.15
+advance_mode = 2
+advance_condition = &"walk"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_je7p5"]
+xfade_time = 0.15
+advance_mode = 2
+advance_condition = &"run"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_fm80t"]
+xfade_time = 0.05
+priority = 0
+advance_mode = 2
+advance_condition = &"dashing"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_gx1jg"]
+xfade_time = 0.15
+switch_mode = 2
+advance_mode = 2
+advance_condition = &"idle"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_ugbui"]
+xfade_time = 0.15
+advance_mode = 2
+advance_condition = &"idle"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_fcs02"]
+xfade_time = 0.15
+advance_mode = 2
+advance_condition = &"run"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_myrg7"]
+xfade_time = 0.05
+priority = 0
+advance_mode = 2
+advance_condition = &"dashing"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_kvlxm"]
+xfade_time = 0.15
+switch_mode = 2
+advance_mode = 2
+advance_condition = &"walk"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_uf5tr"]
+xfade_time = 0.15
+advance_mode = 2
+advance_condition = &"idle"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_lgqa7"]
+xfade_time = 0.15
+advance_mode = 2
+advance_condition = &"walk"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_8ydkj"]
+xfade_time = 0.05
+priority = 0
+advance_mode = 2
+advance_condition = &"dashing"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_3j4b4"]
+xfade_time = 0.15
+switch_mode = 2
+advance_mode = 2
+advance_condition = &"run"
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_yj68g"]
+xfade_time = 0.05
+switch_mode = 2
+advance_mode = 2
+
+[sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_ioxgp"]
+xfade_time = 0.05
+advance_mode = 2
+advance_condition = &"dash_over"
+
+[sub_resource type="AnimationNodeStateMachine" id="AnimationNodeStateMachine_cnsyf"]
+states/End/position = Vector2(980, 300)
+states/Start/position = Vector2(40, 60)
+states/dash/node = SubResource("AnimationNodeAnimation_gmlin")
+states/dash/position = Vector2(500, 300)
+states/dash_end/node = SubResource("AnimationNodeAnimation_lvxji")
+states/dash_end/position = Vector2(740, 300)
+states/dash_start/node = SubResource("AnimationNodeAnimation_p47bc")
+states/dash_start/position = Vector2(260, 300)
+states/idle/node = SubResource("AnimationNodeAnimation_75vfm")
+states/idle/position = Vector2(260, 60)
+states/run/node = SubResource("AnimationNodeAnimation_0owmy")
+states/run/position = Vector2(740, 60)
+states/walk/node = SubResource("AnimationNodeAnimation_qek5x")
+states/walk/position = Vector2(500, -60)
+transitions = ["Start", "idle", SubResource("AnimationNodeStateMachineTransition_5gtgg"), "idle", "walk", SubResource("AnimationNodeStateMachineTransition_h17s1"), "idle", "run", SubResource("AnimationNodeStateMachineTransition_je7p5"), "idle", "dash_start", SubResource("AnimationNodeStateMachineTransition_fm80t"), "dash_end", "idle", SubResource("AnimationNodeStateMachineTransition_gx1jg"), "walk", "idle", SubResource("AnimationNodeStateMachineTransition_ugbui"), "walk", "run", SubResource("AnimationNodeStateMachineTransition_fcs02"), "walk", "dash_start", SubResource("AnimationNodeStateMachineTransition_myrg7"), "dash_end", "walk", SubResource("AnimationNodeStateMachineTransition_kvlxm"), "run", "idle", SubResource("AnimationNodeStateMachineTransition_uf5tr"), "run", "walk", SubResource("AnimationNodeStateMachineTransition_lgqa7"), "run", "dash_start", SubResource("AnimationNodeStateMachineTransition_8ydkj"), "dash_end", "run", SubResource("AnimationNodeStateMachineTransition_3j4b4"), "dash_start", "dash", SubResource("AnimationNodeStateMachineTransition_yj68g"), "dash", "dash_end", SubResource("AnimationNodeStateMachineTransition_ioxgp")]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_duck"]
 radius = 0.49
@@ -16,20 +135,30 @@ properties/1/path = NodePath(".:health")
 properties/1/spawn = true
 properties/1/replication_mode = 2
 
-[node name="Player" type="CharacterBody3D"]
+[node name="Player" type="CharacterBody3D" unique_id=867554235]
 collision_layer = 2
-collision_mask = 3
+collision_mask = 11
 script = ExtResource("1_player")
 
-[node name="Model" parent="." instance=ExtResource("3_duck")]
+[node name="Model" parent="." unique_id=964723069 instance=ExtResource("3_duck")]
 transform = Transform3D(1.3, 0, 0, 0, 1.3, 0, 0, 0, 1.3, 0, -0.625, 0)
 
-[node name="CollisionShape" type="CollisionShape3D" parent="."]
+[node name="AnimationTree" type="AnimationTree" parent="." unique_id=1228192790]
+root_node = NodePath("../Model")
+tree_root = SubResource("AnimationNodeStateMachine_cnsyf")
+anim_player = NodePath("../Model/AnimationPlayer")
+parameters/conditions/dash_over = false
+parameters/conditions/dashing = false
+parameters/conditions/idle = false
+parameters/conditions/run = false
+parameters/conditions/walk = false
+
+[node name="CollisionShape" type="CollisionShape3D" parent="." unique_id=767325698]
 shape = SubResource("CapsuleShape3D_duck")
 
-[node name="PlayerCamera" parent="." instance=ExtResource("2_camera")]
+[node name="PlayerCamera" parent="." unique_id=1108729630 instance=ExtResource("2_camera")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.15, 0)
 
-[node name="Sync" type="MultiplayerSynchronizer" parent="."]
+[node name="Sync" type="MultiplayerSynchronizer" parent="." unique_id=167297076]
 replication_config = SubResource("SceneReplicationConfig_sync")
 public_visibility = false

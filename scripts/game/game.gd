@@ -16,8 +16,13 @@ extends Node3D
 ## Compte à rebours : l'hôte décompte match_duration secondes (figé pendant la
 ## pause) et envoie régulièrement le temps restant aux autres ordinateurs, qui
 ## décomptent de leur côté entre deux envois. À 0, l'hôte termine le combat.
-## Fin du combat aussi possible via le bouton de test du menu pause.
 ## Les scores (par équipe) viennent du mode défense de zone.
+##
+## Messages (Announcer) : au lancement « Attention… » (joueurs figés) pendant
+## ready_duration, puis « C'est parti ! » : les joueurs bougent, le chrono et
+## les zones démarrent. À chaque prise de zone : « Ton équipe / L'adversaire a
+## pris la zone clé ! ». À la fin : « Terminé ! » pendant finish_duration,
+## joueurs et bulles figés, puis écran de fin.
 
 ## Intervalle (s) entre deux envois du temps restant par l'hôte.
 const TIME_SYNC_INTERVAL := 0.5
@@ -27,6 +32,13 @@ const DEBUG_DAMAGE := 10.0
 
 ## Durée d'un combat en secondes (0 = pas de limite, chrono masqué).
 @export var match_duration := 60.0
+## Durée de « Attention… » (joueurs figés), puis de « C'est parti ! » (s).
+@export var ready_duration := 2.0
+@export var go_duration := 2.0
+## Durée de « Ton équipe / L'adversaire a pris la zone clé ! » (s).
+@export var capture_message_duration := 2.5
+## Durée de « Terminé ! » avant l'écran de fin (s).
+@export var finish_duration := 1.5
 
 ## Temps restant (s). Ne diminue qu'une fois la partie lancée.
 var time_left := 0.0
@@ -42,8 +54,8 @@ var _time_sync_cooldown := 0.0
 @onready var _hud: CanvasLayer = $MatchHud
 @onready var _damage_overlay: CanvasLayer = $DamageOverlay
 @onready var _death_screen: CanvasLayer = $DeathScreen
+@onready var _announcer: CanvasLayer = $Announcer
 @onready var _debug_health: Label = $DebugHealth/Label # DEBUG
-@onready var _pause_menu: CanvasLayer = $PauseMenu
 
 
 func _ready() -> void:
@@ -61,9 +73,9 @@ func _ready() -> void:
 	_hud.set_time_left(time_left if match_duration > 0.0 else -1.0)
 	_hud.set_scores(0, 0)
 	_mode.scores_changed.connect(func() -> void: _hud.set_scores(_mode.scores[1], _mode.scores[2]))
+	_mode.zone_captured.connect(_on_zone_captured)
 	NetworkManager.slots_changed.connect(_apply_slots)
 	NetworkManager.match_started.connect(_on_match_started)
-	_pause_menu.end_match_requested.connect(_end_match)
 	NetworkManager.notify_game_ready()
 
 
@@ -138,13 +150,27 @@ func _apply_slots() -> void:
 		player.camera.set_view_active(player.is_local)
 
 
+## Sur tous les ordinateurs, au même moment (à la latence près).
 func _on_match_started() -> void:
+	_announcer.show_ready(ready_duration)
+	await get_tree().create_timer(ready_duration, false).timeout # Figé pendant la pause.
+	if not is_inside_tree() or _ended:
+		return
+	_announcer.show_go(go_duration)
 	for player: Player in _players.get_children():
 		player.activate()
 	_running = match_duration > 0.0
 	var players: Array[Player] = []
 	players.assign(_players.get_children())
 	_mode.start(players)
+
+
+func _on_zone_captured(team: int) -> void:
+	var local_team := 0
+	for player: Player in _players.get_children():
+		if player.is_local:
+			local_team = Player.team_of(player.player_id)
+	_announcer.show_capture(team == local_team, Player.TEAM_COLORS[team - 1], capture_message_duration)
 
 
 func _update_capture_bar() -> void:
@@ -162,9 +188,25 @@ func _sync_time_left(value: float) -> void:
 	_hud.set_time_left(time_left)
 
 
+## Hôte uniquement, quand le chrono arrive à 0.
 func _end_match() -> void:
 	if _ended:
 		return
+	_finish_match.rpc(_mode.scores.duplicate())
+
+
+## Sur tous les ordinateurs : « Terminé ! », tout se fige, puis l'hôte passe à l'écran de fin.
+@rpc("authority", "call_local", "reliable")
+func _finish_match(scores: Dictionary) -> void:
 	_ended = true
 	_running = false
-	NetworkManager.end_match(_mode.scores.duplicate())
+	for player: Player in _players.get_children():
+		player.freeze()
+	_projectiles.process_mode = Node.PROCESS_MODE_DISABLED
+	_mode.process_mode = Node.PROCESS_MODE_DISABLED # Plus de capture ni de points.
+	_announcer.show_finish(finish_duration)
+	if not multiplayer.is_server():
+		return
+	await get_tree().create_timer(finish_duration, false).timeout
+	if is_inside_tree():
+		NetworkManager.end_match(scores)

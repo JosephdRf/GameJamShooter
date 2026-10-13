@@ -5,24 +5,16 @@ extends CanvasLayer
 ## ordinateurs. Chez l'hôte : Reprendre (ou P / + / B / Échap) et Quitter, qui
 ## ramène tout le monde à la sélection d'équipe. Chez les autres : un simple
 ## message d'attente (Échap quitte le jeu, comme en partie).
-## "[Test] Terminer le combat" n'existe que dans les versions de développement :
-## il déclenche la fin du combat en attendant la vraie règle de victoire.
-
-## Émis quand l'hôte demande la fin du combat depuis ce menu (test).
-signal end_match_requested
 
 @onready var _message: Label = %Message
 @onready var _buttons: Control = %Buttons
 @onready var _resume_button: Button = %ResumeButton
-@onready var _end_match_button: Button = %EndMatchButton
 @onready var _quit_button: Button = %QuitButton
 
 
 func _ready() -> void:
 	visible = false
-	_end_match_button.visible = OS.is_debug_build()
 	_resume_button.pressed.connect(NetworkManager.set_paused.bind(false))
-	_end_match_button.pressed.connect(end_match_requested.emit)
 	_quit_button.pressed.connect(NetworkManager.return_to_team_select)
 	NetworkManager.pause_changed.connect(_on_pause_changed)
 

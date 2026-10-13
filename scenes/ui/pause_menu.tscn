@@ -53,12 +53,6 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 28
 text = "Reprendre"
 
-[node name="EndMatchButton" type="Button" parent="Center/Layout/Buttons"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 48)
-layout_mode = 2
-text = "[Test] Terminer le combat"
-
 [node name="QuitButton" type="Button" parent="Center/Layout/Buttons"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 64)

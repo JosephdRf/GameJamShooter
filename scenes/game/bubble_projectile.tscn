@@ -1,6 +1,6 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://b5osoclmgb7yu"]
 
-[ext_resource type="Script" path="res://scripts/game/bubble_projectile.gd" id="1_bubble"]
+[ext_resource type="Script" uid="uid://dprr7ffmdd6a" path="res://scripts/game/bubble_projectile.gd" id="1_bubble"]
 
 [sub_resource type="SphereMesh" id="SphereMesh_bubble"]
 radius = 0.35
@@ -14,13 +14,12 @@ albedo_color = Color(0.82, 0.94, 1, 0.45)
 metallic_specular = 1.0
 roughness = 0.05
 rim_enabled = true
-rim = 1.0
 rim_tint = 0.2
 
-[node name="BubbleProjectile" type="Node3D"]
+[node name="BubbleProjectile" type="Node3D" unique_id=1486090387]
 script = ExtResource("1_bubble")
 
-[node name="Mesh" type="MeshInstance3D" parent="."]
+[node name="Mesh" type="MeshInstance3D" parent="." unique_id=1919264022]
 cast_shadow = 0
 mesh = SubResource("SphereMesh_bubble")
 surface_material_override/0 = SubResource("StandardMaterial3D_bubble")

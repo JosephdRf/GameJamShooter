@@ -12,6 +12,8 @@ extends Node3D
 ## autres ordinateurs.
 
 signal scores_changed
+## Émis sur tous les ordinateurs quand une équipe (1 ou 2) capture la zone.
+signal zone_captured(team: int)
 
 ## Équipe (1 ou 2) -> points.
 var scores := {1: 0, 2: 0}
@@ -57,6 +59,7 @@ func _on_zone_finished(team: int) -> void:
 	if team != 0:
 		scores[team] += _zones[_active_index].points
 		_sync_scores.rpc(scores)
+		_announce_capture.rpc(team)
 	# Prochaine zone : au hasard parmi les autres (la même s'il n'y en a qu'une).
 	var next := _active_index
 	if _zones.size() > 1:
@@ -64,6 +67,11 @@ func _on_zone_finished(team: int) -> void:
 		if next >= _active_index:
 			next += 1
 	_activate(next)
+
+
+@rpc("authority", "call_local", "reliable")
+func _announce_capture(team: int) -> void:
+	zone_captured.emit(team)
 
 
 @rpc("authority", "call_local", "reliable")

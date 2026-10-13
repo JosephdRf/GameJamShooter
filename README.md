@@ -31,6 +31,8 @@ Les chemins sont regroupés dans `scripts/ui/screens.gd` (`Screens.TITLE`, `Scre
    Équipe bleue : J1 + J2 · Équipe rouge : J3 + J4 (couleurs dans `Player.TEAM_COLORS`).
 5. L'hôte appuie sur **Start** (bouton +), ou A / Entrée sur « Lancer la partie » : la partie se lance pour tous,
    même s'il manque des joueurs (les cubes non choisis restent immobiles).
+   « **Attention…** » s'affiche 2 s (joueurs figés), puis « **C'est parti !** » : on peut bouger, le
+   chrono et les zones démarrent.
 
 6. En jeu, l'hôte peut mettre en pause (**P** ou **+**) : la partie est figée pour tous.
    « Quitter » ramène tout le monde à la sélection d'équipe.
@@ -43,10 +45,11 @@ Les chemins sont regroupés dans `scripts/ui/screens.gd` (`Screens.TITLE`, `Scre
    la zone prend la couleur de l'équipe présente et une barre de progression s'affiche sous le
    score. Si l'équipe sort, la barre repart à 0 ; si les deux équipes sont dedans, elle est en
    pause. Une zone non capturée disparaît au bout de **20 s** (décompte en pause tant qu'une
-   équipe la capture). Scores : bleu à gauche du chrono, rouge à droite.
+   équipe la capture). Scores : bleu à gauche du chrono, rouge à droite. À chaque prise :
+   « Ton équipe a pris la zone clé ! » ou « L'adversaire a pris la zone clé ! ».
 9. Fin du combat : écran des scores de chaque équipe, **Rejouer** (retour à la sélection
-   d'équipe) ou **Quitter** (ferme le jeu). Le bouton « [Test] Terminer le combat » du menu pause
-   (versions de développement uniquement) termine le combat immédiatement.
+   d'équipe) ou **Quitter** (ferme le jeu). Avant l'écran de fin, « Terminé ! » s'affiche 1,5 s,
+   joueurs figés.
 
 Dans l'éditeur : **F5** lance le jeu depuis l'écran de chargement, **F6** sur `scenes/game/game.tscn` lance le jeu seul
 (hors ligne, on contrôle le joueur 1).
@@ -125,6 +128,7 @@ Un joueur qui tombe de la plateforme meurt.
 │   │   ├── pause_menu.tscn      # Menu pause (instancié dans game.tscn)
 │   │   ├── end_screen.tscn      # Écran de fin : scores, équipe gagnante, Rejouer / Quitter
 │   │   ├── death_screen.tscn    # « You died » + image grisée (instancié dans game.tscn)
+│   │   ├── announcer.tscn       # Messages de match (Attention…, C'est parti !, zone, Terminé !)
 │   │   ├── damage_overlay.tscn  # Regroupe les écrans de dégâts (instancié dans game.tscn)
 │   │   └── damage/damage_screen_1..3.tscn  # Bulles sur les bords, de plus en plus couvrantes
 │   ├── game/game.tscn       # Partie : Arena + Players/Player1..4 + SpawnZones (2) + Projectiles + ZoneDefenseMode (3 zones) + MatchHud + PauseMenu

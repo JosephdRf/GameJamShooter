@@ -123,6 +123,12 @@ func activate() -> void:
 	_sync.public_visibility = true
 
 
+## Fin du combat : le cube s'arrête et ne répond plus aux commandes.
+func freeze() -> void:
+	active = false
+	velocity = Vector3.ZERO
+
+
 func _physics_process(delta: float) -> void:
 	if Engine.is_editor_hint() or not active:
 		return

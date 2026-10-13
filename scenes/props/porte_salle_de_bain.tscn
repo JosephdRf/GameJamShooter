@@ -1,0 +1,135 @@
+[gd_scene format=3 uid="uid://dg7fqvkrgwcts"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_arncn"]
+albedo_color = Color(0.9490196, 0.95686275, 0.96862745, 1)
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_jhpnv"]
+roughness = 0.35
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ielpf"]
+albedo_color = Color(0.8901961, 0.9098039, 0.93333334, 1)
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_21ah5"]
+albedo_color = Color(0.9137255, 0.93333334, 0.9529412, 1)
+metallic = 0.9
+roughness = 0.15
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_bcym4"]
+top_radius = 0.025
+bottom_radius = 0.025
+height = 0.01
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_1vymd"]
+top_radius = 0.008
+bottom_radius = 0.008
+height = 0.04
+
+[sub_resource type="BoxMesh" id="BoxMesh_31la2"]
+size = Vector3(0.11, 0.016, 0.018)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_srs6a"]
+top_radius = 0.018
+bottom_radius = 0.018
+height = 0.012
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_1y14s"]
+top_radius = 0.025
+bottom_radius = 0.025
+height = 0.01
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_vmjhh"]
+top_radius = 0.008
+bottom_radius = 0.008
+height = 0.04
+
+[sub_resource type="BoxMesh" id="BoxMesh_g25cr"]
+size = Vector3(0.11, 0.016, 0.018)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_55imq"]
+top_radius = 0.018
+bottom_radius = 0.018
+height = 0.012
+
+[node name="PorteSalleDeBain" type="Node3D" unique_id=1736422125]
+
+[node name="Corps" type="CSGCombiner3D" parent="." unique_id=1826629969]
+use_collision = true
+
+[node name="Montant_G" type="CSGBox3D" parent="Corps" unique_id=1882832832]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.219, 0.5705, 0)
+size = Vector3(0.035, 1.141, 0.09)
+material = SubResource("StandardMaterial3D_arncn")
+
+[node name="Montant_D" type="CSGBox3D" parent="Corps" unique_id=1203777431]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.219, 0.5705, 0)
+size = Vector3(0.035, 1.141, 0.09)
+material = SubResource("StandardMaterial3D_arncn")
+
+[node name="Battant" type="CSGBox3D" parent="Corps" unique_id=265499462]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5745, 0)
+size = Vector3(0.403, 1.133, 0.04)
+material = SubResource("StandardMaterial3D_jhpnv")
+
+[node name="Panneau_bas_Salle" type="CSGBox3D" parent="Corps" unique_id=2114831039]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0.023)
+size = Vector3(0.313, 0.42, 0.008)
+material = SubResource("StandardMaterial3D_ielpf")
+
+[node name="Panneau_haut_Salle" type="CSGBox3D" parent="Corps" unique_id=282792164]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.82, 0.023)
+size = Vector3(0.313, 0.36, 0.008)
+material = SubResource("StandardMaterial3D_ielpf")
+
+[node name="Panneau_bas_Couloir" type="CSGBox3D" parent="Corps" unique_id=53528714]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, -0.023)
+size = Vector3(0.313, 0.42, 0.008)
+material = SubResource("StandardMaterial3D_ielpf")
+
+[node name="Panneau_haut_Couloir" type="CSGBox3D" parent="Corps" unique_id=1412764950]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.82, -0.023)
+size = Vector3(0.313, 0.36, 0.008)
+material = SubResource("StandardMaterial3D_ielpf")
+
+[node name="Poignees" type="Node3D" parent="." unique_id=1195797393]
+
+[node name="Rosace_Salle" type="MeshInstance3D" parent="Poignees" unique_id=316304317]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0.1515, 0.575, 0.025)
+material_override = SubResource("StandardMaterial3D_21ah5")
+mesh = SubResource("CylinderMesh_bcym4")
+
+[node name="Tige_Salle" type="MeshInstance3D" parent="Poignees" unique_id=50799893]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0.1515, 0.575, 0.045)
+material_override = SubResource("StandardMaterial3D_21ah5")
+mesh = SubResource("CylinderMesh_1vymd")
+
+[node name="Bequille_Salle" type="MeshInstance3D" parent="Poignees" unique_id=491380175]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1015, 0.575, 0.065)
+material_override = SubResource("StandardMaterial3D_21ah5")
+mesh = SubResource("BoxMesh_31la2")
+
+[node name="Verrou_Salle" type="MeshInstance3D" parent="Poignees" unique_id=1993355921]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0.1515, 0.505, 0.031)
+material_override = SubResource("StandardMaterial3D_21ah5")
+mesh = SubResource("CylinderMesh_srs6a")
+
+[node name="Rosace_Couloir" type="MeshInstance3D" parent="Poignees" unique_id=154837291]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0.1515, 0.575, -0.025)
+material_override = SubResource("StandardMaterial3D_21ah5")
+mesh = SubResource("CylinderMesh_1y14s")
+
+[node name="Tige_Couloir" type="MeshInstance3D" parent="Poignees" unique_id=1107357908]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0.1515, 0.575, -0.045)
+material_override = SubResource("StandardMaterial3D_21ah5")
+mesh = SubResource("CylinderMesh_vmjhh")
+
+[node name="Bequille_Couloir" type="MeshInstance3D" parent="Poignees" unique_id=1109226457]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1015, 0.575, -0.065)
+material_override = SubResource("StandardMaterial3D_21ah5")
+mesh = SubResource("BoxMesh_g25cr")
+
+[node name="Verrou_Couloir" type="MeshInstance3D" parent="Poignees" unique_id=903767812]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0.1515, 0.505, -0.031)
+material_override = SubResource("StandardMaterial3D_21ah5")
+mesh = SubResource("CylinderMesh_55imq")

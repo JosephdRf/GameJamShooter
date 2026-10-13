@@ -1,0 +1,115 @@
+[gd_scene format=3 uid="uid://bky74exs260n2"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_wn8dq"]
+albedo_color = Color(0.827451, 0.84705883, 0.8745098, 1)
+roughness = 0.6
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2ddwb"]
+albedo_color = Color(0.43529412, 0.46666667, 0.5137255, 1)
+roughness = 0.6
+
+[node name="RouleauxPapier" type="CSGCombiner3D" unique_id=177877123]
+use_collision = true
+
+[node name="Rouleau_bas_1" type="CSGCylinder3D" parent="." unique_id=2059678706]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.112, 0.035, 0)
+radius = 0.055
+height = 0.07
+sides = 32
+material = SubResource("StandardMaterial3D_wn8dq")
+
+[node name="Trou" type="CSGCylinder3D" parent="Rouleau_bas_1" unique_id=645054326]
+operation = 2
+radius = 0.021
+height = 0.09
+sides = 32
+material = SubResource("StandardMaterial3D_2ddwb")
+
+[node name="Rouleau_bas_2" type="CSGCylinder3D" parent="." unique_id=2063690329]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.035, 0)
+radius = 0.055
+height = 0.07
+sides = 32
+material = SubResource("StandardMaterial3D_wn8dq")
+
+[node name="Trou" type="CSGCylinder3D" parent="Rouleau_bas_2" unique_id=1474962695]
+operation = 2
+radius = 0.021
+height = 0.09
+sides = 32
+material = SubResource("StandardMaterial3D_2ddwb")
+
+[node name="Rouleau_bas_3" type="CSGCylinder3D" parent="." unique_id=486616384]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.112, 0.035, 0)
+radius = 0.055
+height = 0.07
+sides = 32
+material = SubResource("StandardMaterial3D_wn8dq")
+
+[node name="Trou" type="CSGCylinder3D" parent="Rouleau_bas_3" unique_id=609521689]
+operation = 2
+radius = 0.021
+height = 0.09
+sides = 32
+material = SubResource("StandardMaterial3D_2ddwb")
+
+[node name="Rouleau_milieu_1" type="CSGCylinder3D" parent="." unique_id=1201630114]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.056, 0.105, 0)
+radius = 0.055
+height = 0.07
+sides = 32
+material = SubResource("StandardMaterial3D_wn8dq")
+
+[node name="Trou" type="CSGCylinder3D" parent="Rouleau_milieu_1" unique_id=1081179289]
+operation = 2
+radius = 0.021
+height = 0.09
+sides = 32
+material = SubResource("StandardMaterial3D_2ddwb")
+
+[node name="Rouleau_milieu_2" type="CSGCylinder3D" parent="." unique_id=1887483793]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.056, 0.105, 0)
+radius = 0.055
+height = 0.07
+sides = 32
+material = SubResource("StandardMaterial3D_wn8dq")
+
+[node name="Trou" type="CSGCylinder3D" parent="Rouleau_milieu_2" unique_id=406776843]
+operation = 2
+radius = 0.021
+height = 0.09
+sides = 32
+material = SubResource("StandardMaterial3D_2ddwb")
+
+[node name="Rouleau_haut" type="CSGCylinder3D" parent="." unique_id=1218307968]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.175, 0)
+radius = 0.055
+height = 0.07
+sides = 32
+material = SubResource("StandardMaterial3D_wn8dq")
+
+[node name="Trou" type="CSGCylinder3D" parent="Rouleau_haut" unique_id=479112502]
+operation = 2
+radius = 0.021
+height = 0.09
+sides = 32
+material = SubResource("StandardMaterial3D_2ddwb")
+
+[node name="Rouleau_couche" type="CSGCylinder3D" parent="." unique_id=815212009]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0.3, 0.055, 0.02)
+radius = 0.055
+height = 0.07
+sides = 32
+material = SubResource("StandardMaterial3D_wn8dq")
+
+[node name="Trou" type="CSGCylinder3D" parent="Rouleau_couche" unique_id=1031942990]
+operation = 2
+radius = 0.021
+height = 0.09
+sides = 32
+material = SubResource("StandardMaterial3D_2ddwb")
+
+[node name="Papier_deroule" type="CSGBox3D" parent="." unique_id=830225641]
+transform = Transform3D(0.9945219, 0, 0.104528464, 0, 1, 0, -0.104528464, 0, 0.9945219, 0.53, 0.002, 0.02)
+size = Vector3(0.4, 0.004, 0.1)
+material = SubResource("StandardMaterial3D_wn8dq")

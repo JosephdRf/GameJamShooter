@@ -1,0 +1,45 @@
+[gd_scene format=3 uid="uid://dcq5tklgkc1bl"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_76kv3"]
+albedo_color = Color(0.7254902, 0.7529412, 0.7921569, 1)
+roughness = 0.6
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1yek0"]
+albedo_color = Color(0.827451, 0.84705883, 0.8745098, 1)
+roughness = 0.6
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_l0ep4"]
+albedo_color = Color(0.2509804, 0.27450982, 0.30980393, 1)
+roughness = 0.6
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_xh6sg"]
+albedo_color = Color(0.6039216, 0.6392157, 0.6901961, 1)
+roughness = 0.6
+
+[node name="PesePersonne" type="CSGCombiner3D" unique_id=1509595119]
+use_collision = true
+
+[node name="Plateau" type="CSGBox3D" parent="." unique_id=1072616724]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0225, 0)
+size = Vector3(0.3, 0.045, 0.3)
+material = SubResource("StandardMaterial3D_76kv3")
+
+[node name="Dessus" type="CSGBox3D" parent="." unique_id=672314645]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.048, 0)
+size = Vector3(0.27, 0.006, 0.27)
+material = SubResource("StandardMaterial3D_1yek0")
+
+[node name="Ecran" type="CSGBox3D" parent="." unique_id=1366034354]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.052, 0.095)
+size = Vector3(0.09, 0.004, 0.04)
+material = SubResource("StandardMaterial3D_l0ep4")
+
+[node name="Pied_0" type="CSGBox3D" parent="." unique_id=501263526]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.07, 0.0515, -0.03)
+size = Vector3(0.09, 0.003, 0.14)
+material = SubResource("StandardMaterial3D_xh6sg")
+
+[node name="Pied_2" type="CSGBox3D" parent="." unique_id=234606906]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.07, 0.0515, -0.03)
+size = Vector3(0.09, 0.003, 0.14)
+material = SubResource("StandardMaterial3D_xh6sg")

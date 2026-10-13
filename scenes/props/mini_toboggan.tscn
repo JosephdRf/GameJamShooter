@@ -1,0 +1,107 @@
+[gd_scene format=3 uid="uid://cvmpvxxgcn0vk"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_btpcq"]
+albedo_color = Color(0.6039216, 0.6392157, 0.6901961, 1)
+roughness = 0.6
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_635t1"]
+albedo_color = Color(0.7254902, 0.7529412, 0.7921569, 1)
+roughness = 0.6
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_usfc6"]
+albedo_color = Color(0.43529412, 0.46666667, 0.5137255, 1)
+roughness = 0.6
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bf6s2"]
+albedo_color = Color(0.827451, 0.84705883, 0.8745098, 1)
+roughness = 0.6
+
+[node name="Toboggan" type="CSGCombiner3D" unique_id=209257861]
+use_collision = true
+
+[node name="Marche_1" type="CSGBox3D" parent="." unique_id=1588357530]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.38, 0.0105, 0)
+size = Vector3(0.3, 0.021, 0.13)
+material = SubResource("StandardMaterial3D_btpcq")
+
+[node name="Marche_2" type="CSGBox3D" parent="." unique_id=1042792116]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.365, 0.021, 0)
+size = Vector3(0.27, 0.042, 0.13)
+material = SubResource("StandardMaterial3D_635t1")
+
+[node name="Marche_3" type="CSGBox3D" parent="." unique_id=636042775]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.35, 0.0315, 0)
+size = Vector3(0.24, 0.063, 0.13)
+material = SubResource("StandardMaterial3D_btpcq")
+
+[node name="Marche_4" type="CSGBox3D" parent="." unique_id=392186970]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.335, 0.042, 0)
+size = Vector3(0.21, 0.084, 0.13)
+material = SubResource("StandardMaterial3D_635t1")
+
+[node name="Marche_5" type="CSGBox3D" parent="." unique_id=1940963678]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.32, 0.0525, 0)
+size = Vector3(0.18, 0.105, 0.13)
+material = SubResource("StandardMaterial3D_btpcq")
+
+[node name="Marche_6" type="CSGBox3D" parent="." unique_id=440297258]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.305, 0.063, 0)
+size = Vector3(0.15, 0.126, 0.13)
+material = SubResource("StandardMaterial3D_635t1")
+
+[node name="Marche_7" type="CSGBox3D" parent="." unique_id=1508717204]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.29, 0.0735, 0)
+size = Vector3(0.12, 0.147, 0.13)
+material = SubResource("StandardMaterial3D_btpcq")
+
+[node name="Marche_8" type="CSGBox3D" parent="." unique_id=331282013]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.275, 0.084, 0)
+size = Vector3(0.09, 0.168, 0.13)
+material = SubResource("StandardMaterial3D_635t1")
+
+[node name="Marche_9" type="CSGBox3D" parent="." unique_id=755176801]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.26, 0.0945, 0)
+size = Vector3(0.06, 0.189, 0.13)
+material = SubResource("StandardMaterial3D_btpcq")
+
+[node name="Marche_10" type="CSGBox3D" parent="." unique_id=2084572205]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.245, 0.105, 0)
+size = Vector3(0.03, 0.21, 0.13)
+material = SubResource("StandardMaterial3D_635t1")
+
+[node name="Plateforme" type="CSGBox3D" parent="." unique_id=155512833]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.17, 0.105, 0)
+size = Vector3(0.12, 0.21, 0.13)
+material = SubResource("StandardMaterial3D_635t1")
+
+[node name="Garde_corps_0" type="CSGBox3D" parent="." unique_id=1158523401]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.17, 0.24, -0.059)
+size = Vector3(0.12, 0.06, 0.012)
+material = SubResource("StandardMaterial3D_usfc6")
+
+[node name="Garde_corps_2" type="CSGBox3D" parent="." unique_id=125689593]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.17, 0.24, 0.059)
+size = Vector3(0.12, 0.06, 0.012)
+material = SubResource("StandardMaterial3D_usfc6")
+
+[node name="Glissiere" type="CSGCombiner3D" parent="." unique_id=1379304699]
+transform = Transform3D(0.92426145, 0.38176015, 0, -0.38176015, 0.92426145, 0, 0, 0, 1, 0.12, 0.107, 0)
+
+[node name="Piste" type="CSGBox3D" parent="Glissiere" unique_id=1335223864]
+size = Vector3(0.5176947, 0.015, 0.13)
+material = SubResource("StandardMaterial3D_bf6s2")
+
+[node name="Rebord_0" type="CSGBox3D" parent="Glissiere" unique_id=1971851415]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, -0.059)
+size = Vector3(0.5176947, 0.04, 0.012)
+material = SubResource("StandardMaterial3D_btpcq")
+
+[node name="Rebord_2" type="CSGBox3D" parent="Glissiere" unique_id=528697312]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.02, 0.059)
+size = Vector3(0.5176947, 0.04, 0.012)
+material = SubResource("StandardMaterial3D_btpcq")
+
+[node name="Pied_glissiere" type="CSGBox3D" parent="." unique_id=2024926088]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.12, 0.05, 0)
+size = Vector3(0.03, 0.1, 0.11)
+material = SubResource("StandardMaterial3D_usfc6")

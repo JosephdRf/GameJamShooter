@@ -1,0 +1,121 @@
+[gd_scene format=3 uid="uid://b1octw75mrwwa"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_saths"]
+albedo_color = Color(0.9647059, 0.9843137, 1, 1)
+roughness = 0.12
+
+[sub_resource type="BoxMesh" id="BoxMesh_gdm75"]
+size = Vector3(0.18, 0.38, 0.4)
+
+[sub_resource type="BoxMesh" id="BoxMesh_2y4cn"]
+size = Vector3(0.21, 0.03, 0.42)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_kevkx"]
+albedo_color = Color(0, 0.83137256, 1, 1)
+roughness = 0.3
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_e337a"]
+top_radius = 0.03
+bottom_radius = 0.03
+height = 0.012
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_27xh6"]
+top_radius = 0.1
+bottom_radius = 0.13
+height = 0.28
+radial_segments = 48
+
+[sub_resource type="BoxMesh" id="BoxMesh_1yxkf"]
+size = Vector3(0.14, 0.26, 0.2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_w0mh7"]
+cull_mode = 2
+albedo_color = Color(0.9647059, 0.9843137, 1, 1)
+roughness = 0.12
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_r3i4t"]
+top_radius = 0.17
+bottom_radius = 0.11
+height = 0.13
+cap_top = false
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_sbbjy"]
+albedo_color = Color(0.56078434, 0.8627451, 1, 1)
+metallic = 0.1
+roughness = 0.0
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_2avhw"]
+top_radius = 0.12
+bottom_radius = 0.12
+height = 0.01
+
+[sub_resource type="TorusMesh" id="TorusMesh_uw5am"]
+inner_radius = 0.12
+outer_radius = 0.18
+ring_segments = 16
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_3qtl8"]
+top_radius = 0.17
+bottom_radius = 0.17
+height = 0.018
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_r23sg"]
+size = Vector3(0.62, 0.44, 0.38)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_coq7v"]
+size = Vector3(0.21, 0.82, 0.42)
+
+[node name="Toilettes" type="StaticBody3D" unique_id=1814691230]
+
+[node name="Reservoir" type="MeshInstance3D" parent="." unique_id=1590180302]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1, 0.59, 0)
+material_override = SubResource("StandardMaterial3D_saths")
+mesh = SubResource("BoxMesh_gdm75")
+
+[node name="Couvercle_reservoir" type="MeshInstance3D" parent="." unique_id=483131443]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.105, 0.797, 0)
+material_override = SubResource("StandardMaterial3D_saths")
+mesh = SubResource("BoxMesh_2y4cn")
+
+[node name="Bouton_chasse" type="MeshInstance3D" parent="." unique_id=1581633103]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.11, 0.818, 0)
+material_override = SubResource("StandardMaterial3D_kevkx")
+mesh = SubResource("CylinderMesh_e337a")
+
+[node name="Pied" type="MeshInstance3D" parent="." unique_id=1456301252]
+transform = Transform3D(1.2, 0, 0, 0, 1, 0, 0, 0, 1, 0.38, 0.14, 0)
+material_override = SubResource("StandardMaterial3D_saths")
+mesh = SubResource("CylinderMesh_27xh6")
+
+[node name="Jonction" type="MeshInstance3D" parent="." unique_id=173871862]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.2, 0.22, 0)
+material_override = SubResource("StandardMaterial3D_saths")
+mesh = SubResource("BoxMesh_1yxkf")
+
+[node name="Cuvette" type="MeshInstance3D" parent="." unique_id=1537067290]
+transform = Transform3D(1.2, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, 0.335, 0)
+material_override = SubResource("StandardMaterial3D_w0mh7")
+mesh = SubResource("CylinderMesh_r3i4t")
+
+[node name="Eau" type="MeshInstance3D" parent="." unique_id=611674500]
+transform = Transform3D(1.2, 0, 0, 0, 1, 0, 0, 0, 1, 0.4, 0.34, 0)
+material_override = SubResource("StandardMaterial3D_sbbjy")
+mesh = SubResource("CylinderMesh_2avhw")
+
+[node name="Lunette" type="MeshInstance3D" parent="." unique_id=1055388424]
+transform = Transform3D(1.2, 0, 0, 0, 0.4, 0, 0, 0, 1, 0.4, 0.418, 0)
+material_override = SubResource("StandardMaterial3D_saths")
+mesh = SubResource("TorusMesh_uw5am")
+
+[node name="Abattant" type="MeshInstance3D" parent="." unique_id=1747035197]
+transform = Transform3D(0.12543412, -0.9945219, 0, 1.1934264, 0.10452842, 0, 0, 0, 1, 0.22627449, 0.6288232, 0)
+material_override = SubResource("StandardMaterial3D_saths")
+mesh = SubResource("CylinderMesh_3qtl8")
+
+[node name="Collision_cuvette" type="CollisionShape3D" parent="." unique_id=1425214396]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.31, 0.22, 0)
+shape = SubResource("BoxShape3D_r23sg")
+
+[node name="Collision_reservoir" type="CollisionShape3D" parent="." unique_id=924778963]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.105, 0.41, 0)
+shape = SubResource("BoxShape3D_coq7v")

@@ -1,0 +1,64 @@
+[gd_scene format=3 uid="uid://w1rupoqwy24f"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_xh6sg"]
+albedo_color = Color(0.6039216, 0.6392157, 0.6901961, 1)
+roughness = 0.6
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_76kv3"]
+albedo_color = Color(0.7254902, 0.7529412, 0.7921569, 1)
+roughness = 0.6
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1yek0"]
+albedo_color = Color(0.827451, 0.84705883, 0.8745098, 1)
+roughness = 0.6
+
+[node name="PileServiettes" type="CSGCombiner3D" unique_id=273039949]
+use_collision = true
+
+[node name="Serviette_1" type="CSGBox3D" parent="." unique_id=996121711]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.035, 0)
+size = Vector3(0.4, 0.07, 0.3)
+material = SubResource("StandardMaterial3D_xh6sg")
+
+[node name="Pli_1" type="CSGCylinder3D" parent="." unique_id=1059952429]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, -0.2, 0.035, 0)
+radius = 0.035
+height = 0.3
+sides = 32
+material = SubResource("StandardMaterial3D_xh6sg")
+
+[node name="Serviette_2" type="CSGBox3D" parent="." unique_id=1209790051]
+transform = Transform3D(0.9975641, 0, 0.06975647, 0, 1, 0, -0.06975647, 0, 0.9975641, -0.045, 0.105, 0)
+size = Vector3(0.31, 0.07, 0.27)
+material = SubResource("StandardMaterial3D_76kv3")
+
+[node name="Pli_2" type="CSGCylinder3D" parent="." unique_id=632394996]
+transform = Transform3D(0.9975641, 0.06975647, -3.0491523e-09, 0, -4.371139e-08, -1, -0.06975647, 0.9975641, -4.360491e-08, -0.2, 0.105, 0)
+radius = 0.035
+height = 0.27
+sides = 32
+material = SubResource("StandardMaterial3D_76kv3")
+
+[node name="Serviette_3" type="CSGBox3D" parent="." unique_id=693112761]
+transform = Transform3D(0.9986295, 0, -0.05233596, 0, 1, 0, 0.05233596, 0, 0.9986295, -0.09, 0.175, 0)
+size = Vector3(0.22, 0.07, 0.24)
+material = SubResource("StandardMaterial3D_1yek0")
+
+[node name="Pli_3" type="CSGCylinder3D" parent="." unique_id=576743045]
+transform = Transform3D(0.9986295, -0.05233596, 2.2876774e-09, 0, -4.371139e-08, -1, 0.05233596, 0.9986295, -4.3651482e-08, -0.2, 0.175, 0)
+radius = 0.035
+height = 0.24
+sides = 32
+material = SubResource("StandardMaterial3D_1yek0")
+
+[node name="Serviette_4" type="CSGBox3D" parent="." unique_id=1612463822]
+transform = Transform3D(0.9961947, 0, 0.08715574, 0, 1, 0, -0.08715574, 0, 0.9961947, -0.135, 0.245, 0)
+size = Vector3(0.13, 0.07, 0.21)
+material = SubResource("StandardMaterial3D_76kv3")
+
+[node name="Pli_4" type="CSGCylinder3D" parent="." unique_id=1397437944]
+transform = Transform3D(0.9961947, 0.08715574, -3.8096983e-09, 0, -4.371139e-08, -1, -0.08715574, 0.9961947, -4.3545054e-08, -0.2, 0.245, 0)
+radius = 0.035
+height = 0.21
+sides = 32
+material = SubResource("StandardMaterial3D_76kv3")

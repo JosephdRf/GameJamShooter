@@ -65,6 +65,8 @@ extends Node3D
 const RADIUS := 0.455
 ## Portée de la bulle normale (m), cf. max_distance.
 const RANGE := 25.0
+## Vitesse à laquelle l'image de la bulle rejoint sa vraie trajectoire (cf. _visual_offset).
+const VISUAL_CATCH_UP_SPEED := 25.0
 ## Rayon de la bulle de capture (m), cf. `radius` de capture_bubble.tscn.
 const CAPTURE_RADIUS := 0.7
 ## Rayon de contact avec le décor des bulles (m), cf. `world_radius` des deux scènes.
@@ -72,8 +74,9 @@ const WORLD_CONTACT_RADIUS := 0.3
 ## Surface considérée comme un sol (flaque) si la composante verticale de sa normale dépasse ce seuil.
 const GROUND_MIN_NORMAL_Y := 0.7
 
-## Émis quand la bulle éclate sur le sol : `point` sur la surface, rayon de la flaque (m).
-signal splashed(point: Vector3, puddle_radius: float)
+## Émis quand la bulle éclate sur le sol : `point` sur la surface, rayon de la flaque (m),
+## normale de la surface (l'éclaboussure suit une pente).
+signal splashed(point: Vector3, puddle_radius: float, normal: Vector3)
 
 ## Matériau de chaque équipe (index 0 = équipe 1), partagé par toutes ses bulles :
 ## celui de la scène, teinté à la couleur de l'équipe (même transparence).
@@ -90,12 +93,19 @@ var _queries: Array[PhysicsShapeQueryParameters3D] = []
 var _world_shape := SphereShape3D.new()
 var _hit_shape := SphereShape3D.new()
 var _grow_tween: Tween
+## Écart entre l'image de la bulle et sa vraie position, qui fond en VISUAL_CATCH_UP_SPEED :
+## partie de la ligne de visée, elle semble sortir du canon (cf. launch, `visual_from`).
+var _visual_offset := Vector3.ZERO
 
 
 ## À appeler juste après l'ajout à la scène. `deals_damage` : vrai seulement
 ## sur l'ordinateur du tireur.
-func launch(shooter: Player, origin: Vector3, direction: Vector3, deals_damage: bool) -> void:
+## `visual_from` : point d'où la bulle semble partir (bout du canon), si elle part d'ailleurs.
+func launch(shooter: Player, origin: Vector3, direction: Vector3, deals_damage: bool,
+		visual_from := Vector3.INF) -> void:
 	global_position = origin
+	if visual_from.is_finite():
+		_visual_offset = visual_from - origin
 	_direction = direction.normalized()
 	_shooter_team = Player.team_of(shooter.player_id)
 	var mesh := $Mesh as MeshInstance3D
@@ -122,6 +132,7 @@ func launch(shooter: Player, origin: Vector3, direction: Vector3, deals_damage: 
 
 
 func _physics_process(delta: float) -> void:
+	_catch_up_visual(delta)
 	var step := minf(speed * delta, max_distance - _travelled)
 	var space := get_world_3d().direct_space_state
 	var grown := minf(scale.x, 1.0)
@@ -168,7 +179,7 @@ func _on_hit(collider: Object, contact: Dictionary) -> void:
 			player.take_damage(damage)
 	elif not player and not contact.is_empty() and puddle_radius > 0.0 \
 			and (contact.normal as Vector3).y > GROUND_MIN_NORMAL_Y:
-		splashed.emit(contact.point, puddle_radius)
+		splashed.emit(contact.point, puddle_radius, contact.normal)
 	_pop()
 
 
@@ -176,6 +187,8 @@ func _on_hit(collider: Object, contact: Dictionary) -> void:
 ## assets/audio/sfx/bubble_pop.tres), puis le nœud est supprimé une fois le son fini.
 func _pop() -> void:
 	set_physics_process(false)
+	_visual_offset = Vector3.ZERO # Éclate là où elle est vraiment.
+	$Mesh.position = Vector3.ZERO
 	if _grow_tween:
 		_grow_tween.kill()
 	var pop_sound := $PopSound as AudioStreamPlayer3D
@@ -188,3 +201,13 @@ func _pop() -> void:
 	if pop_sound.playing:
 		await pop_sound.finished
 	queue_free()
+
+## L'image de la bulle rejoint en douceur sa vraie trajectoire (le nœud, lui, est mis à
+## l'échelle par la croissance : l'écart est donc divisé par son échelle).
+func _catch_up_visual(delta: float) -> void:
+	if _visual_offset == Vector3.ZERO:
+		return
+	_visual_offset *= exp(-VISUAL_CATCH_UP_SPEED * delta)
+	if _visual_offset.length() < 0.01:
+		_visual_offset = Vector3.ZERO
+	$Mesh.position = _visual_offset / maxf(scale.x, 0.01)

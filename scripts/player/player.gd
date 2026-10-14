@@ -37,8 +37,8 @@ signal health_changed(health: float)
 signal died
 signal respawned
 ## Émis sur tous les ordinateurs quand ce joueur tire (Game crée la bulle ;
-## `capture` : bulle de capture).
-signal shot(origin: Vector3, direction: Vector3, capture: bool)
+## `capture` : bulle de capture ; `visual_origin` : bout du canon, d'où la bulle semble partir).
+signal shot(origin: Vector3, direction: Vector3, capture: bool, visual_origin: Vector3)
 ## Émis (ordinateur du joueur) quand un tir est refusé faute d'eau.
 signal water_denied
 
@@ -102,6 +102,8 @@ const FOOTSTEPS := {
 	&"walk": [0.49, 0.98],
 	&"run": [0.47, 0.95],
 }
+## Hauteur minimale du départ des bulles au-dessus des pieds (m), cf. get_muzzle_position.
+const MIN_MUZZLE_HEIGHT := 0.42
 ## Canon à eau : intervalle (s) entre deux envois du point visé aux autres ordinateurs.
 const CANNON_AIM_SYNC_INTERVAL := 0.066
 ## Sillage sur l'eau pendant une glissade : un rond et une gerbe toutes les WAKE_INTERVAL s.
@@ -144,6 +146,9 @@ const CAPTURE_CEILING_TEST := 0.02
 ## Pendant le dash, gauche / droite le font tourner (radians par seconde) ; avant / arrière
 ## n'ont pas d'effet (ni accélérer ni freiner).
 @export var dash_steer_speed := 1.75
+## Pendant le dash, le canard reste collé au sol jusqu'à cette distance (m) : en descente
+## rapide, il suit la pente au lieu de s'envoler tout droit (hors dash : floor_snap_length).
+@export var dash_floor_snap := 0.6
 @export_group("Tir")
 ## Temps minimum entre deux appuis sur la touche de tir (s).
 @export var fire_cooldown := 0.15
@@ -165,7 +170,7 @@ const CAPTURE_CEILING_TEST := 0.02
 ## Eau dépensée (fraction de la réserve) par un tir, une grosse bulle, et par seconde de jet.
 @export var water_per_shot := 0.05
 @export var water_per_capture := 0.2
-@export var water_per_second := 0.1
+@export var water_per_second := 0.2
 ## Temps sans dépenser d'eau avant que la réserve se recharge (s).
 @export var water_recharge_delay := 2.0
 ## Recharge : vitesse au départ (fraction par seconde), qui double toutes les
@@ -255,6 +260,8 @@ var _puddles: Puddles
 var _wake_left := 0.0
 ## Temps restant avant le prochain envoi de cannon_target (s).
 var _cannon_sync_left := 0.0
+## floor_snap_length hors dash (celui de la scène), cf. dash_floor_snap.
+var _floor_snap_default := 0.1
 ## Temps depuis la dernière dépense d'eau (s), pour la recharge.
 var _water_idle := INF
 ## Temps restant avant de pouvoir tirer une bulle de capture (s).
@@ -313,6 +320,7 @@ func _ready() -> void:
 	if not Engine.is_editor_hint():
 		_create_muzzle()
 	_model_base_y = _model.position.y
+	_floor_snap_default = floor_snap_length
 	_camera_base_y = camera.position.y
 	_spawn_position = global_position
 	sync_position = position
@@ -331,13 +339,18 @@ func freeze() -> void:
 	cannon_on = false
 
 
-## Bout du canon, une fois le canard tourné vers sa visée (départ des bulles et du jet d'eau).
+## Bout du canon, une fois le canard tourné vers sa visée (départ des bulles et du jet d'eau),
+## jamais à moins de MIN_MUZZLE_HEIGHT au-dessus des pieds : en marchant ou en courant,
+## l'animation balance le pistolet jusqu'à 0,2 m du sol, et une bulle partie si bas raclerait
+## le sol (rayon de contact 0,3 m) et éclaterait au hasard.
 func get_muzzle_position() -> Vector3:
 	if _muzzle == null:
 		return global_position
 	# Le canard n'a peut-être pas fini de se tourner vers sa visée.
 	var turn := atan2(sync_facing.x, sync_facing.y) - _model.rotation.y
-	return global_position + (_muzzle.global_position - global_position).rotated(Vector3.UP, turn)
+	var muzzle := global_position + (_muzzle.global_position - global_position).rotated(Vector3.UP, turn)
+	muzzle.y = maxf(muzzle.y, _feet_position().y + MIN_MUZZLE_HEIGHT)
+	return muzzle
 
 
 func _physics_process(delta: float) -> void:
@@ -475,19 +488,26 @@ func _simulate(delta: float) -> void:
 		if not is_on_floor():
 			velocity.y -= _gravity * gravity_scale * delta
 		if _dash_time > 0.0:
-			# Dash : vitesse horizontale selon la courbe (la gravité s'applique si on quitte le sol).
+			# Dash : vitesse selon la courbe. Au sol, elle suit la surface (pente montante ou
+			# descendante) ; en l'air, elle reste horizontale et la gravité s'applique.
 			if not _dash_paused_on_water():
 				_dash_time = maxf(_dash_time - delta, 0.0)
 			# Gauche / droite infléchissent un peu la trajectoire (input.x > 0 : vers la droite).
 			_dash_direction = _dash_direction.rotated(Vector3.UP, -input.x * dash_steer_speed * delta)
 			var speed := _dash_speed_at(1.0 - _dash_time / dash_duration)
-			velocity.x = _dash_direction.x * speed
-			velocity.z = _dash_direction.z * speed
+			if is_on_floor():
+				var ground := get_floor_normal()
+				velocity = (_dash_direction - ground * _dash_direction.dot(ground)).normalized() * speed
+			else:
+				velocity.x = _dash_direction.x * speed
+				velocity.z = _dash_direction.z * speed
 		else:
 			var target := direction * move_speed
 			velocity.x = move_toward(velocity.x, target.x, acceleration * delta)
 			velocity.z = move_toward(velocity.z, target.z, acceleration * delta)
 
+	# Pendant le dash, collé au sol de plus loin (suit une descente rapide au lieu de s'envoler).
+	floor_snap_length = dash_floor_snap if _dash_time > 0.0 else _floor_snap_default
 	if not _step_up(delta):
 		move_and_slide()
 
@@ -519,8 +539,44 @@ func _fire(capture: bool) -> void:
 	var aim_point: Vector3 = target.point
 	if target.collider is not Player:
 		aim_point += target.normal * BubbleProjectile.WORLD_CONTACT_RADIUS
-	var origin := get_muzzle_position()
-	_shoot.rpc(origin, _shot_direction(origin, aim_point), capture)
+	# La bulle part du bout du canon. Mais le canon est plus bas que la caméra : face à une
+	# montée, au bord d'un meuble…, la ligne canon → viseur peut traverser le décor alors que
+	# la caméra voit le point visé. Dans ce cas, la bulle part de la ligne de visée (à hauteur
+	# du canard) si elle va ainsi nettement plus loin vers le point visé ; elle semble quand
+	# même sortir du canon (BubbleProjectile.launch, `visual_from`).
+	var muzzle := get_muzzle_position()
+	var origin := muzzle
+	var reach := INF if capture else BubbleProjectile.RANGE
+	var from_muzzle := _shot_reach(muzzle, aim_point, reach)
+	if from_muzzle < minf(muzzle.distance_to(aim_point), reach) - 0.5:
+		var sight := _sight_origin()
+		if _shot_reach(sight, aim_point, reach) > from_muzzle + 0.5:
+			origin = sight
+	_shoot.rpc(origin, _shot_direction(origin, aim_point), capture, muzzle)
+
+
+## Point de départ du rayon de visée : sur la ligne caméra → viseur, à hauteur du canard (ce
+## qui est entre la caméra et le canard est ignoré).
+func _sight_origin() -> Vector3:
+	var ray := camera.get_aim_ray()
+	var origin: Vector3 = ray[0]
+	var direction: Vector3 = ray[1]
+	return origin + direction * maxf((global_position - origin).dot(direction), 0.0)
+
+
+## Distance (m) que parcourt une bulle partie de `from` vers `to` (le point visé, déjà
+## décalé de son rayon de contact) avant de toucher le décor, sans dépasser `max_distance`.
+func _shot_reach(from: Vector3, to: Vector3, max_distance: float) -> float:
+	var distance := minf(from.distance_to(to), max_distance)
+	var shape := SphereShape3D.new()
+	shape.radius = BubbleProjectile.WORLD_CONTACT_RADIUS * 0.9
+	var query := PhysicsShapeQueryParameters3D.new()
+	query.shape = shape
+	query.transform = Transform3D(Basis.IDENTITY, from)
+	query.motion = (to - from).normalized() * distance
+	query.collision_mask = WORLD_LAYER | enemy_spawn_layer(team_of(player_id))
+	query.exclude = [get_rid()]
+	return get_world_3d().direct_space_state.cast_motion(query)[0] * distance
 
 
 ## Du bout du canon `origin` vers `aim_point` ; si la cible est trop proche (derrière le
@@ -613,11 +669,11 @@ func _regenerate(delta: float) -> void:
 
 ## Sur tous les ordinateurs (appelé par celui qui contrôle ce cube).
 @rpc("authority", "call_local", "reliable")
-func _shoot(origin: Vector3, direction: Vector3, capture: bool) -> void:
+func _shoot(origin: Vector3, direction: Vector3, capture: bool, visual_origin: Vector3) -> void:
 	var sound := _capture_shoot_sound if capture else _shoot_sound
-	sound.global_position = origin # Le son part du canon, en même temps que la bulle.
+	sound.global_position = visual_origin # Le son part du canon, en même temps que la bulle.
 	sound.play()
-	shot.emit(origin, direction, capture)
+	shot.emit(origin, direction, capture, visual_origin)
 
 
 ## Ordinateur qui a l'autorité sur ce cube : début de la capture (cf. capture()).
@@ -710,10 +766,8 @@ func _aim_facing() -> Vector2:
 ## Le rayon part de la hauteur du canard (pas de la caméra) pour ignorer ce qui
 ## se trouve entre la caméra et lui.
 func aim() -> Dictionary:
-	var ray := camera.get_aim_ray()
-	var origin: Vector3 = ray[0]
-	var direction: Vector3 = ray[1]
-	origin += direction * maxf((global_position - origin).dot(direction), 0.0)
+	var origin := _sight_origin()
+	var direction: Vector3 = camera.get_aim_ray()[1]
 	var query := PhysicsRayQueryParameters3D.create(origin, origin + direction * AIM_DISTANCE,
 			WORLD_LAYER | PLAYERS_LAYER | enemy_spawn_layer(team_of(player_id)), [get_rid()])
 	var hit := get_world_3d().direct_space_state.intersect_ray(query)
@@ -773,7 +827,7 @@ func _update_model(velocity_now: Vector3, delta: float) -> void:
 	_wake_left -= delta
 	if sliding and _wake_left <= 0.0:
 		_wake_left = WAKE_INTERVAL
-		_puddles.wake(_feet_position(), horizontal)
+		_puddles.wake(_feet_position(), horizontal, _ground_normal())
 	var dashing := _dash_animation_left > 0.0
 	_animation_tree.set(&"parameters/conditions/dashing", dashing)
 	_animation_tree.set(&"parameters/conditions/dash_over", not dashing)
@@ -807,7 +861,7 @@ func _play_footsteps(enabled: bool) -> void:
 					else (contact > _footstep_phase or contact <= phase) # L'animation a bouclé.
 			if crossed and is_on_water():
 				_water_step_sound.play()
-				_puddles.step_splash(_feet_position())
+				_puddles.step_splash(_feet_position(), _ground_normal())
 			elif crossed:
 				_step_sound.play()
 	_footstep_animation = animation
@@ -863,6 +917,12 @@ func is_on_water() -> bool:
 	if _puddles == null:
 		_puddles = get_tree().get_first_node_in_group(Puddles.GROUP) as Puddles
 	return _puddles != null and _puddles.is_wet(_feet_position())
+
+
+## Normale du sol sous le canard (vers le haut si on ne la connaît pas : en l'air, ou canard
+## d'un autre ordinateur, qui ne fait pas de move_and_slide ici).
+func _ground_normal() -> Vector3:
+	return get_floor_normal() if is_on_floor() else Vector3.UP
 
 
 ## Point du sol sous le canard (bas de sa capsule).

@@ -24,6 +24,9 @@ extends Node3D
 ## l'ordinateur du tireur compte les dégâts, regroupés par cible à chaque image (un seul
 ## Player.take_damage par cible et par image, pas un par goutte).
 
+## Une goutte sur PAINT_EVERY qui touche le sol y peint, avec PAINT_EVERY fois plus d'eau :
+## même trace (les gouttes tombent presque au même endroit), peinture bien moins coûteuse.
+const PAINT_EVERY := 3
 ## Une goutte sur SLOW_EVERY part moins vite (cf. min_speed_ratio).
 const SLOW_EVERY := 5
 
@@ -43,8 +46,8 @@ const SLOW_EVERY := 5
 ## Durée de vie maximale d'une goutte (s).
 @export var lifetime := 2.5
 ## Rayon (m) et quantité d'eau de la tache laissée au sol par une goutte (cf. Puddles).
-@export var puddle_radius := 0.55
-@export var puddle_amount := 0.15
+@export var puddle_radius := 1.3
+@export var puddle_amount := 0.2
 ## Dégâts infligés par chaque goutte qui touche un adversaire (PV).
 @export var damage_per_drop := 0.4
 ## Taille d'une goutte (m) et étirement selon sa vitesse.
@@ -56,6 +59,8 @@ var _drops: Array[Array] = []
 ## Joueur -> gouttes en attente d'émission (fraction) et nombre de gouttes émises.
 var _emission := {}
 var _multimesh := MultiMesh.new()
+## Gouttes tombées au sol, pour n'en peindre qu'une sur PAINT_EVERY.
+var _landed := 0
 ## Dégâts de l'image en cours, par cible (Player -> PV), envoyés en une fois (cf. _deal_damage).
 var _pending_damage := {}
 var _puddles: Puddles
@@ -181,7 +186,9 @@ func _on_drop_hit(hit: Dictionary, shooter: Player) -> void:
 		return
 	var normal: Vector3 = hit.normal
 	if hit.collider is not Player and normal.y > BubbleProjectile.GROUND_MIN_NORMAL_Y:
-		_puddles.add_puddle(hit.position, puddle_radius, puddle_amount, false)
+		_landed += 1
+		if _landed % PAINT_EVERY == 0:
+			_puddles.add_puddle(hit.position, puddle_radius, puddle_amount * PAINT_EVERY, false, normal)
 	_puddles.drip(hit.position, normal)
 
 

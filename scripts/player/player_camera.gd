@@ -5,8 +5,8 @@ extends Node3D
 ## aux entrées : joystick droit (actions look_*) et souris / trackpad.
 ##
 ## Hiérarchie : PlayerCamera (lacet / yaw) > Pitch (tangage) > SpringArm > Camera
-## Cadrage façon Splatoon : pivot 1,15 m au-dessus du centre du canard (au-dessus
-## de sa tête), bras de 3,2 m presque horizontal (-2°) : le canard est en bas au
+## Cadrage façon Splatoon : pivot 1,44 m au-dessus du centre du canard (au-dessus
+## de sa tête), bras de 4 m presque horizontal (-2°) : le canard est en bas au
 ## centre de l'écran, le viseur (centre de l'écran, sauf aide à la visée : cf.
 ## AimAssist) juste au-dessus de lui.
 ## Au repos, le viseur vise donc au loin à hauteur de tête : les bulles portent
@@ -26,7 +26,7 @@ extends Node3D
 @export var invert_y := false
 ## Visée : champ de vision (°) et longueur du bras (m), au lieu de ceux de la scène.
 @export var aim_fov := 55.0
-@export var aim_arm_length := 2.0
+@export var aim_arm_length := 2.5
 ## Vitesse du zoom (plus élevé = plus rapide).
 @export var aim_zoom_speed := 14.0
 

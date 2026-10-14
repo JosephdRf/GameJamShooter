@@ -144,7 +144,7 @@ Un joueur qui tombe de la plateforme meurt.
 - Une bulle qui éclate sur le sol (ou le dessus d'un meuble) laisse une **flaque d'eau** (rayon 2 m,
   3,6 m pour la maxi-bulle : `puddle_radius`), de forme irrégulière. Deux flaques proches se rejoignent
   en une seule ; tirer plusieurs fois au même endroit l'agrandit.
-- **Évaporation** : l'eau disparaît **30 s** après son dernier arrosage, en pâlissant pendant les 10 dernières
+- **Évaporation** : l'eau disparaît **30 s** après son dernier arrosage, en pâlissant pendant les 3 dernières
   secondes ; réarroser une flaque la rafraîchit (groupe « Évaporation » du nœud `Puddles`).
 - **Dash sur l'eau** : il ne s'use pas. Le canard garde sa vitesse tant qu'il glisse sur une flaque, et
   la distance du dash ne compte que sur le sol sec (`dash_slides_on_water` sur le joueur). Contre un mur,

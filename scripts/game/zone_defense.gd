@@ -26,7 +26,7 @@ const SYNC_INTERVAL := 0.1
 const MAX_HEIGHT := 3.0
 const IDLE_COLOR := Color(1, 0.95, 0.7) # Jaune pâle : visible sur le sol clair.
 
-@export var radius := 3.5:
+@export var radius := 5.25:
 	set(value):
 		radius = value
 		_update_shape()

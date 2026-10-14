@@ -103,7 +103,7 @@ const FOOTSTEPS := {
 	&"run": [0.47, 0.95],
 }
 ## Hauteur minimale du départ des bulles au-dessus des pieds (m), cf. get_muzzle_position.
-const MIN_MUZZLE_HEIGHT := 0.42
+const MIN_MUZZLE_HEIGHT := 0.525
 ## Canon à eau : intervalle (s) entre deux envois du point visé aux autres ordinateurs.
 const CANNON_AIM_SYNC_INTERVAL := 0.066
 ## Sillage sur l'eau pendant une glissade : un rond et une gerbe toutes les WAKE_INTERVAL s.

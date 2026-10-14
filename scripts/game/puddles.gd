@@ -12,7 +12,9 @@ extends Node3D
 ## Affichage : la carte est découpée en carreaux de CHUNK_SIZE m, chacun projeté sur le
 ## décor par un Decal. Un carreau par « étage » de LAYER_HEIGHT m : il ne colore que les
 ## surfaces proches de cette hauteur (une flaque sur une étagère ne déborde pas sur le sol
-## en dessous). Un éclatement ne met à jour que les carreaux qu'il touche.
+## en dessous). Un éclatement ne met à jour que les carreaux qu'il touche. Sur une pente,
+## chaque pixel de la tache va dans l'étage de sa propre hauteur (celle du plan de la pente
+## touchée) : la flaque couvre la pente, au lieu d'une bande horizontale de LAYER_HEIGHT m.
 ## Peinture étalée sur plusieurs images (au plus `paint_budget_ms` ms par image) : une
 ## grosse flaque apparaît en quelques images au lieu de faire saccader le jeu.
 ## Les canards (calque visuel DUCK_VISUAL_LAYER) ne sont pas mouillés par les Decals.
@@ -21,7 +23,15 @@ extends Node3D
 ## brillante (reflets de la lumière), bleu clair au bord et plus sombre là où elle est profonde, avec de petites rides (normal map partagée,
 ## sans raccord d'un carreau à l'autre). Chaque éclatement fait des ronds dans l'eau et
 ## quelques gouttes (_play_splash). Les canards font aussi réagir l'eau : un rond à chaque pas
-## (step_splash) et un sillage quand ils glissent dessus (wake), cf. Player.
+## (step_splash) et un sillage quand ils glissent dessus (wake), cf. Player. Ronds et gouttes
+## suivent la surface touchée (`normal`) : posés à plat sur une pente, gouttes projetées
+## perpendiculairement à elle (sinon, sur une pente, l'éclaboussure ressemblait à un rebond).
+##
+## Évaporation : chaque pixel retient l'instant de son dernier arrosage ; `water_lifetime` s
+## plus tard il sèche, après avoir pâli pendant les `fade_duration` dernières secondes.
+## Réarroser une flaque la rafraîchit. Le temps compté est celui de la partie (figé en pause).
+## Passe d'évaporation toutes les EVAPORATION_STEP s, sur les seuls pixels mouillés, dans le
+## même budget de temps par image que la peinture.
 ##
 ## Les joueurs savent s'ils marchent dans l'eau avec is_wet() (groupe GROUP).
 ##
@@ -36,6 +46,8 @@ const LAYER_HEIGHT := 0.5
 const DUCK_VISUAL_LAYER := 2
 ## Groupe du nœud des flaques (un par partie), pour que les joueurs le trouvent.
 const GROUP := &"puddles"
+## Intervalle (s) entre deux passes d'évaporation (pâlissement par paliers de cette durée).
+const EVAPORATION_STEP := 0.2
 ## Canon à eau : un rond dans l'eau toutes les DRIP_RING_EVERY gouttes (cf. drip).
 const DRIP_RING_EVERY := 3
 
@@ -63,6 +75,13 @@ const DRIP_RING_EVERY := 3
 @export var damp_roughness := 0.5
 ## Relief des petites rides de l'eau (0 = eau parfaitement plate).
 @export var ripple_strength := 6.0
+@export_group("Évaporation")
+## Temps (s) après le dernier arrosage au bout duquel l'eau a disparu.
+@export var water_lifetime := 30.0
+## Pendant ses dernières secondes (s), l'eau pâlit jusqu'à disparaître.
+@export var fade_duration := 10.0
+## Couleur vers laquelle l'eau pâlit (de plus en plus claire avant de disparaître).
+@export var fade_color := Color(0.85, 0.92, 0.96)
 @export_group("Éclaboussure")
 ## Ronds dans l'eau et gouttes : éclatements, pas et glissades des canards.
 @export var splash_effects := true
@@ -88,11 +107,18 @@ var _drop_mesh: SphereMesh
 var _drips := 0
 
 ## Carreau (Vector3i(x, étage, z)) -> { wet: PackedFloat32Array, albedo: Image,
-## orm: Image, decal: Decal, dirty: bool }.
+## orm: Image, decal: Decal, dirty: bool, stamp: PackedFloat32Array (instant du dernier
+## arrosage + 1 par pixel, 0 = sec), wet_pixels: PackedInt32Array (pixels mouillés),
+## oldest: float (plus vieux stamp), evaporating: bool }.
 var _chunks := {}
 ## Taches à peindre, dans l'ordre : une par carreau touché, peinte ligne par ligne
 ## (cf. _make_job, _paint_rows).
 var _jobs: Array[Dictionary] = []
+## Passes d'évaporation en cours, une par carreau (cf. _evaporate).
+var _evaporations: Array[Dictionary] = []
+## Temps de la partie (s), qui n'avance pas en pause.
+var _clock := 0.0
+var _evaporation_left := 0.0
 
 
 func _ready() -> void:
@@ -117,26 +143,35 @@ func is_wet(point: Vector3) -> bool:
 	return (_chunks[key].wet as PackedFloat32Array)[i] > threshold
 
 
-## Ajoute une tache d'eau de rayon `radius` (m) centrée sur `point` (surface du sol), avec
-## une éclaboussure (ronds et gouttes) si `splash`.
-func add_puddle(point: Vector3, radius: float, amount := 1.0, splash := true) -> void:
+## Ajoute une tache d'eau de rayon `radius` (m) centrée sur `point` (surface du sol, de
+## normale `normal`), avec une éclaboussure (ronds et gouttes) si `splash`.
+func add_puddle(point: Vector3, radius: float, amount := 1.0, splash := true, normal := Vector3.UP) -> void:
 	if splash and splash_effects:
-		_play_splash(point, radius)
-	var layer := roundi(point.y / LAYER_HEIGHT)
+		_play_splash(point, radius, normal)
 	var reach := radius * (1.0 + shape_noise) # Place pour les lobes les plus grands.
+	# Pente : la tache suit le plan de la surface touchée ; elle s'étend sur les étages que ce
+	# plan traverse dans son rayon (un seul sur un sol plat). Surface trop raide : à plat.
+	var slope := normal.normalized() if normal.y > 0.2 else Vector3.UP
+	var rise := reach * Vector2(slope.x, slope.z).length() / slope.y
 	var min_chunk := Vector2i(floori((point.x - reach) / CHUNK_SIZE), floori((point.z - reach) / CHUNK_SIZE))
 	var max_chunk := Vector2i(floori((point.x + reach) / CHUNK_SIZE), floori((point.z + reach) / CHUNK_SIZE))
-	for cx in range(min_chunk.x, max_chunk.x + 1):
-		for cz in range(min_chunk.y, max_chunk.y + 1):
-			_jobs.append(_make_job(_get_chunk(Vector3i(cx, layer, cz)), Vector2(cx, cz) * CHUNK_SIZE,
-					point, radius, amount))
+	for layer in range(roundi((point.y - rise) / LAYER_HEIGHT), roundi((point.y + rise) / LAYER_HEIGHT) + 1):
+		for cx in range(min_chunk.x, max_chunk.x + 1):
+			for cz in range(min_chunk.y, max_chunk.y + 1):
+				_jobs.append(_make_job(_get_chunk(Vector3i(cx, layer, cz)), Vector2(cx, cz) * CHUNK_SIZE,
+						point, radius, amount, slope, layer, rise > 0.0))
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	_clock += delta
+	_schedule_evaporation(delta)
 	var deadline := Time.get_ticks_usec() + int(paint_budget_ms * 1000.0)
 	while not _jobs.is_empty() and Time.get_ticks_usec() < deadline:
 		if _paint_rows(_jobs[0], deadline):
 			_jobs.pop_front()
+	while not _evaporations.is_empty() and Time.get_ticks_usec() < deadline:
+		if _evaporate(_evaporations[0], deadline):
+			_evaporations.pop_front()
 	for chunk: Dictionary in _chunks.values():
 		if chunk.dirty:
 			chunk.dirty = false
@@ -148,14 +183,18 @@ func _process(_delta: float) -> void:
 			chunk.decal.texture_orm = ImageTexture.create_from_image(chunk.orm)
 
 
-## Tache à peindre dans le carreau dont le coin (x, z) minimal est `origin` (m).
-func _make_job(chunk: Dictionary, origin: Vector2, point: Vector3, radius: float, amount: float) -> Dictionary:
+## Tache à peindre dans le carreau dont le coin (x, z) minimal est `origin` (m), étage
+## `layer`. Si `on_slope`, seuls les pixels dont la hauteur sur le plan (`point`, `slope`)
+## tombe dans cet étage sont peints.
+func _make_job(chunk: Dictionary, origin: Vector2, point: Vector3, radius: float, amount: float,
+		slope := Vector3.UP, layer := 0, on_slope := false) -> Dictionary:
 	var size := _chunk_pixels()
 	var center := (Vector2(point.x, point.z) - origin) * pixels_per_meter
 	var r := radius * pixels_per_meter
 	var reach := r * (1.0 + shape_noise)
 	return {
 		"chunk": chunk, "origin": origin, "center": center, "r": r, "reach": reach, "amount": amount,
+		"point": point, "slope": slope, "layer": layer, "on_slope": on_slope,
 		"row": maxi(floori(center.y - reach), 0), "last_row": mini(ceili(center.y + reach), size - 1),
 		"first_col": maxi(floori(center.x - reach), 0), "last_col": mini(ceili(center.x + reach), size - 1),
 	}
@@ -170,8 +209,19 @@ func _paint_rows(job: Dictionary, deadline: int) -> bool:
 	var r: float = job.r
 	var reach2: float = job.reach * job.reach
 	var amount: float = job.amount
+	var on_slope: bool = job.on_slope
+	var point: Vector3 = job.point
+	var slope: Vector3 = job.slope
+	var layer: int = job.layer
+	# Demi-hauteur d'étage, plus de quoi déborder de 2 pixels sur l'étage voisin : sans ce
+	# recouvrement, le lissage de la texture au bord de l'étage dessine une ligne claire.
+	# (Le Decal coupe net au bord de l'étage : le débordement ne se voit pas.)
+	var band := LAYER_HEIGHT / 2.0 + 2.0 / pixels_per_meter * Vector2(slope.x, slope.z).length() / slope.y + 0.01
 	var dry := threshold - damp_width # En dessous, le pixel reste transparent (cf. _shade).
 	var wet: PackedFloat32Array = chunk.wet
+	var stamp: PackedFloat32Array = chunk.stamp
+	var wet_pixels: PackedInt32Array = chunk.wet_pixels
+	var now := _clock + 1.0 # (+1 : 0 veut dire « sec »)
 	while job.row <= job.last_row and Time.get_ticks_usec() < deadline:
 		var py: int = job.row
 		job.row += 1
@@ -181,6 +231,10 @@ func _paint_rows(job: Dictionary, deadline: int) -> bool:
 			if dist2 >= reach2:
 				continue # Hors de portée même du plus grand lobe : pas besoin du bruit.
 			var world := origin + pixel / pixels_per_meter
+			if on_slope: # Hauteur de la pente ici : ce pixel est-il dans l'étage de ce carreau ?
+				var height := point.y - (slope.x * (world.x - point.x) + slope.z * (world.y - point.z)) / slope.y
+				if absf(height - layer * LAYER_HEIGHT) > band:
+					continue
 			# Rayon déformé selon l'endroit : contour en lobes, pas en cercle.
 			var local_r := r * (1.0 + shape_noise * _noise.get_noise_2d(world.x, world.y))
 			var d2 := dist2 / (local_r * local_r)
@@ -189,16 +243,92 @@ func _paint_rows(job: Dictionary, deadline: int) -> bool:
 			var i := py * size + px
 			# Tache douce (1 au centre, 0 au bord) : deux taches proches se rejoignent.
 			wet[i] = minf(wet[i] + amount * (1.0 - d2) * (1.0 - d2), max_wetness)
+			if stamp[i] == 0.0:
+				wet_pixels.append(i) # Pixel qui vient d'être mouillé : à faire sécher plus tard.
+			stamp[i] = now # Arrosé : l'évaporation repart de zéro.
 			if wet[i] > dry:
 				_shade(chunk, px, py, wet[i])
 	chunk.wet = wet
+	chunk.stamp = stamp
+	chunk.wet_pixels = wet_pixels
+	chunk.oldest = minf(chunk.oldest, now)
 	chunk.dirty = true
 	return job.row > job.last_row
 
 
+## Toutes les EVAPORATION_STEP s, lance une passe sur chaque carreau où de l'eau commence à
+## pâlir (son plus vieux pixel a dépassé water_lifetime - fade_duration).
+func _schedule_evaporation(delta: float) -> void:
+	_evaporation_left -= delta
+	if _evaporation_left > 0.0:
+		return
+	_evaporation_left = EVAPORATION_STEP
+	var fading_since := _clock + 1.0 - (water_lifetime - fade_duration)
+	for chunk: Dictionary in _chunks.values():
+		if not chunk.evaporating and chunk.oldest <= fading_since:
+			chunk.evaporating = true
+			# La passe prend la liste des pixels mouillés ; ceux mouillés pendant la passe vont
+			# dans une nouvelle liste, réunies à la fin.
+			_evaporations.append({"chunk": chunk, "pixels": chunk.wet_pixels, "index": 0,
+					"kept": PackedInt32Array(), "oldest": INF})
+			chunk.wet_pixels = PackedInt32Array()
+			chunk.oldest = INF
+
+
+## Passe d'évaporation sur un carreau, jusqu'à `deadline` (µs) : les pixels trop vieux sèchent,
+## ceux en fin de vie pâlissent. Vrai quand elle est finie.
+func _evaporate(job: Dictionary, deadline: int) -> bool:
+	var chunk: Dictionary = job.chunk
+	var size := _chunk_pixels()
+	var wet: PackedFloat32Array = chunk.wet
+	var stamp: PackedFloat32Array = chunk.stamp
+	var pixels: PackedInt32Array = job.pixels
+	var kept: PackedInt32Array = job.kept
+	var now := _clock + 1.0
+	var fade_start := water_lifetime - fade_duration
+	var dry := threshold - damp_width
+	var albedo: Image = chunk.albedo
+	var orm: Image = chunk.orm
+	var changed := false
+	while job.index < pixels.size():
+		if job.index % 64 == 0 and Time.get_ticks_usec() >= deadline:
+			break
+		var i := pixels[job.index]
+		job.index += 1
+		if stamp[i] == 0.0:
+			continue
+		var age := now - stamp[i]
+		var px := i % size
+		var py := i / size
+		if age >= water_lifetime: # Sec.
+			wet[i] = 0.0
+			stamp[i] = 0.0
+			albedo.set_pixel(px, py, Color(0, 0, 0, 0))
+			orm.set_pixel(px, py, Color(0, 0, 0, 0))
+			changed = true
+			continue
+		kept.append(i)
+		job.oldest = minf(job.oldest, stamp[i])
+		if age > fade_start and wet[i] > dry:
+			_shade(chunk, px, py, wet[i], (age - fade_start) / fade_duration)
+			changed = true
+	chunk.wet = wet
+	chunk.stamp = stamp
+	job.kept = kept
+	if changed:
+		chunk.dirty = true
+	if job.index < pixels.size():
+		return false
+	chunk.wet_pixels = kept + chunk.wet_pixels
+	chunk.oldest = minf(chunk.oldest, job.oldest)
+	chunk.evaporating = false
+	return true
+
+
 ## Couleur d'un pixel selon son humidité : halo de sol mouillé juste sous le seuil, puis
-## eau de plus en plus profonde (plus sombre, plus opaque) au-dessus.
-func _shade(chunk: Dictionary, px: int, py: int, wetness: float) -> void:
+## eau de plus en plus profonde (plus sombre, plus opaque) au-dessus. `fade` (0 à 1) : en fin
+## de vie, l'eau pâlit (plus claire, plus transparente) jusqu'à disparaître.
+func _shade(chunk: Dictionary, px: int, py: int, wetness: float, fade := 0.0) -> void:
 	var damp := smoothstep(threshold - damp_width, threshold - 0.04, wetness)
 	var water := smoothstep(threshold - 0.04, threshold + 0.04, wetness)
 	var depth := smoothstep(threshold, threshold + 1.2, wetness)
@@ -206,9 +336,11 @@ func _shade(chunk: Dictionary, px: int, py: int, wetness: float) -> void:
 	var water_rgb := water_color.lerp(deep_color, depth).darkened(rim * 0.3)
 	var water_alpha := minf(lerpf(water_color.a, deep_alpha, depth) + rim * 0.15, 1.0)
 	var color := Color(damp_color, damp * damp_color.a).lerp(Color(water_rgb, water_alpha), water)
+	if fade > 0.0:
+		color = Color(Color(color.r, color.g, color.b).lerp(fade_color, fade * 0.7), color.a * (1.0 - fade))
 	(chunk.albedo as Image).set_pixel(px, py, color)
-	var roughness := lerpf(damp_roughness, water_roughness, water)
-	(chunk.orm as Image).set_pixel(px, py, Color(1.0, roughness, 0.0, maxf(damp, water)))
+	var roughness := lerpf(lerpf(damp_roughness, water_roughness, water), damp_roughness, fade)
+	(chunk.orm as Image).set_pixel(px, py, Color(1.0, roughness, 0.0, maxf(damp, water) * (1.0 - fade)))
 
 
 func _get_chunk(key: Vector3i) -> Dictionary:
@@ -217,6 +349,8 @@ func _get_chunk(key: Vector3i) -> Dictionary:
 	var size := _chunk_pixels()
 	var wet := PackedFloat32Array()
 	wet.resize(size * size)
+	var stamp := PackedFloat32Array()
+	stamp.resize(size * size)
 	var albedo := Image.create_empty(size, size, false, Image.FORMAT_RGBA8)
 	var orm := Image.create_empty(size, size, false, Image.FORMAT_RGBA8)
 	var decal := Decal.new()
@@ -230,7 +364,8 @@ func _get_chunk(key: Vector3i) -> Dictionary:
 	decal.normal_fade = 0.6 # Pas sur les côtés verticaux (marches, rebords).
 	decal.cull_mask = ~DUCK_VISUAL_LAYER & 0xFFFFF
 	add_child(decal)
-	var chunk := {"wet": wet, "albedo": albedo, "orm": orm, "decal": decal, "dirty": false}
+	var chunk := {"wet": wet, "albedo": albedo, "orm": orm, "decal": decal, "dirty": false,
+			"stamp": stamp, "wet_pixels": PackedInt32Array(), "oldest": INF, "evaporating": false}
 	_chunks[key] = chunk
 	return chunk
 
@@ -239,11 +374,12 @@ func _chunk_pixels() -> int:
 	return roundi(CHUNK_SIZE * pixels_per_meter)
 
 
-## Éclatement d'une bulle : deux ronds qui s'élargissent dans l'eau et des gouttes qui retombent.
-func _play_splash(point: Vector3, radius: float) -> void:
-	_spawn_ring(point, radius * 1.1, 0.0, splash_duration)
-	_spawn_ring(point, radius * 0.7, 0.12, splash_duration)
-	_spawn_drops(point, splash_drops, Vector3.UP, 35.0, 2.5, 4.5, 0.15)
+## Éclatement d'une bulle sur une surface de normale `normal` : deux ronds qui s'élargissent
+## à plat sur la surface et des gouttes projetées perpendiculairement à elle.
+func _play_splash(point: Vector3, radius: float, normal := Vector3.UP) -> void:
+	_spawn_ring(point, radius * 1.1, 0.0, splash_duration, 1.0, normal)
+	_spawn_ring(point, radius * 0.7, 0.12, splash_duration, 1.0, normal)
+	_spawn_drops(point, splash_drops, normal, 35.0, 2.5, 4.5, 0.15)
 
 
 ## Goutte du canon à eau qui touche `point` (surface de normale `normal`) : de temps en temps,
@@ -253,36 +389,42 @@ func drip(point: Vector3, normal := Vector3.UP) -> void:
 	if not splash_effects or _drips % DRIP_RING_EVERY != 0:
 		return
 	if normal.y > 0.7:
-		_spawn_ring(point, 0.5, 0.0, 0.35, 0.3)
+		_spawn_ring(point, 0.5, 0.0, 0.35, 0.3, normal)
 	else:
 		_spawn_drops(point - Vector3.UP * 0.05, 3, (normal + Vector3.UP * 0.5).normalized(), 50.0, 1.0, 2.5, 0.05, 0.6)
 
 
-## Pas d'un canard dans l'eau (`point` sous son pied) : petit rond et quelques gouttes.
-func step_splash(point: Vector3) -> void:
+## Pas d'un canard dans l'eau (`point` sous son pied, sol de normale `normal`) : petit rond et
+## quelques gouttes.
+func step_splash(point: Vector3, normal := Vector3.UP) -> void:
 	if splash_effects:
-		_spawn_ring(point, 0.9, 0.0, 0.5, 0.65)
-		_spawn_drops(point, 5, Vector3.UP, 30.0, 1.0, 2.0, 0.08, 0.7)
+		_spawn_ring(point, 0.9, 0.0, 0.5, 0.65, normal)
+		_spawn_drops(point, 5, normal, 30.0, 1.0, 2.0, 0.08, 0.7)
 
 
 ## Sillage d'un canard qui glisse sur l'eau, à appeler régulièrement pendant la glissade :
-## rond sous ses pieds et gerbes projetées sur les côtés et vers l'arrière de `velocity`.
-func wake(point: Vector3, velocity: Vector3) -> void:
+## rond sous ses pieds et gerbes projetées sur les côtés et vers l'arrière de `velocity` (sol de
+## normale `normal`).
+func wake(point: Vector3, velocity: Vector3, normal := Vector3.UP) -> void:
 	if not splash_effects:
 		return
 	var back := Vector3(-velocity.x, 0.0, -velocity.z).normalized()
-	_spawn_ring(point, 1.1, 0.0, 0.6, 0.45)
-	_spawn_drops(point, 6, (back + Vector3.UP * 1.3).normalized(), 60.0, 2.0, 3.5, 0.15, 0.8)
+	_spawn_ring(point, 1.1, 0.0, 0.6, 0.45, normal)
+	_spawn_drops(point, 6, (back + normal * 1.3).normalized(), 60.0, 2.0, 3.5, 0.15, 0.8)
 
 
-## Rond qui apparaît après `delay` s, s'élargit jusqu'à `size` m en `duration` s et s'efface.
-## `opacity` : 1 = aussi marqué que l'éclatement d'une bulle.
-func _spawn_ring(point: Vector3, size: float, delay: float, duration: float, opacity := 1.0) -> void:
+## Rond qui apparaît après `delay` s, s'élargit jusqu'à `size` m en `duration` s et s'efface,
+## posé à plat sur la surface de normale `normal`. `opacity` : 1 = aussi marqué que
+## l'éclatement d'une bulle.
+func _spawn_ring(point: Vector3, size: float, delay: float, duration: float, opacity := 1.0,
+		normal := Vector3.UP) -> void:
 	var ring := MeshInstance3D.new()
 	ring.mesh = _ring_mesh
 	ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	ring.layers = DUCK_VISUAL_LAYER # Sinon la flaque (Decal) le peindrait couleur d'eau.
-	ring.position = point + Vector3.UP * 0.02
+	ring.position = point + normal * 0.02
+	if normal.dot(Vector3.UP) > -0.99: # (Rond horizontal à l'origine : on le couche sur la surface.)
+		ring.quaternion = Quaternion(Vector3.UP, normal.normalized())
 	ring.scale = Vector3.ONE * 0.1
 	ring.transparency = 1.0
 	add_child(ring)

@@ -125,11 +125,13 @@ func _on_player_health_changed(health: float, player: Player) -> void:
 
 
 ## Sur tous les ordinateurs ; seule la bulle de l'ordinateur du tireur inflige des dégâts.
-func _on_player_shot(origin: Vector3, direction: Vector3, capture: bool, player: Player) -> void:
+func _on_player_shot(origin: Vector3, direction: Vector3, capture: bool, visual_origin: Vector3, player: Player) -> void:
 	var bubble: BubbleProjectile = (CAPTURE_PROJECTILE_SCENE if capture else PROJECTILE_SCENE).instantiate()
-	bubble.splashed.connect(_puddles.add_puddle) # Flaque là où elle éclate sur le sol.
+	# Flaque là où elle éclate sur le sol (éclaboussure orientée selon la surface).
+	bubble.splashed.connect(func(point: Vector3, radius: float, normal: Vector3) -> void:
+		_puddles.add_puddle(point, radius, 1.0, true, normal))
 	_projectiles.add_child(bubble)
-	bubble.launch(player, origin, direction, player.is_multiplayer_authority())
+	bubble.launch(player, origin, direction, player.is_multiplayer_authority(), visual_origin)
 
 
 func _on_player_died(player: Player) -> void:

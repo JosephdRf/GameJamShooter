@@ -13,6 +13,9 @@ extends CharacterBody3D
 ## take_damage() (depuis n'importe quel ordinateur) ; sans dégâts pendant
 ## `regen_delay` s, la vie remonte de `regen_rate` PV/s. À 0 PV, le cube
 ## disparaît `respawn_delay` s puis réapparaît à son point de départ.
+##
+## Sons (nœuds *Sound, joués sur tous les ordinateurs) : tir, pas calés sur
+## l'animation (cf. FOOTSTEPS), dash, saut, touché, mort et réapparition.
 
 ## Émis sur tous les ordinateurs quand la vie change / à la mort / à la réapparition.
 signal health_changed(health: float)
@@ -68,6 +71,12 @@ const REMOTE_SNAP_DISTANCE := 3.0
 const STEP_MIN_HEIGHT := 0.01
 ## Vitesse à laquelle le modèle et la caméra rattrapent une marche montée d'un coup.
 const STEP_SMOOTHING := 18.0
+## Bruits de pas : instants (fractions de l'animation) où un pied se pose, relevés sur
+## les pistes foot_ik_L / foot_ik_R de walk et run (assets/models/duck_v3.glb).
+const FOOTSTEPS := {
+	&"walk": [0.49, 0.98],
+	&"run": [0.47, 0.95],
+}
 
 @export_range(1, 4) var player_id := 1:
 	set(value):
@@ -118,6 +127,7 @@ var sync_position: Vector3
 ## Points de vie (0 = mort). Diffusé par le nœud Sync quand il change.
 var health := 100.0:
 	set(value):
+		var previous := health
 		var was_alive := health > 0.0
 		health = value
 		health_changed.emit(health)
@@ -125,6 +135,8 @@ var health := 100.0:
 			_on_died()
 		elif not was_alive and health > 0.0:
 			_on_respawned()
+		elif health < previous and _hit_sound:
+			_hit_sound.play() # Touché (sur tous les ordinateurs : la vie est diffusée).
 
 var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var _spawn_position: Vector3
@@ -151,6 +163,9 @@ var _respawn_left := 0.0
 var _step_offset := 0.0
 var _model_base_y: float
 var _camera_base_y: float
+## Animation et position (fraction) à l'image précédente, pour les bruits de pas.
+var _footstep_animation: StringName
+var _footstep_phase := 0.0
 
 ## Caméra du joueur : les déplacements sont relatifs à son orientation.
 @onready var camera: PlayerCamera = $PlayerCamera
@@ -163,6 +178,13 @@ var _camera_base_y: float
 @onready var _sync: MultiplayerSynchronizer = $Sync
 ## Son du tir : un son de bulle au hasard (assets/audio/sfx/bubble_shoot.tres).
 @onready var _shoot_sound: AudioStreamPlayer3D = $ShootSound
+## Autres sons du canard, chacun tiré au hasard dans assets/audio/sfx/duck_*.tres.
+@onready var _step_sound: AudioStreamPlayer3D = $StepSound
+@onready var _dash_sound: AudioStreamPlayer3D = $DashSound
+@onready var _jump_sound: AudioStreamPlayer3D = $JumpSound
+@onready var _hit_sound: AudioStreamPlayer3D = $HitSound
+@onready var _death_sound: AudioStreamPlayer3D = $DeathSound
+@onready var _respawn_sound: AudioStreamPlayer3D = $RespawnSound
 
 
 ## Équipe (1 ou 2) du joueur `id`.
@@ -267,6 +289,7 @@ func _simulate(delta: float) -> void:
 		input = Input.get_vector(&"move_left", &"move_right", &"move_up", &"move_down")
 		if Input.is_action_just_pressed(&"jump") and is_on_floor():
 			velocity.y = jump_velocity
+			_play_jump.rpc()
 	var direction := Vector3(input.x, 0.0, input.y).rotated(Vector3.UP, camera.get_yaw())
 
 	_dash_cooldown_left = maxf(_dash_cooldown_left - delta, 0.0)
@@ -329,10 +352,17 @@ func _shoot(origin: Vector3, direction: Vector3) -> void:
 
 
 ## Sur tous les ordinateurs (appelé par celui qui contrôle ce cube) : lance les
-## animations du dash.
+## animations et le son du dash.
 @rpc("authority", "call_local", "reliable")
 func _play_dash() -> void:
 	_dash_animation_left = dash_duration
+	_dash_sound.play()
+
+
+## Sur tous les ordinateurs (appelé par celui qui contrôle ce cube) : son du saut.
+@rpc("authority", "call_local", "reliable")
+func _play_jump() -> void:
+	_jump_sound.play()
 
 
 ## Ce que vise le joueur (centre de l'écran) : { point, normal, collider (ou null) }.
@@ -390,6 +420,28 @@ func _update_model(velocity_now: Vector3, delta: float) -> void:
 	_animation_tree.set(&"parameters/conditions/idle", not moving)
 	_animation_tree.set(&"parameters/conditions/walk", moving and speed <= RUN_SPEED)
 	_animation_tree.set(&"parameters/conditions/run", moving and speed > RUN_SPEED)
+	# Au sol : les canards des autres ordinateurs n'ont pas is_on_floor(), on regarde leur vitesse verticale.
+	var grounded := is_on_floor() if is_multiplayer_authority() else absf(velocity_now.y) < 1.0
+	_play_footsteps(active and moving and grounded)
+
+
+## Bruit de pas quand l'animation walk / run passe sur un instant de FOOTSTEPS
+## (un pied se pose). Calé sur l'animation : marche et course gardent leur rythme.
+func _play_footsteps(enabled: bool) -> void:
+	var animation := _animation_playback.get_current_node()
+	var length := _animation_playback.get_current_length()
+	if not enabled or not FOOTSTEPS.has(animation) or length <= 0.0:
+		_footstep_animation = &""
+		return
+	var phase := fmod(_animation_playback.get_current_play_position() / length, 1.0)
+	if animation == _footstep_animation:
+		for contact: float in FOOTSTEPS[animation]:
+			var crossed := (_footstep_phase < contact and contact <= phase) if phase >= _footstep_phase \
+					else (contact > _footstep_phase or contact <= phase) # L'animation a bouclé.
+			if crossed:
+				_step_sound.play()
+	_footstep_animation = animation
+	_footstep_phase = phase
 
 
 ## Le modèle regarde vers +Z : on l'aligne sur `direction` (weight = 1 : d'un coup).
@@ -410,6 +462,7 @@ func _apply_damage(amount: float) -> void:
 ## Sur tous les ordinateurs : le cube mort disparaît et ne bloque plus personne.
 func _on_died() -> void:
 	_respawn_left = respawn_delay
+	_death_sound.play()
 	_model.visible = false
 	_collision_shape.set_deferred(&"disabled", true)
 	died.emit()
@@ -418,6 +471,7 @@ func _on_died() -> void:
 func _on_respawned() -> void:
 	_dash_animation_left = 0.0
 	_animation_playback.start(&"idle") # Repart de l'arrêt, pas de l'animation au moment de la mort.
+	_respawn_sound.play()
 	_model.visible = true
 	_collision_shape.set_deferred(&"disabled", false)
 	respawned.emit()

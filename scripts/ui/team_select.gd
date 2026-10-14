@@ -42,10 +42,13 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	if not NetworkManager.is_my_slot_locked():
 		if Input.is_action_just_pressed(&"menu_left"):
+			UiSounds.play_click()
 			NetworkManager.move_my_slot(-1)
 		if Input.is_action_just_pressed(&"menu_right"):
+			UiSounds.play_click()
 			NetworkManager.move_my_slot(1)
 	if multiplayer.is_server() and Input.is_action_just_pressed(&"start"):
+		UiSounds.play_confirm()
 		NetworkManager.start_match()
 
 
@@ -63,6 +66,10 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _set_locked(value: bool) -> void:
+	if value:
+		UiSounds.play_confirm()
+	else:
+		UiSounds.play_click()
 	NetworkManager.set_my_slot_locked(value)
 	if value and multiplayer.is_server():
 		_start_button.grab_focus()

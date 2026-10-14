@@ -1,0 +1,211 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/game/hair_dryer.gd" id="1_dryer"]
+
+[sub_resource type="StandardMaterial3D" id="Mat_socle"]
+albedo_color = Color(0.86, 0.89, 0.92, 1)
+roughness = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Mat_lisere"]
+albedo_color = Color(1, 0.55, 0.2, 1)
+emission_enabled = true
+emission = Color(1, 0.45, 0.12, 1)
+emission_energy_multiplier = 0.6
+roughness = 0.4
+
+[sub_resource type="StandardMaterial3D" id="Mat_grille"]
+albedo_color = Color(0.32, 0.34, 0.38, 1)
+metallic = 0.7
+roughness = 0.35
+
+[sub_resource type="StandardMaterial3D" id="Mat_plastique"]
+albedo_color = Color(0.96, 0.52, 0.66, 1)
+roughness = 0.3
+clearcoat_enabled = true
+
+[sub_resource type="StandardMaterial3D" id="Mat_buse"]
+albedo_color = Color(0.22, 0.24, 0.28, 1)
+roughness = 0.45
+
+[sub_resource type="StandardMaterial3D" id="Mat_chrome"]
+albedo_color = Color(0.85, 0.87, 0.9, 1)
+metallic = 1.0
+roughness = 0.15
+
+[sub_resource type="StandardMaterial3D" id="Mat_braise"]
+albedo_color = Color(1, 0.4, 0.1, 1)
+emission_enabled = true
+emission = Color(1, 0.38, 0.08, 1)
+emission_energy_multiplier = 4.0
+
+[sub_resource type="StandardMaterial3D" id="Mat_bouton"]
+albedo_color = Color(0.97, 0.97, 0.97, 1)
+roughness = 0.3
+
+[sub_resource type="TorusMesh" id="Torus_lisere"]
+material = SubResource("Mat_lisere")
+inner_radius = 3.3
+outer_radius = 3.6
+rings = 64
+ring_segments = 8
+
+[sub_resource type="TorusMesh" id="Torus_grille1"]
+material = SubResource("Mat_grille")
+inner_radius = 1.32
+outer_radius = 1.46
+rings = 48
+ring_segments = 6
+
+[sub_resource type="TorusMesh" id="Torus_grille2"]
+material = SubResource("Mat_grille")
+inner_radius = 2.02
+outer_radius = 2.16
+rings = 48
+ring_segments = 6
+
+[sub_resource type="TorusMesh" id="Torus_grille3"]
+material = SubResource("Mat_grille")
+inner_radius = 2.72
+outer_radius = 2.86
+rings = 64
+ring_segments = 6
+
+[sub_resource type="CylinderMesh" id="Cyl_pied"]
+material = SubResource("Mat_buse")
+top_radius = 0.8
+bottom_radius = 0.85
+height = 0.3
+
+[sub_resource type="CylinderMesh" id="Cyl_corps"]
+material = SubResource("Mat_plastique")
+top_radius = 0.75
+bottom_radius = 0.75
+height = 1.5
+
+[sub_resource type="CylinderMesh" id="Cyl_bague"]
+material = SubResource("Mat_chrome")
+top_radius = 0.78
+bottom_radius = 0.78
+height = 0.1
+
+[sub_resource type="CylinderMesh" id="Cyl_buse"]
+material = SubResource("Mat_buse")
+top_radius = 0.45
+bottom_radius = 0.7
+height = 0.55
+
+[sub_resource type="CylinderMesh" id="Cyl_sortie"]
+material = SubResource("Mat_braise")
+top_radius = 0.42
+bottom_radius = 0.42
+height = 0.03
+
+[sub_resource type="CylinderMesh" id="Cyl_poignee"]
+material = SubResource("Mat_plastique")
+top_radius = 0.26
+bottom_radius = 0.3
+height = 1.75
+
+[sub_resource type="BoxMesh" id="Box_bouton"]
+material = SubResource("Mat_bouton")
+size = Vector3(0.12, 0.38, 0.22)
+
+[sub_resource type="CylinderMesh" id="Cyl_fil"]
+material = SubResource("Mat_buse")
+top_radius = 0.06
+bottom_radius = 0.06
+height = 1.4
+
+[sub_resource type="CylinderShape3D" id="Shape_seche_cheveux"]
+height = 2.55
+radius = 0.82
+
+[node name="HairDryer" type="Node3D"]
+script = ExtResource("1_dryer")
+
+[node name="Socle" type="CSGCombiner3D" parent="."]
+use_collision = true
+
+[node name="Base" type="CSGCylinder3D" parent="Socle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.1, 0)
+radius = 3.6
+height = 0.2
+sides = 48
+material = SubResource("Mat_socle")
+
+[node name="Rebord" type="CSGCylinder3D" parent="Socle"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.225, 0)
+radius = 3.6
+height = 0.45
+sides = 48
+material = SubResource("Mat_socle")
+
+[node name="Creux" type="CSGCylinder3D" parent="Socle/Rebord"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.225, 0)
+operation = 2
+radius = 3.3
+height = 0.45
+sides = 48
+material = SubResource("Mat_socle")
+
+[node name="Lisere" type="MeshInstance3D" parent="Socle"]
+transform = Transform3D(1, 0, 0, 0, 0.3, 0, 0, 0, 1, 0, 0.45, 0)
+mesh = SubResource("Torus_lisere")
+
+[node name="Grille1" type="MeshInstance3D" parent="Socle"]
+transform = Transform3D(1, 0, 0, 0, 0.3, 0, 0, 0, 1, 0, 0.2, 0)
+mesh = SubResource("Torus_grille1")
+
+[node name="Grille2" type="MeshInstance3D" parent="Socle"]
+transform = Transform3D(1, 0, 0, 0, 0.3, 0, 0, 0, 1, 0, 0.2, 0)
+mesh = SubResource("Torus_grille2")
+
+[node name="Grille3" type="MeshInstance3D" parent="Socle"]
+transform = Transform3D(1, 0, 0, 0, 0.3, 0, 0, 0, 1, 0, 0.2, 0)
+mesh = SubResource("Torus_grille3")
+
+[node name="SecheCheveux" type="Node3D" parent="."]
+
+[node name="Pied" type="MeshInstance3D" parent="SecheCheveux"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.35, 0)
+mesh = SubResource("Cyl_pied")
+
+[node name="Corps" type="MeshInstance3D" parent="SecheCheveux"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.25, 0)
+mesh = SubResource("Cyl_corps")
+
+[node name="Bague" type="MeshInstance3D" parent="SecheCheveux"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+mesh = SubResource("Cyl_bague")
+
+[node name="Buse" type="MeshInstance3D" parent="SecheCheveux"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.275, 0)
+mesh = SubResource("Cyl_buse")
+
+[node name="Sortie" type="MeshInstance3D" parent="SecheCheveux"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.54, 0)
+mesh = SubResource("Cyl_sortie")
+
+[node name="Poignee" type="MeshInstance3D" parent="SecheCheveux"]
+transform = Transform3D(0.628, -0.778, 0, 0.778, 0.628, 0, 0, 0, 1, 1.25, 0.98, 0)
+mesh = SubResource("Cyl_poignee")
+
+[node name="Bouton" type="MeshInstance3D" parent="SecheCheveux"]
+transform = Transform3D(0.628, -0.778, 0, 0.778, 0.628, 0, 0, 0, 1, 1.38, 1.18, 0)
+mesh = SubResource("Box_bouton")
+
+[node name="Fil" type="MeshInstance3D" parent="SecheCheveux"]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 2.6, 0.27, 0)
+mesh = SubResource("Cyl_fil")
+
+[node name="Lueur" type="OmniLight3D" parent="SecheCheveux"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.9, 0)
+light_color = Color(1, 0.55, 0.25, 1)
+light_energy = 1.5
+omni_range = 4.5
+
+[node name="Collision" type="StaticBody3D" parent="SecheCheveux"]
+
+[node name="Forme" type="CollisionShape3D" parent="SecheCheveux/Collision"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.275, 0)
+shape = SubResource("Shape_seche_cheveux")

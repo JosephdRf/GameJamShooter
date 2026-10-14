@@ -159,6 +159,16 @@ Un joueur qui tombe de la plateforme meurt.
   peinture par image). Rien n'est envoyé en réseau : chaque ordinateur fait éclater sa copie de la bulle
   au même endroit.
 
+### Sèche-cheveux (prototype)
+
+- Au centre d'`arena4` (au pied de la rampe de l'îlot central) : un sèche-cheveux allumé, debout au milieu d'un socle rond (liseré orange).
+  Le jet est toujours actif : tout canard en l'air dans la colonne d'air chaud est porté vers le haut et
+  flotte vers 13 m (en montant et descendant un peu : la puissance du souffle oscille) tant qu'il y reste ; il retombe en en sortant par le côté. Sauter
+  depuis le socle lance l'envol (au lieu d'un saut de 2 m).
+- Air chaud visible (jet, colonne qui fait onduler l'arrière-plan, filets d'air, lueur de la buse) et audible.
+- Scène `scenes/game/hair_dryer.tscn` (à poser n'importe où), script `scripts/game/hair_dryer.gd` : `zone_radius`,
+  `launch_speed`, `updraft_speed`, `lift_acceleration`, `lift_gravity`, `column_height`, `hover_height`, `power_variation`, `power_period`, `air_color`. Shader : `assets/shaders/hot_air.gdshader`.
+
 ### Vie
 
 - Chaque joueur a **100 PV**. Pas de barre de vie : plus il en a perdu, plus l'écran se couvre de bulles,

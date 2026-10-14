@@ -1,35 +1,27 @@
 [gd_scene format=3 uid="uid://flgmol2ni2u"]
 
-
 [ext_resource type="Texture2D" uid="uid://bk8bd11xbsdfn" path="res://scenes/levels/mapv1.svg" id="1_4ka2m"]
-
 [ext_resource type="PackedScene" uid="uid://b1octw75mrwwa" path="res://scenes/props/toilettes.tscn" id="2_df2vj"]
-
 [ext_resource type="PackedScene" uid="uid://b7miebbssnjht" path="res://scenes/props/meuble_lavabo.tscn" id="3_q46is"]
-
 [ext_resource type="PackedScene" uid="uid://dg7fqvkrgwcts" path="res://scenes/props/porte_salle_de_bain.tscn" id="4_mrpyv"]
-
 [ext_resource type="PackedScene" uid="uid://bi3vtqac4ljqg" path="res://scenes/props/penderie.tscn" id="5_inacw"]
-
 [ext_resource type="PackedScene" uid="uid://bmipl2xgouxt6" path="res://scenes/props/douche_interieur.tscn" id="6_j3qu1"]
-
 [ext_resource type="PackedScene" uid="uid://gjanb5ykeoir" path="res://scenes/props/etagere_bois.tscn" id="7_rm3jc"]
-
 [ext_resource type="PackedScene" uid="uid://w1rupoqwy24f" path="res://scenes/props/pile_serviettes.tscn" id="8_s6ml8"]
-
 [ext_resource type="PackedScene" uid="uid://bky74exs260n2" path="res://scenes/props/rouleaux_papier.tscn" id="9_bsj62"]
-
 [ext_resource type="PackedScene" uid="uid://dcq5tklgkc1bl" path="res://scenes/props/pese_personne.tscn" id="10_6xc1t"]
-
 [ext_resource type="PackedScene" uid="uid://cvmpvxxgcn0vk" path="res://scenes/props/mini_toboggan.tscn" id="11_dj4vv"]
-
 [ext_resource type="PackedScene" uid="uid://bdi7sb0cuk0h0" path="res://scenes/props/produits_salle_de_bain.tscn" id="13_6xc1t"]
-
-
 [ext_resource type="PackedScene" uid="uid://dj8m655pwshoe" path="res://scenes/props/boite_mouchoirs.tscn" id="13_dj4vv"]
-
 [ext_resource type="PackedScene" uid="uid://rh54uh3s3i2h" path="res://scenes/props/corbeille_linge.tscn" id="14_dj4vv"]
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dj4vv"]
+albedo_color = Color(0.58, 0.61, 0.65, 1)
+roughness = 0.45
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_juhtu"]
+albedo_color = Color(0.46, 0.49, 0.54, 1)
+roughness = 0.6
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dbi1a"]
 transparency = 1
@@ -40,26 +32,24 @@ emission_enabled = true
 emission = Color(0.7490196, 0.95686275, 1, 1)
 emission_energy_multiplier = 0.3
 
-
 [sub_resource type="BoxMesh" id="BoxMesh_vj1es"]
 material = SubResource("StandardMaterial3D_dbi1a")
 size = Vector3(25.800001, 22.8, 0.29999998)
 
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dj4vv"]
-albedo_color = Color(0.58, 0.61, 0.65, 1)
-roughness = 0.45
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_juhtu"]
-albedo_color = Color(0.46, 0.49, 0.54, 1)
-roughness = 0.6
+[sub_resource type="Environment" id="Environment_dj4vv"]
+background_mode = 1
+background_color = Color(0.86, 0.9, 0.95, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.95, 0.97, 1, 1)
+ambient_light_energy = 0.3
+tonemap_mode = 2
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_q70t4"]
 albedo_color = Color(0.62, 0.63, 0.66, 1)
 roughness = 0.8
 
 [sub_resource type="BoxMesh" id="BoxMesh_dj4vv"]
-size = Vector3(0.21, 5.4907893, 0.21)
+size = Vector3(0.21, 5.4907894, 0.21)
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_juhtu"]
 top_radius = 0.105
@@ -68,11 +58,14 @@ height = 1.5
 radial_segments = 10
 rings = 1
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_q70t4"]
-size = Vector3(3, 6.3907893, 3.6)
+[sub_resource type="BoxShape3D" id="BoxShape3D_dj4vv"]
+size = Vector3(1.7, 5.8907895, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_juhtu"]
+size = Vector3(1.5, 5.4907894, 0.2)
 
 [sub_resource type="BoxMesh" id="BoxMesh_702kj"]
-size = Vector3(0.21, 5.4876453, 0.21)
+size = Vector3(0.21, 5.487645, 0.21)
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_smo6e"]
 top_radius = 0.105
@@ -81,8 +74,11 @@ height = 1.5
 radial_segments = 10
 rings = 1
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_ogg5m"]
-size = Vector3(3, 6.3876456, 3.6)
+[sub_resource type="BoxShape3D" id="BoxShape3D_q70t4"]
+size = Vector3(1.7, 5.8876452, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_702kj"]
+size = Vector3(1.5, 5.487645, 0.2)
 
 [sub_resource type="BoxMesh" id="BoxMesh_1nmha"]
 size = Vector3(0.21, 4.990605, 0.21)
@@ -94,8 +90,11 @@ height = 1.35
 radial_segments = 10
 rings = 1
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_r1gk4"]
-size = Vector3(2.85, 5.890605, 3.6)
+[sub_resource type="BoxShape3D" id="BoxShape3D_smo6e"]
+size = Vector3(1.5500001, 5.390605, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ogg5m"]
+size = Vector3(1.35, 4.990605, 0.2)
 
 [sub_resource type="BoxMesh" id="BoxMesh_akmat"]
 size = Vector3(0.21, 4.9906044, 0.21)
@@ -107,11 +106,14 @@ height = 1.35
 radial_segments = 10
 rings = 1
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_7bl04"]
-size = Vector3(2.85, 5.8906044, 3.6)
+[sub_resource type="BoxShape3D" id="BoxShape3D_1nmha"]
+size = Vector3(1.5500001, 5.3906045, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_pxvwb"]
+size = Vector3(1.35, 4.9906044, 0.2)
 
 [sub_resource type="BoxMesh" id="BoxMesh_yryk3"]
-size = Vector3(0.21, 4.8010134, 0.21)
+size = Vector3(0.21, 4.8010135, 0.21)
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_3ntvi"]
 top_radius = 0.105
@@ -120,11 +122,14 @@ height = 1.5
 radial_segments = 10
 rings = 1
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_gfv22"]
-size = Vector3(3, 5.7010134, 3.6)
+[sub_resource type="BoxShape3D" id="BoxShape3D_r1gk4"]
+size = Vector3(1.7, 5.2010136, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_akmat"]
+size = Vector3(1.5, 4.8010135, 0.2)
 
 [sub_resource type="BoxMesh" id="BoxMesh_f8rj3"]
-size = Vector3(0.21, 4.6309728, 0.21)
+size = Vector3(0.21, 4.630973, 0.21)
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_imx3p"]
 top_radius = 0.105
@@ -133,11 +138,97 @@ height = 1.2
 radial_segments = 10
 rings = 1
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_2o1dc"]
+size = Vector3(1.4000001, 5.030973, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_7bl04"]
+size = Vector3(1.2, 4.630973, 0.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_juhtu"]
+size = Vector3(0.21, 5.1750803, 0.21)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_q70t4"]
+top_radius = 0.105
+bottom_radius = 0.105
+height = 1.5
+radial_segments = 10
+rings = 1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_yryk3"]
+size = Vector3(1.7, 5.5750804, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_3ntvi"]
+size = Vector3(1.5, 5.1750803, 0.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_q70t4"]
+size = Vector3(0.21, 15.884174, 0.21)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_702kj"]
+top_radius = 0.105
+bottom_radius = 0.105
+height = 1.5
+radial_segments = 10
+rings = 1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_gfv22"]
+size = Vector3(1.7, 16.284174, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_f8rj3"]
+size = Vector3(1.5, 15.884174, 0.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_smo6e"]
+size = Vector3(0.21, 13.715062, 0.21)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_ogg5m"]
+top_radius = 0.105
+bottom_radius = 0.105
+height = 1.5
+radial_segments = 10
+rings = 1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_imx3p"]
+size = Vector3(1.7, 14.115063, 0.5)
+
 [sub_resource type="BoxShape3D" id="BoxShape3D_1nq25"]
-size = Vector3(2.7, 5.5309728, 3.6)
+size = Vector3(1.5, 13.715062, 0.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ogg5m"]
+size = Vector3(0.21, 15.164448, 0.21)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_1nmha"]
+top_radius = 0.105
+bottom_radius = 0.105
+height = 1.5
+radial_segments = 10
+rings = 1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_fbsh4"]
+size = Vector3(1.7, 15.564448, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_lsyki"]
+size = Vector3(1.5, 15.164448, 0.2)
+
+[sub_resource type="BoxMesh" id="BoxMesh_pxvwb"]
+size = Vector3(0.21, 15.889142, 0.21)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_r1gk4"]
+top_radius = 0.105
+bottom_radius = 0.105
+height = 1.5
+radial_segments = 10
+rings = 1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ai5il"]
+size = Vector3(1.7, 16.289143, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hw603"]
+size = Vector3(1.5, 15.889142, 0.2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_702kj"]
+albedo_color = Color(0.8, 0.8, 0.82, 1)
+roughness = 0.9
 
 [node name="Arena2" type="Node3D" unique_id=1642305965]
-
 
 [node name="Sprite3D" type="Sprite3D" parent="." unique_id=1175920662]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, -3.5762787e-06, 0.11999285, 3.5762787e-06)
@@ -146,20 +237,16 @@ pixel_size = 0.144
 alpha_cut = 1
 texture = ExtResource("1_4ka2m")
 
-
 [node name="Structure" type="CSGCombiner3D" parent="." unique_id=1480785371]
 use_collision = true
-
 
 [node name="Sol" type="CSGBox3D" parent="Structure" unique_id=211071891]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.75, 0)
 size = Vector3(126, 1.5, 102)
 
-
 [node name="Mur1" type="CSGBox3D" parent="Structure" unique_id=368021370]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.582581, 17.128784, -34.998264)
 size = Vector3(58.849, 34.25757, 1.8)
-
 
 [node name="Trou_arche" type="CSGCylinder3D" parent="Structure/Mur1" unique_id=1472461809]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 17.125711, -14.897461, 0.078366995)
@@ -168,109 +255,88 @@ radius = 2.1
 height = 2.7597656
 sides = 24
 
-
 [node name="Mur2" type="CSGBox3D" parent="Structure" unique_id=247457873]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -39.68628, 17.090332, -30.670704)
 size = Vector3(10.46054, 34.25757, 1.8)
-
 
 [node name="Mur17" type="CSGBox3D" parent="Structure" unique_id=1305854043]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 18.709717, 17.090332, -30.670704)
 size = Vector3(10.46054, 34.25757, 1.8)
 
-
 [node name="Mur18" type="CSGBox3D" parent="Structure" unique_id=282059579]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 40.977173, 17.090332, -1.8338916)
 size = Vector3(9.727341, 34.25757, 1.8)
-
 
 [node name="Mur5" type="CSGBox3D" parent="Structure" unique_id=148427141]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -59.49829, 17.090332, -10.733068)
 size = Vector3(23.320702, 34.25757, 1.8)
 
-
 [node name="Mur6" type="CSGBox3D" parent="Structure" unique_id=1208954528]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -59.49829, 17.090332, 24.488136)
 size = Vector3(18.709814, 34.25757, 1.8)
-
 
 [node name="Mur10" type="CSGBox3D" parent="Structure" unique_id=647327233]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -33.688484, 17.090332, 38.909325)
 size = Vector3(11.525129, 34.25757, 1.8)
 
-
 [node name="Mur11" type="CSGBox3D" parent="Structure" unique_id=1192636564]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 25.805426, 17.090332, 36.033768)
 size = Vector3(17.276237, 34.25757, 1.8)
-
 
 [node name="Mur14" type="CSGBox3D" parent="Structure" unique_id=274346412]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 48.713905, 17.090332, 13.511995)
 size = Vector3(23.442595, 34.25757, 1.8)
 
-
 [node name="Mur13" type="CSGBox3D" parent="Structure" unique_id=1627781151]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 41.16932, 17.090332, 26.606941)
 size = Vector3(4.2311687, 34.25757, 1.8)
-
 
 [node name="Mur3" type="CSGBox3D" parent="Structure" unique_id=1719567717]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -45.69329, 16.503754, -26.373219)
 size = Vector3(13.015331, 35.198914, 1.8)
 
-
 [node name="Mur8" type="CSGBox3D" parent="Structure" unique_id=549894575]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -46.254036, 16.503754, 33.992355)
 size = Vector3(26.827724, 35.198914, 1.8)
 
-
 [node name="Mur9" type="CSGBox3D" parent="Structure" unique_id=582019361]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.9217722, 16.503754, 44.43377)
 size = Vector3(58.811424, 35.198914, 1.8)
-
 
 [node name="CSGBox3D" type="CSGBox3D" parent="Structure/Mur9" unique_id=1701769227]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10.854034, 4.409271, 0)
 operation = 2
 size = Vector3(21, 18, 6)
 
-
 [node name="Mur12" type="CSGBox3D" parent="Structure" unique_id=784959445]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33.262115, 16.74179, 28.296978)
 size = Vector3(15.816137, 35.198914, 1.8)
-
 
 [node name="Mur15" type="CSGBox3D" parent="Structure" unique_id=2089457511]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 44.930576, 16.74179, 25.378916)
 size = Vector3(7.907281, 35.198914, 1.8)
 
-
 [node name="Mur16" type="CSGBox3D" parent="Structure" unique_id=611484983]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 44.18076, 16.74179, 2.6500332)
 size = Vector3(7.907281, 35.198914, 1.8)
-
 
 [node name="Mur19" type="CSGBox3D" parent="Structure" unique_id=417139335]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19.721172, 16.74179, -26.402967)
 size = Vector3(3.1999648, 35.198914, 1.8)
 
-
 [node name="Mur7" type="CSGBox3D" parent="Structure" unique_id=1904321025]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -55.49587, 16.503754, -22.496813)
 size = Vector3(9.083911, 35.198914, 1.8)
 
-
 [node name="Mur4" type="CSGBox3D" parent="Structure" unique_id=162993798]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -51.86602, 15.447462, -24.085747)
 size = Vector3(4.907324, 37.174347, 1.8)
-
 
 [node name="Mur_douche" type="CSGCylinder3D" parent="Structure" unique_id=357262617]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40.169987, 17.15625, -25.0625)
 radius = 20.400002
 height = 34.3125
 sides = 48
-
 
 [node name="Creux_douche" type="CSGCylinder3D" parent="Structure/Mur_douche" unique_id=2046800797]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.010986328, 0, -0.009155273)
@@ -279,12 +345,10 @@ radius = 18.599998
 height = 45.0
 sides = 48
 
-
 [node name="Ouverture_douche" type="CSGBox3D" parent="Structure/Mur_douche" unique_id=1062717874]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.757477, 0, 9.972382)
 operation = 2
 size = Vector3(23.481445, 30, 21.045227)
-
 
 [node name="Bac_douche" type="CSGCylinder3D" parent="Structure" unique_id=1485820373]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 39.984455, 1.5, -24.763668)
@@ -292,9 +356,8 @@ radius = 18.599998
 height = 3.0
 sides = 48
 
-
 [node name="Mur_tuyau" type="CSGCylinder3D" parent="Structure" unique_id=2056627631]
-transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 16.725, 2.3822019, -39.137262)
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 16.725, 2.382202, -39.13726)
 radius = 2.3999999
 height = 25.35
 sides = 48
@@ -308,14 +371,14 @@ sides = 48
 material = SubResource("StandardMaterial3D_dj4vv")
 
 [node name="Manchon_2" type="CSGCylinder3D" parent="Structure" unique_id=901585300]
-transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 21.6, 2.3822019, -39.09)
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 21.6, 2.382202, -39.09)
 radius = 2.61
 height = 0.9
 sides = 48
 material = SubResource("StandardMaterial3D_dj4vv")
 
 [node name="Manchon_1" type="CSGCylinder3D" parent="Structure" unique_id=1990895473]
-transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 12.6, 2.3822019, -39.09)
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 12.6, 2.382202, -39.09)
 radius = 2.61
 height = 0.9
 sides = 48
@@ -329,14 +392,14 @@ sides = 48
 material = SubResource("StandardMaterial3D_dj4vv")
 
 [node name="Coude_douche_ext" type="CSGSphere3D" parent="Structure" unique_id=956046691]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.4, 2.3822019, -39.09)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.4, 2.382202, -39.09)
 radius = 2.4
 radial_segments = 48
 rings = 24
 material = SubResource("StandardMaterial3D_dj4vv")
 
 [node name="Tuyau_trou" type="CSGCylinder3D" parent="Structure" unique_id=1366967562]
-transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 17.945588, 2.2915653, -39.093018)
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 17.945587, 2.2915654, -39.093018)
 operation = 2
 radius = 2.1
 height = 22.908825
@@ -344,7 +407,7 @@ sides = 48
 material = SubResource("StandardMaterial3D_juhtu")
 
 [node name="Tuyau_trou_2" type="CSGCylinder3D" parent="Structure" unique_id=868010963]
-transform = Transform3D(1.9106853e-15, 4.3711385e-08, 1, 0.99999994, -4.3711385e-08, 0, 4.3711385e-08, 0.99999994, -4.371139e-08, 6.4911747, 2.2915653, -36.495)
+transform = Transform3D(1.9106853e-15, 4.3711385e-08, 1, 0.99999994, -4.3711385e-08, 0, 4.3711385e-08, 0.99999994, -4.371139e-08, 6.4911747, 2.2915654, -36.495)
 operation = 2
 radius = 2.1
 height = 5.19
@@ -352,7 +415,7 @@ sides = 48
 material = SubResource("StandardMaterial3D_juhtu")
 
 [node name="Coude_entree_int" type="CSGSphere3D" parent="Structure" unique_id=1500290353]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.4911747, 2.2915653, -39.09)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.4911747, 2.2915654, -39.09)
 operation = 2
 radius = 2.1
 radial_segments = 48
@@ -360,7 +423,7 @@ rings = 24
 material = SubResource("StandardMaterial3D_juhtu")
 
 [node name="Coude_douche_int" type="CSGSphere3D" parent="Structure" unique_id=1845296231]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.4, 2.2915653, -39.09)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.4, 2.2915654, -39.09)
 operation = 2
 radius = 2.1
 radial_segments = 48
@@ -379,112 +442,98 @@ material = SubResource("StandardMaterial3D_juhtu")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.889625, 20.168884, 44.485367)
 use_collision = true
 
-
 [node name="Cadre" type="CSGBox3D" parent="Fenêtre" unique_id=154795809]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7300794, 0)
 size = Vector3(29.400002, 24.939846, 2.3999999)
-
 
 [node name="Cadre_creux" type="CSGBox3D" parent="Fenêtre" unique_id=718310846]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.7423818, 0)
 operation = 2
 size = Vector3(25.800001, 21.315235, 6)
 
-
 [node name="Montant" type="CSGBox3D" parent="Fenêtre" unique_id=1079507830]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.01001358, 0, 0)
 size = Vector3(1.1999999, 22.8, 1.5)
-
 
 [node name="Traverse" type="CSGBox3D" parent="Fenêtre" unique_id=271851750]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.61735153, 0)
 size = Vector3(25.800001, 1.1999999, 1.5)
 
-
 [node name="Rebord" type="CSGBox3D" parent="Fenêtre" unique_id=848595610]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -11.825463, -1.5)
 size = Vector3(30, 1.1999999, 7.5)
 
-
 [node name="Vitre" type="MeshInstance3D" parent="Fenêtre" unique_id=1853177915]
 mesh = SubResource("BoxMesh_vj1es")
 
+[node name="Environnement" type="WorldEnvironment" parent="." unique_id=1801430139]
+environment = SubResource("Environment_dj4vv")
 
 [node name="Soleil" type="DirectionalLight3D" parent="." unique_id=1645177303]
 transform = Transform3D(1, 0, 0, 0, 0.76604444, 0.6427876, 0, -0.6427876, 0.76604444, 6.8999996, 66, 72)
 light_color = Color(1, 0.957, 0.84, 1)
-shadow_enabled = true
+light_energy = 0.5
 
+[node name="Lumiere_appoint" type="DirectionalLight3D" parent="." unique_id=20106578]
+transform = Transform3D(-1, 7.161255e-08, -5.0143647e-08, 0, 0.57357645, 0.81915206, 8.742278e-08, 0.81915206, -0.57357645, 0, 0, 0)
+light_color = Color(0.92, 0.96, 1, 1)
+light_energy = 0.2
+light_specular = 0.2
 
-[node name="Toilettes" parent="." unique_id=1814691230 instance=ExtResource("2_df2vj")]
+[node name="Toilettes" type="StaticBody3D" parent="." unique_id=1814691230 instance=ExtResource("2_df2vj")]
 transform = Transform3D(30, 0, 0, 0, 30, 0, 0, 0, 30, -58.589996, 0, 24)
-
 
 [node name="MeubleLavabo" parent="." unique_id=992427573 instance=ExtResource("3_q46is")]
 transform = Transform3D(30, 0, 0, 0, 30, 0, 0, 0, 30, 6.5399995, 0, -28.037998)
 
-
 [node name="PorteSalleDeBain" parent="." unique_id=1736422125 instance=ExtResource("4_mrpyv")]
 transform = Transform3D(-1.3113416e-06, 0, 30, 0, 30, 0, -30, 0, -1.3113416e-06, -59.489998, 0, 8.025001)
-
 
 [node name="Penderie" parent="." unique_id=1894453324 instance=ExtResource("5_inacw")]
 transform = Transform3D(30, 0, 0, 0, 30, 0, 0, 0, 30, 41.159996, 0, 14.01)
 
-
 [node name="DoucheInterieur" parent="." unique_id=1641406931 instance=ExtResource("6_j3qu1")]
 transform = Transform3D(30, 0, 0, 0, 30, 0, 0, 0, 30, 40.17, 0, -25.05)
 
-
 [node name="Etageres" type="Node3D" parent="." unique_id=1214729613]
-
 
 [node name="Fenetre_1" parent="Etageres" unique_id=1742732598 instance=ExtResource("7_rm3jc")]
 transform = Transform3D(30, 0, 0, 0, 30, 0, 0, 0, 30, -12.599999, 4.2, 43.53)
 
-
 [node name="Fenetre_2" parent="Etageres" unique_id=881543409 instance=ExtResource("7_rm3jc")]
 transform = Transform3D(30, 0, 0, 0, 30, 0, 0, 0, 30, -12.599999, 12.599999, 43.53)
-
 
 [node name="Fenetre_1b_jonction" parent="Etageres" unique_id=492697790 instance=ExtResource("7_rm3jc")]
 transform = Transform3D(30, 0, 0, 0, 30, 0, 0, 0, 30, -23.4, 8.4, 43.53)
 
-
 [node name="Toilettes_1" parent="Etageres" unique_id=1854529157 instance=ExtResource("7_rm3jc")]
 transform = Transform3D(24, 0, 0, 0, 30, 0, 0, 0, 30, -36.300003, 4.2, 33.090004)
 
-
 [node name="Angle_1" parent="Etageres" unique_id=949043063 instance=ExtResource("7_rm3jc")]
-transform = Transform3D(-9.5727939e-07, 0, -30, 0, 30, 0, 21.9, 0, -1.3113417e-06, -32.79, 5.6930484, 36.6)
+transform = Transform3D(-9.572794e-07, 0, -30, 0, 30, 0, 21.9, 0, -1.3113417e-06, -32.79, 5.6930485, 36.6)
 
 [node name="Obstacles" type="Node3D" parent="." unique_id=2084297212]
 
-
 [node name="PileServiettes" parent="Obstacles" unique_id=273039949 instance=ExtResource("8_s6ml8")]
-transform = Transform3D(28.69103, -1.05263, -8.701529, 0.275146, 29.87636, -2.706942, 8.760647, 2.509026, 28.58244, 10.82485, 0, 30.96622)
-
+transform = Transform3D(28.699507, 0, -8.73717, 0, 30.000002, 0, 8.737169, 0, 28.699509, 10.82485, 2.2351743e-07, 30.96622)
 
 [node name="RouleauxPapier" parent="Obstacles" unique_id=177877123 instance=ExtResource("9_bsj62")]
 transform = Transform3D(19.852364, 0, 13.486424, 0, 24, 0, -13.486424, 0, 19.852364, -26.419674, 0, 18.540552)
 
-
 [node name="PesePersonne" parent="Obstacles" unique_id=1509595119 instance=ExtResource("10_6xc1t")]
 transform = Transform3D(-30, 0, -4.529874e-06, 0, 30, 0, 4.529874e-06, 0, -30, -25.5, 0, -27.900002)
 
-
 [node name="Toboggan" parent="Obstacles" unique_id=209257861 instance=ExtResource("11_dj4vv")]
 transform = Transform3D(22.009537, 0, -9.569754, 0, 23.999998, 0, 9.569754, 0, 22.009537, -26.026709, 0, -11.291979)
-
 
 [node name="ProduitsSalleDeBain" parent="Obstacles" unique_id=155777768 instance=ExtResource("13_6xc1t")]
 transform = Transform3D(30, 0, 0, 0, 30, 0, 0, 0, 30, 0, 0, -2.587958)
 
 [node name="BoiteMouchoirs" parent="Obstacles" unique_id=948495229 instance=ExtResource("13_dj4vv")]
-transform = Transform3D(-28.190778, 0, 10.260606, 0, 30, 0, -10.260606, 0, -28.190778, -3.139776, 0, 0)
+transform = Transform3D(-28.190779, 0, 10.260606, 0, 30, 0, -10.260606, 0, -28.190779, -3.139776, 0, 0)
 
-[node name="CorbeilleLinge" type="Node3D" parent="Obstacles" unique_id=1328315256 instance=ExtResource("14_dj4vv")]
-transform = Transform3D(22.498838, 0, -0.22852689, 0, 22.5, 0, 0.22852689, 0, 22.498838, 14.524008, 0, 19.884282)
+[node name="CorbeilleLinge" parent="Obstacles" unique_id=1328315256 instance=ExtResource("14_dj4vv")]
+transform = Transform3D(22.498838, 0, -0.22852689, 0, 22.5, 0, 0.22852689, 0, 22.498838, 14.524008, 0, 19.884281)
 
 [node name="Echelles" type="Node3D" parent="." unique_id=986938342]
 
@@ -492,12 +541,12 @@ transform = Transform3D(22.498838, 0, -0.22852689, 0, 22.5, 0, 0.22852689, 0, 22
 transform = Transform3D(-1, 0, 0, 0, 0.9647638, 0.26311716, 0, 0.26311713, -0.96476394, -33.6, 0, 28.14)
 
 [node name="Montant_G" type="MeshInstance3D" parent="Echelles/Echelle_sol_toilettes" unique_id=1147737489]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 2.7453948, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 2.7453947, 0)
 material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("BoxMesh_dj4vv")
 
 [node name="Montant_D" type="MeshInstance3D" parent="Echelles/Echelle_sol_toilettes" unique_id=1919047385]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 2.7453948, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 2.7453947, 0)
 material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("BoxMesh_dj4vv")
 
@@ -507,7 +556,7 @@ material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("CylinderMesh_juhtu")
 
 [node name="Barreau_1" type="MeshInstance3D" parent="Echelles/Echelle_sol_toilettes" unique_id=957504752]
-transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 1.7626974, 0)
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 1.7626975, 0)
 material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("CylinderMesh_juhtu")
 
@@ -517,12 +566,12 @@ material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("CylinderMesh_juhtu")
 
 [node name="Barreau_3" type="MeshInstance3D" parent="Echelles/Echelle_sol_toilettes" unique_id=480517732]
-transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 4.0880919, 0)
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 4.088092, 0)
 material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("CylinderMesh_juhtu")
 
 [node name="Barreau_4" type="MeshInstance3D" parent="Echelles/Echelle_sol_toilettes" unique_id=612314956]
-transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 5.2507893, 0)
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 5.250789, 0)
 material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("CylinderMesh_juhtu")
 
@@ -532,8 +581,15 @@ collision_mask = 2
 monitorable = false
 
 [node name="Forme" type="CollisionShape3D" parent="Echelles/Echelle_sol_toilettes/Zone" unique_id=1063439513]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.7453948, 1.5)
-shape = SubResource("BoxShape3D_q70t4")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.7453947, 0.15)
+shape = SubResource("BoxShape3D_dj4vv")
+
+[node name="Appui" type="StaticBody3D" parent="Echelles/Echelle_sol_toilettes" unique_id=2118482868]
+collision_mask = 0
+
+[node name="Forme" type="CollisionShape3D" parent="Echelles/Echelle_sol_toilettes/Appui" unique_id=1961226092]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.7453947, -0.05)
+shape = SubResource("BoxShape3D_juhtu")
 
 [node name="Echelle_sol_fenetre1" type="Node3D" parent="Echelles" unique_id=1514665282]
 transform = Transform3D(-1, 0, 0, 0, 0.9653554, 0.26093856, 0, 0.26093853, -0.96535546, -12.6, 0, 38.592)
@@ -559,17 +615,17 @@ material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("CylinderMesh_smo6e")
 
 [node name="Barreau_2" type="MeshInstance3D" parent="Echelles/Echelle_sol_fenetre1" unique_id=1937920216]
-transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 2.9238228, 0)
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 2.9238229, 0)
 material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("CylinderMesh_smo6e")
 
 [node name="Barreau_3" type="MeshInstance3D" parent="Echelles/Echelle_sol_fenetre1" unique_id=1516191644]
-transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 4.0857342, 0)
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 4.0857344, 0)
 material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("CylinderMesh_smo6e")
 
 [node name="Barreau_4" type="MeshInstance3D" parent="Echelles/Echelle_sol_fenetre1" unique_id=818526263]
-transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 5.2476453, 0)
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 5.2476454, 0)
 material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("CylinderMesh_smo6e")
 
@@ -579,19 +635,26 @@ collision_mask = 2
 monitorable = false
 
 [node name="Forme" type="CollisionShape3D" parent="Echelles/Echelle_sol_fenetre1/Zone" unique_id=811960280]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.7438228, 1.5)
-shape = SubResource("BoxShape3D_ogg5m")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.7438226, 0.15)
+shape = SubResource("BoxShape3D_q70t4")
+
+[node name="Appui" type="StaticBody3D" parent="Echelles/Echelle_sol_fenetre1" unique_id=1461361569]
+collision_mask = 0
+
+[node name="Forme" type="CollisionShape3D" parent="Echelles/Echelle_sol_fenetre1/Appui" unique_id=337823488]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.7438226, -0.05)
+shape = SubResource("BoxShape3D_702kj")
 
 [node name="Echelle_fenetre1_jonction" type="Node3D" parent="Echelles" unique_id=52712803]
 transform = Transform3D(0, -0.42111126, 0.907009, 0, 0.90700895, 0.4211113, -1, 0, 0, -16.95, 4.95, 40.65)
 
 [node name="Montant_G" type="MeshInstance3D" parent="Echelles/Echelle_fenetre1_jonction" unique_id=1779099321]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.675, 2.4953025, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.675, 2.4953024, 0)
 material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("BoxMesh_1nmha")
 
 [node name="Montant_D" type="MeshInstance3D" parent="Echelles/Echelle_fenetre1_jonction" unique_id=426199168]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.675, 2.4953025, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.675, 2.4953024, 0)
 material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("BoxMesh_1nmha")
 
@@ -626,8 +689,15 @@ collision_mask = 2
 monitorable = false
 
 [node name="Forme" type="CollisionShape3D" parent="Echelles/Echelle_fenetre1_jonction/Zone" unique_id=1866904147]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4953025, 1.5)
-shape = SubResource("BoxShape3D_r1gk4")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4953024, 0.15)
+shape = SubResource("BoxShape3D_smo6e")
+
+[node name="Appui" type="StaticBody3D" parent="Echelles/Echelle_fenetre1_jonction" unique_id=1134315767]
+collision_mask = 0
+
+[node name="Forme" type="CollisionShape3D" parent="Echelles/Echelle_fenetre1_jonction/Appui" unique_id=677938698]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4953024, -0.05)
+shape = SubResource("BoxShape3D_ogg5m")
 
 [node name="Echelle_jonction_fenetre2" type="Node3D" parent="Echelles" unique_id=1544382518]
 transform = Transform3D(0, 0.42111132, -0.907009, 0, 0.9070089, 0.42111138, 1, 0, 0, -19.05, 9.15, 42.21)
@@ -663,7 +733,7 @@ material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("CylinderMesh_2o1dc")
 
 [node name="Barreau_4" type="MeshInstance3D" parent="Echelles/Echelle_jonction_fenetre2" unique_id=1840809453]
-transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 4.7506044, 0)
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 4.7506046, 0)
 material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("CylinderMesh_2o1dc")
 
@@ -673,8 +743,15 @@ collision_mask = 2
 monitorable = false
 
 [node name="Forme" type="CollisionShape3D" parent="Echelles/Echelle_jonction_fenetre2/Zone" unique_id=231984482]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4953022, 1.5)
-shape = SubResource("BoxShape3D_7bl04")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4953022, 0.15)
+shape = SubResource("BoxShape3D_1nmha")
+
+[node name="Appui" type="StaticBody3D" parent="Echelles/Echelle_jonction_fenetre2" unique_id=2044154752]
+collision_mask = 0
+
+[node name="Forme" type="CollisionShape3D" parent="Echelles/Echelle_jonction_fenetre2/Appui" unique_id=1692517167]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4953022, -0.05)
+shape = SubResource("BoxShape3D_pxvwb")
 
 [node name="Echelle_fenetre1_rebord" type="Node3D" parent="Echelles" unique_id=61213450]
 transform = Transform3D(0, 0.43908894, -0.89844364, 0, 0.8984436, 0.43908897, 1, 0, 0, -10.05, 4.95, 40.8)
@@ -700,17 +777,17 @@ material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("CylinderMesh_3ntvi")
 
 [node name="Barreau_2" type="MeshInstance3D" parent="Echelles/Echelle_fenetre1_rebord" unique_id=579902794]
-transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 2.5805067, 0)
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 2.5805068, 0)
 material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("CylinderMesh_3ntvi")
 
 [node name="Barreau_3" type="MeshInstance3D" parent="Echelles/Echelle_fenetre1_rebord" unique_id=99319381]
-transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 3.5707601, 0)
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 3.57076, 0)
 material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("CylinderMesh_3ntvi")
 
 [node name="Barreau_4" type="MeshInstance3D" parent="Echelles/Echelle_fenetre1_rebord" unique_id=1307869684]
-transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 4.5610134, 0)
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 4.561013, 0)
 material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("CylinderMesh_3ntvi")
 
@@ -720,8 +797,15 @@ collision_mask = 2
 monitorable = false
 
 [node name="Forme" type="CollisionShape3D" parent="Echelles/Echelle_fenetre1_rebord/Zone" unique_id=519415393]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4005067, 1.5)
-shape = SubResource("BoxShape3D_gfv22")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4005067, 0.15)
+shape = SubResource("BoxShape3D_r1gk4")
+
+[node name="Appui" type="StaticBody3D" parent="Echelles/Echelle_fenetre1_rebord" unique_id=299401567]
+collision_mask = 0
+
+[node name="Forme" type="CollisionShape3D" parent="Echelles/Echelle_fenetre1_rebord/Appui" unique_id=963468576]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4005067, -0.05)
+shape = SubResource("BoxShape3D_akmat")
 
 [node name="Echelle_angle_jonction" type="Node3D" parent="Echelles" unique_id=1530264502]
 transform = Transform3D(-0.70710707, 0.5478846, -0.44701472, 0, 0.6321745, 0.7748261, 0.70710653, 0.547885, -0.44701505, -29.7, 6.45, 39.39)
@@ -752,7 +836,7 @@ material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("CylinderMesh_imx3p")
 
 [node name="Barreau_3" type="MeshInstance3D" parent="Echelles/Echelle_angle_jonction" unique_id=651216857]
-transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 4.3909728, 0)
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 4.3909726, 0)
 material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("CylinderMesh_imx3p")
 
@@ -762,5 +846,845 @@ collision_mask = 2
 monitorable = false
 
 [node name="Forme" type="CollisionShape3D" parent="Echelles/Echelle_angle_jonction/Zone" unique_id=1321041149]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3154864, 1.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3154864, 0.15)
+shape = SubResource("BoxShape3D_2o1dc")
+
+[node name="Appui" type="StaticBody3D" parent="Echelles/Echelle_angle_jonction" unique_id=1143063638]
+collision_mask = 0
+
+[node name="Forme" type="CollisionShape3D" parent="Echelles/Echelle_angle_jonction/Appui" unique_id=1505840066]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3154864, -0.05)
+shape = SubResource("BoxShape3D_7bl04")
+
+[node name="Echelle_marchepied" type="Node3D" parent="Echelles" unique_id=1151809920]
+transform = Transform3D(0, -0.2596011, 0.96571594, 0, 0.96571594, 0.2596011, -1, 0, 0, -14.75, 4.5, 30)
+
+[node name="Montant_G" type="MeshInstance3D" parent="Echelles/Echelle_marchepied" unique_id=258412193]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 2.5875401, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("BoxMesh_juhtu")
+
+[node name="Montant_D" type="MeshInstance3D" parent="Echelles/Echelle_marchepied" unique_id=737055299]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 2.5875401, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("BoxMesh_juhtu")
+
+[node name="Barreau_0" type="MeshInstance3D" parent="Echelles/Echelle_marchepied" unique_id=822071352]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.6, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_q70t4")
+
+[node name="Barreau_1" type="MeshInstance3D" parent="Echelles/Echelle_marchepied" unique_id=1886949068]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 1.6837701, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_q70t4")
+
+[node name="Barreau_2" type="MeshInstance3D" parent="Echelles/Echelle_marchepied" unique_id=1017239425]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 2.76754, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_q70t4")
+
+[node name="Barreau_3" type="MeshInstance3D" parent="Echelles/Echelle_marchepied" unique_id=668851729]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 3.85131, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_q70t4")
+
+[node name="Barreau_4" type="MeshInstance3D" parent="Echelles/Echelle_marchepied" unique_id=396012085]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 4.93508, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_q70t4")
+
+[node name="Zone" type="Area3D" parent="Echelles/Echelle_marchepied" unique_id=171971400 groups=["echelles"]]
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="Forme" type="CollisionShape3D" parent="Echelles/Echelle_marchepied/Zone" unique_id=1775604835]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5875401, 0.15)
+shape = SubResource("BoxShape3D_yryk3")
+
+[node name="Appui" type="StaticBody3D" parent="Echelles/Echelle_marchepied" unique_id=2025442758]
+collision_mask = 0
+
+[node name="Forme" type="CollisionShape3D" parent="Echelles/Echelle_marchepied/Appui" unique_id=261038483]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5875401, -0.05)
+shape = SubResource("BoxShape3D_3ntvi")
+
+[node name="Echelle_tour" type="Node3D" parent="Echelles" unique_id=1872294720]
+transform = Transform3D(-1, 0, 0, 0, 0.9662349, 0.25766268, 0, 0.25766265, -0.966235, 27, 0, 13.5)
+
+[node name="Montant_G" type="MeshInstance3D" parent="Echelles/Echelle_tour" unique_id=172199442]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 7.942087, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("BoxMesh_q70t4")
+
+[node name="Montant_D" type="MeshInstance3D" parent="Echelles/Echelle_tour" unique_id=1494399900]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 7.942087, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("BoxMesh_q70t4")
+
+[node name="Barreau_0" type="MeshInstance3D" parent="Echelles/Echelle_tour" unique_id=1589941016]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.6, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_702kj")
+
+[node name="Barreau_1" type="MeshInstance3D" parent="Echelles/Echelle_tour" unique_id=1696994356]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 1.5402609, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_702kj")
+
+[node name="Barreau_2" type="MeshInstance3D" parent="Echelles/Echelle_tour" unique_id=1135012604]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 2.480522, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_702kj")
+
+[node name="Barreau_3" type="MeshInstance3D" parent="Echelles/Echelle_tour" unique_id=1667097652]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 3.4207828, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_702kj")
+
+[node name="Barreau_4" type="MeshInstance3D" parent="Echelles/Echelle_tour" unique_id=998197382]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 4.3610435, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_702kj")
+
+[node name="Barreau_5" type="MeshInstance3D" parent="Echelles/Echelle_tour" unique_id=795660027]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 5.301305, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_702kj")
+
+[node name="Barreau_6" type="MeshInstance3D" parent="Echelles/Echelle_tour" unique_id=1515106013]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 6.2415657, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_702kj")
+
+[node name="Barreau_7" type="MeshInstance3D" parent="Echelles/Echelle_tour" unique_id=860499365]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 7.1818266, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_702kj")
+
+[node name="Barreau_8" type="MeshInstance3D" parent="Echelles/Echelle_tour" unique_id=1874204718]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 8.1220875, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_702kj")
+
+[node name="Barreau_9" type="MeshInstance3D" parent="Echelles/Echelle_tour" unique_id=83701892]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 9.062348, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_702kj")
+
+[node name="Barreau_10" type="MeshInstance3D" parent="Echelles/Echelle_tour" unique_id=1847425712]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 10.002609, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_702kj")
+
+[node name="Barreau_11" type="MeshInstance3D" parent="Echelles/Echelle_tour" unique_id=283913109]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 10.94287, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_702kj")
+
+[node name="Barreau_12" type="MeshInstance3D" parent="Echelles/Echelle_tour" unique_id=534502933]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 11.883131, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_702kj")
+
+[node name="Barreau_13" type="MeshInstance3D" parent="Echelles/Echelle_tour" unique_id=1197520351]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 12.823392, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_702kj")
+
+[node name="Barreau_14" type="MeshInstance3D" parent="Echelles/Echelle_tour" unique_id=2018936584]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 13.763653, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_702kj")
+
+[node name="Barreau_15" type="MeshInstance3D" parent="Echelles/Echelle_tour" unique_id=1172707604]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 14.703914, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_702kj")
+
+[node name="Barreau_16" type="MeshInstance3D" parent="Echelles/Echelle_tour" unique_id=1536586396]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 15.644175, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_702kj")
+
+[node name="Zone" type="Area3D" parent="Echelles/Echelle_tour" unique_id=1533439616 groups=["echelles"]]
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="Forme" type="CollisionShape3D" parent="Echelles/Echelle_tour/Zone" unique_id=872428028]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.942087, 0.15)
+shape = SubResource("BoxShape3D_gfv22")
+
+[node name="Appui" type="StaticBody3D" parent="Echelles/Echelle_tour" unique_id=1999489638]
+collision_mask = 0
+
+[node name="Forme" type="CollisionShape3D" parent="Echelles/Echelle_tour/Appui" unique_id=2100378667]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.942087, -0.05)
+shape = SubResource("BoxShape3D_f8rj3")
+
+[node name="Echelle_toilettes_cote" type="Node3D" parent="Echelles" unique_id=41481990]
+transform = Transform3D(-1, 0, 0, 0, 0.9659258, 0.25881904, 0, 0.258819, -0.9659259, -46.6, 0, 14.843455)
+
+[node name="Montant_G" type="MeshInstance3D" parent="Echelles/Echelle_toilettes_cote" unique_id=1650363348]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 6.857531, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("BoxMesh_smo6e")
+
+[node name="Montant_D" type="MeshInstance3D" parent="Echelles/Echelle_toilettes_cote" unique_id=225161499]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 6.857531, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("BoxMesh_smo6e")
+
+[node name="Barreau_0" type="MeshInstance3D" parent="Echelles/Echelle_toilettes_cote" unique_id=1503882741]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.6, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_ogg5m")
+
+[node name="Barreau_1" type="MeshInstance3D" parent="Echelles/Echelle_toilettes_cote" unique_id=984342940]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 1.5196474, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_ogg5m")
+
+[node name="Barreau_2" type="MeshInstance3D" parent="Echelles/Echelle_toilettes_cote" unique_id=577177917]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 2.4392946, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_ogg5m")
+
+[node name="Barreau_3" type="MeshInstance3D" parent="Echelles/Echelle_toilettes_cote" unique_id=400327348]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 3.358942, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_ogg5m")
+
+[node name="Barreau_4" type="MeshInstance3D" parent="Echelles/Echelle_toilettes_cote" unique_id=1473626960]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 4.2785892, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_ogg5m")
+
+[node name="Barreau_5" type="MeshInstance3D" parent="Echelles/Echelle_toilettes_cote" unique_id=1997700302]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 5.1982365, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_ogg5m")
+
+[node name="Barreau_6" type="MeshInstance3D" parent="Echelles/Echelle_toilettes_cote" unique_id=2123026944]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 6.117884, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_ogg5m")
+
+[node name="Barreau_7" type="MeshInstance3D" parent="Echelles/Echelle_toilettes_cote" unique_id=947293732]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 7.0375314, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_ogg5m")
+
+[node name="Barreau_8" type="MeshInstance3D" parent="Echelles/Echelle_toilettes_cote" unique_id=1141071526]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 7.9571786, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_ogg5m")
+
+[node name="Barreau_9" type="MeshInstance3D" parent="Echelles/Echelle_toilettes_cote" unique_id=284797914]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 8.876826, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_ogg5m")
+
+[node name="Barreau_10" type="MeshInstance3D" parent="Echelles/Echelle_toilettes_cote" unique_id=1129895715]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 9.7964735, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_ogg5m")
+
+[node name="Barreau_11" type="MeshInstance3D" parent="Echelles/Echelle_toilettes_cote" unique_id=1782280710]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 10.716121, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_ogg5m")
+
+[node name="Barreau_12" type="MeshInstance3D" parent="Echelles/Echelle_toilettes_cote" unique_id=706087026]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 11.635768, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_ogg5m")
+
+[node name="Barreau_13" type="MeshInstance3D" parent="Echelles/Echelle_toilettes_cote" unique_id=557798133]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 12.555415, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_ogg5m")
+
+[node name="Barreau_14" type="MeshInstance3D" parent="Echelles/Echelle_toilettes_cote" unique_id=1992531673]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 13.475062, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_ogg5m")
+
+[node name="Zone" type="Area3D" parent="Echelles/Echelle_toilettes_cote" unique_id=407294920 groups=["echelles"]]
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="Forme" type="CollisionShape3D" parent="Echelles/Echelle_toilettes_cote/Zone" unique_id=1873327531]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.857531, 0.15)
+shape = SubResource("BoxShape3D_imx3p")
+
+[node name="Appui" type="StaticBody3D" parent="Echelles/Echelle_toilettes_cote" unique_id=2022881031]
+collision_mask = 0
+
+[node name="Forme" type="CollisionShape3D" parent="Echelles/Echelle_toilettes_cote/Appui" unique_id=148270207]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.857531, -0.05)
 shape = SubResource("BoxShape3D_1nq25")
+
+[node name="Echelle_banc_lavabo" type="Node3D" parent="Echelles" unique_id=1365063655]
+transform = Transform3D(0, 0.25881907, -0.9659259, 0, 0.9659259, 0.25881907, 1, 0, 0, -6.9316735, 6.1, -31)
+
+[node name="Montant_G" type="MeshInstance3D" parent="Echelles/Echelle_banc_lavabo" unique_id=1710089447]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 7.582224, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("BoxMesh_ogg5m")
+
+[node name="Montant_D" type="MeshInstance3D" parent="Echelles/Echelle_banc_lavabo" unique_id=1061578650]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 7.582224, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("BoxMesh_ogg5m")
+
+[node name="Barreau_0" type="MeshInstance3D" parent="Echelles/Echelle_banc_lavabo" unique_id=1187660504]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.6, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_1nmha")
+
+[node name="Barreau_1" type="MeshInstance3D" parent="Echelles/Echelle_banc_lavabo" unique_id=1342595353]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 1.5549632, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_1nmha")
+
+[node name="Barreau_2" type="MeshInstance3D" parent="Echelles/Echelle_banc_lavabo" unique_id=1724269511]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 2.5099263, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_1nmha")
+
+[node name="Barreau_3" type="MeshInstance3D" parent="Echelles/Echelle_banc_lavabo" unique_id=1407318503]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 3.4648895, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_1nmha")
+
+[node name="Barreau_4" type="MeshInstance3D" parent="Echelles/Echelle_banc_lavabo" unique_id=293038076]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 4.4198527, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_1nmha")
+
+[node name="Barreau_5" type="MeshInstance3D" parent="Echelles/Echelle_banc_lavabo" unique_id=1710975967]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 5.374816, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_1nmha")
+
+[node name="Barreau_6" type="MeshInstance3D" parent="Echelles/Echelle_banc_lavabo" unique_id=1849164149]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 6.329779, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_1nmha")
+
+[node name="Barreau_7" type="MeshInstance3D" parent="Echelles/Echelle_banc_lavabo" unique_id=1053477159]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 7.2847424, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_1nmha")
+
+[node name="Barreau_8" type="MeshInstance3D" parent="Echelles/Echelle_banc_lavabo" unique_id=213491537]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 8.239706, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_1nmha")
+
+[node name="Barreau_9" type="MeshInstance3D" parent="Echelles/Echelle_banc_lavabo" unique_id=404779756]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 9.194669, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_1nmha")
+
+[node name="Barreau_10" type="MeshInstance3D" parent="Echelles/Echelle_banc_lavabo" unique_id=67763000]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 10.149632, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_1nmha")
+
+[node name="Barreau_11" type="MeshInstance3D" parent="Echelles/Echelle_banc_lavabo" unique_id=1749262371]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 11.104595, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_1nmha")
+
+[node name="Barreau_12" type="MeshInstance3D" parent="Echelles/Echelle_banc_lavabo" unique_id=1375035804]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 12.059559, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_1nmha")
+
+[node name="Barreau_13" type="MeshInstance3D" parent="Echelles/Echelle_banc_lavabo" unique_id=1720533861]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 13.014522, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_1nmha")
+
+[node name="Barreau_14" type="MeshInstance3D" parent="Echelles/Echelle_banc_lavabo" unique_id=1535960354]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 13.969485, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_1nmha")
+
+[node name="Barreau_15" type="MeshInstance3D" parent="Echelles/Echelle_banc_lavabo" unique_id=1865910386]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 14.924448, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_1nmha")
+
+[node name="Zone" type="Area3D" parent="Echelles/Echelle_banc_lavabo" unique_id=437836632 groups=["echelles"]]
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="Forme" type="CollisionShape3D" parent="Echelles/Echelle_banc_lavabo/Zone" unique_id=921519140]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.582224, 0.15)
+shape = SubResource("BoxShape3D_fbsh4")
+
+[node name="Appui" type="StaticBody3D" parent="Echelles/Echelle_banc_lavabo" unique_id=647070537]
+collision_mask = 0
+
+[node name="Forme" type="CollisionShape3D" parent="Echelles/Echelle_banc_lavabo/Appui" unique_id=743225490]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.582224, -0.05)
+shape = SubResource("BoxShape3D_lsyki")
+
+[node name="Echelle_tour_2" type="Node3D" parent="Echelles" unique_id=632214676]
+transform = Transform3D(0, 0.258819, -0.9659259, 0, 0.9659259, 0.258819, 1, 0, 0, -42.519238, 0, 13.5)
+
+[node name="Montant_G" type="MeshInstance3D" parent="Echelles/Echelle_tour_2" unique_id=1471729959]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 7.944571, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("BoxMesh_pxvwb")
+
+[node name="Montant_D" type="MeshInstance3D" parent="Echelles/Echelle_tour_2" unique_id=254031293]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 7.944571, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("BoxMesh_pxvwb")
+
+[node name="Barreau_0" type="MeshInstance3D" parent="Echelles/Echelle_tour_2" unique_id=341317399]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.6, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_r1gk4")
+
+[node name="Barreau_1" type="MeshInstance3D" parent="Echelles/Echelle_tour_2" unique_id=1543450787]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 1.5405715, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_r1gk4")
+
+[node name="Barreau_2" type="MeshInstance3D" parent="Echelles/Echelle_tour_2" unique_id=2000404065]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 2.4811428, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_r1gk4")
+
+[node name="Barreau_3" type="MeshInstance3D" parent="Echelles/Echelle_tour_2" unique_id=1189289238]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 3.4217143, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_r1gk4")
+
+[node name="Barreau_4" type="MeshInstance3D" parent="Echelles/Echelle_tour_2" unique_id=1628215645]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 4.3622856, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_r1gk4")
+
+[node name="Barreau_5" type="MeshInstance3D" parent="Echelles/Echelle_tour_2" unique_id=298705078]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 5.302857, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_r1gk4")
+
+[node name="Barreau_6" type="MeshInstance3D" parent="Echelles/Echelle_tour_2" unique_id=50954120]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 6.243428, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_r1gk4")
+
+[node name="Barreau_7" type="MeshInstance3D" parent="Echelles/Echelle_tour_2" unique_id=1356616728]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 7.184, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_r1gk4")
+
+[node name="Barreau_8" type="MeshInstance3D" parent="Echelles/Echelle_tour_2" unique_id=490562944]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 8.124571, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_r1gk4")
+
+[node name="Barreau_9" type="MeshInstance3D" parent="Echelles/Echelle_tour_2" unique_id=1648184231]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 9.065143, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_r1gk4")
+
+[node name="Barreau_10" type="MeshInstance3D" parent="Echelles/Echelle_tour_2" unique_id=248431967]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 10.005714, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_r1gk4")
+
+[node name="Barreau_11" type="MeshInstance3D" parent="Echelles/Echelle_tour_2" unique_id=1124548728]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 10.946285, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_r1gk4")
+
+[node name="Barreau_12" type="MeshInstance3D" parent="Echelles/Echelle_tour_2" unique_id=1838613462]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 11.886857, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_r1gk4")
+
+[node name="Barreau_13" type="MeshInstance3D" parent="Echelles/Echelle_tour_2" unique_id=1686969568]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 12.827428, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_r1gk4")
+
+[node name="Barreau_14" type="MeshInstance3D" parent="Echelles/Echelle_tour_2" unique_id=1031406529]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 13.768, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_r1gk4")
+
+[node name="Barreau_15" type="MeshInstance3D" parent="Echelles/Echelle_tour_2" unique_id=1894087888]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 14.708571, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_r1gk4")
+
+[node name="Barreau_16" type="MeshInstance3D" parent="Echelles/Echelle_tour_2" unique_id=742651880]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 15.649142, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_r1gk4")
+
+[node name="Zone" type="Area3D" parent="Echelles/Echelle_tour_2" unique_id=429430647 groups=["echelles"]]
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="Forme" type="CollisionShape3D" parent="Echelles/Echelle_tour_2/Zone" unique_id=386024525]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.944571, 0.15)
+shape = SubResource("BoxShape3D_ai5il")
+
+[node name="Appui" type="StaticBody3D" parent="Echelles/Echelle_tour_2" unique_id=111669730]
+collision_mask = 0
+
+[node name="Forme" type="CollisionShape3D" parent="Echelles/Echelle_tour_2/Appui" unique_id=1951174528]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 7.944571, -0.05)
+shape = SubResource("BoxShape3D_hw603")
+
+[node name="Verticalite" type="Node3D" parent="." unique_id=1140110821]
+
+[node name="Ilot_central" type="CSGCombiner3D" parent="Verticalite" unique_id=1983321410]
+use_collision = true
+
+[node name="Plateau" type="CSGBox3D" parent="Verticalite/Ilot_central" unique_id=1475892650]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 5.5, 5)
+size = Vector3(12, 1, 12)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Pilier_O" type="CSGBox3D" parent="Verticalite/Ilot_central" unique_id=1086746423]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.5, 2.5, 5)
+size = Vector3(3, 5, 12)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Pilier_E" type="CSGBox3D" parent="Verticalite/Ilot_central" unique_id=1971580037]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.5, 2.5, 5)
+size = Vector3(3, 5, 12)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Rampe_O" type="CSGPolygon3D" parent="Verticalite/Ilot_central" unique_id=591675615]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.4311119, 0, 9.5)
+polygon = PackedVector2Array(0, 0, 8.868888, 0, 8.868888, 6, 8.568888, 6)
+depth = 6.0
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Rampe_E" type="CSGPolygon3D" parent="Verticalite/Ilot_central" unique_id=1076369073]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 30.568888, 0, 3.5)
+polygon = PackedVector2Array(0, 0, 8.868888, 0, 8.868888, 6, 8.568888, 6)
+depth = 6.0
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Belvedere_lavabo" type="CSGCombiner3D" parent="Verticalite" unique_id=811551853]
+use_collision = true
+
+[node name="Rampe_lavabo" type="CSGBox3D" parent="Verticalite/Belvedere_lavabo" unique_id=621348342]
+transform = Transform3D(-0.9631963, 0.16346654, -0.2133813, 0, 0.7938323, 0.6081367, 0.26879898, 0.58575505, -0.7646163, 9.536312, 14.068596, -11.21988)
+size = Vector3(5, 0.6, 28.918676)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Balcon_bleu" type="CSGCombiner3D" parent="Verticalite" unique_id=1935209020]
+use_collision = true
+
+[node name="Plateforme" type="CSGBox3D" parent="Verticalite/Balcon_bleu" unique_id=321776469]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -52.25, 2.25, -18.7)
+size = Vector3(12.5, 4.5, 5.8)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Rampe" type="CSGPolygon3D" parent="Verticalite/Balcon_bleu" unique_id=478453830]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -38.798496, 0, -21.4)
+polygon = PackedVector2Array(0, 0, 7.5015054, 0, 7.5015054, 4.5, 7.201505, 4.5)
+depth = 5.0
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Balcon_rouge" type="CSGCombiner3D" parent="Verticalite" unique_id=1267707689]
+use_collision = true
+
+[node name="Rampe" type="CSGPolygon3D" parent="Verticalite/Balcon_rouge" unique_id=1860131345]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 33.00577, 0, 17)
+polygon = PackedVector2Array(0, 0, 8.094229, 0, 8.094229, 4.5, 7.7942286, 4.5)
+depth = 6.0
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Circuit_haut" type="CSGCombiner3D" parent="Verticalite" unique_id=969251675]
+use_collision = true
+
+[node name="Passerelle_ilot_corbeille" type="CSGBox3D" parent="Verticalite/Circuit_haut" unique_id=1337611314]
+transform = Transform3D(1, 0, 0, 0, 0.98985094, 0.14210969, 0, -0.14210969, 0.98985094, 16, 6.0706935, 12.651612)
+size = Vector3(4, 0.5, 6.077614)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Passerelle_corbeille_pile" type="CSGBox3D" parent="Verticalite/Circuit_haut" unique_id=390697498]
+transform = Transform3D(-1, 0, 0, 0, 0.86289436, 0.5053844, 0, 0.5053844, -0.86289436, 10.8, 4.7571225, 27.029652)
+size = Vector3(2.4, 0.5, 7.0328803)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Rampe_pile_rebord" type="CSGBox3D" parent="Verticalite/Circuit_haut" unique_id=1090429007]
+transform = Transform3D(1, 0, 0, 0, 0.8926787, 0.45069376, 0, -0.45069376, 0.8926787, 6.8, 6.4665523, 34.855602)
+size = Vector3(3, 0.5, 9.985838)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Marchepied" type="CSGCombiner3D" parent="Verticalite" unique_id=1475053193]
+use_collision = true
+
+[node name="Grande_marche" type="CSGBox3D" parent="Verticalite/Marchepied" unique_id=6492236]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20, 4.575, 30)
+size = Vector3(8, 9.15, 6)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Petite_marche" type="CSGBox3D" parent="Verticalite/Marchepied" unique_id=1307238158]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.5, 2.25, 30)
+size = Vector3(5, 4.5, 6)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Rampe" type="CSGPolygon3D" parent="Verticalite/Marchepied" unique_id=467029138]
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -3.2057714, 0, 27.5)
+polygon = PackedVector2Array(0, 0, 8.094229, 0, 8.094229, 4.5, 7.7942286, 4.5)
+depth = 5.0
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Passerelle_jonction" type="CSGBox3D" parent="Verticalite/Marchepied" unique_id=368937387]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -22.5, 8.9, 36.55)
+size = Vector3(3, 0.5, 8.700002)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Abris" type="CSGCombiner3D" parent="Verticalite" unique_id=1237057660]
+use_collision = true
+
+[node name="Pave_1" type="CSGBox3D" parent="Verticalite/Abris" unique_id=1580949613]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -42, 1, 5)
+size = Vector3(2, 2, 6)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Pave_2" type="CSGBox3D" parent="Verticalite/Abris" unique_id=1465565668]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -36, 1, 0)
+size = Vector3(6, 2, 2)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Pave_3" type="CSGBox3D" parent="Verticalite/Abris" unique_id=1490433688]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24, 1, 2)
+size = Vector3(2, 2, 5)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Pave_4" type="CSGBox3D" parent="Verticalite/Abris" unique_id=1730295490]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 1, 24)
+size = Vector3(5, 2, 2)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Pave_5" type="CSGBox3D" parent="Verticalite/Abris" unique_id=85083150]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -28, 1, 30)
+size = Vector3(2, 2, 4)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Pave_6" type="CSGBox3D" parent="Verticalite/Abris" unique_id=1427719625]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -48, 1, 10)
+size = Vector3(4, 2, 2)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Pas_japonais_douche" type="CSGCombiner3D" parent="Verticalite" unique_id=616856010]
+use_collision = true
+
+[node name="Pilier_1" type="CSGBox3D" parent="Verticalite/Pas_japonais_douche" unique_id=427226980]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 46.17, 3.7, -14.667695)
+size = Vector3(3.5, 1.6, 3.5)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Pilier_2" type="CSGBox3D" parent="Verticalite/Pas_japonais_douche" unique_id=1429246562]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50.5623, 4.45, -19.06)
+size = Vector3(3.5, 3.1, 3.5)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Pilier_3" type="CSGBox3D" parent="Verticalite/Pas_japonais_douche" unique_id=37884771]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 52.17, 5.2, -25.06)
+size = Vector3(3.5, 4.6, 3.5)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Pilier_4" type="CSGBox3D" parent="Verticalite/Pas_japonais_douche" unique_id=1746262524]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50.5623, 5.95, -31.06)
+size = Vector3(3.5, 6.1, 3.5)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Pilier_5" type="CSGBox3D" parent="Verticalite/Pas_japonais_douche" unique_id=1835453201]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 46.17, 6.7, -35.452305)
+size = Vector3(5, 7.6, 5)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Tour_de_guet" type="CSGCombiner3D" parent="Verticalite" unique_id=1768203405]
+use_collision = true
+
+[node name="Tour" type="CSGBox3D" parent="Verticalite/Tour_de_guet" unique_id=1038790798]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27, 7.5, 20)
+size = Vector3(5, 15, 5)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Coin_balance" type="CSGCombiner3D" parent="Verticalite" unique_id=489472496]
+use_collision = true
+
+[node name="Banc_plateau" type="CSGBox3D" parent="Verticalite/Coin_balance" unique_id=1742183580]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -21.9, 5.6, -30.55)
+size = Vector3(33.8, 1, 7.1)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Banc_pied_O" type="CSGBox3D" parent="Verticalite/Coin_balance" unique_id=840050831]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -37.8, 2.55, -30.55)
+size = Vector3(2, 5.1, 7.1)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Banc_pied_milieu" type="CSGBox3D" parent="Verticalite/Coin_balance" unique_id=673606129]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -17, 2.55, -30.55)
+size = Vector3(2, 5.1, 7.1)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Banc_pied_E" type="CSGBox3D" parent="Verticalite/Coin_balance" unique_id=862584375]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 2.55, -30.55)
+size = Vector3(2, 5.1, 7.1)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Marche_savon_1" type="CSGBox3D" parent="Verticalite/Coin_balance" unique_id=620669324]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -33.5, 1.55, -25.2)
+size = Vector3(5, 3.1, 3.6)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Marche_savon_2" type="CSGBox3D" parent="Verticalite/Coin_balance" unique_id=1892873868]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -37.4, 2.3, -25.2)
+size = Vector3(2.8, 4.6, 3.6)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Marche_plan_lavabo" type="CSGBox3D" parent="Verticalite/Coin_balance" unique_id=2110593891]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.1, 21.075, -27.5)
+size = Vector3(1.8, 1.35, 2)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Tour_de_guet_2" type="CSGCombiner3D" parent="Verticalite" unique_id=1832222223]
+use_collision = true
+
+[node name="Tour" type="CSGBox3D" parent="Verticalite/Tour_de_guet_2" unique_id=2097232383]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -36, 7.5, 13)
+size = Vector3(5, 15, 5)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="Parcours_tours" type="CSGCombiner3D" parent="Verticalite" unique_id=1928497651]
+use_collision = true
+
+[node name="P1_palier_A" type="CSGBox3D" parent="Verticalite/Parcours_tours" unique_id=1203012099]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -44.5, 12.25, 6)
+size = Vector3(3.5, 0.5, 3.5)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="P1_palier_A_poteau" type="CSGBox3D" parent="Verticalite/Parcours_tours" unique_id=281293672]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -44.5, 6, 6)
+size = Vector3(0.8, 12, 0.8)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="P1_palier_B" type="CSGBox3D" parent="Verticalite/Parcours_tours" unique_id=538136697]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -51.5, 14.25, 2)
+size = Vector3(3.5, 0.5, 3.5)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="P1_palier_B_poteau" type="CSGBox3D" parent="Verticalite/Parcours_tours" unique_id=1394041108]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -51.5, 7, 2)
+size = Vector3(0.8, 14, 0.8)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="P1_palier_C_mur" type="CSGBox3D" parent="Verticalite/Parcours_tours" unique_id=2008215562]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -56.6, 13.25, -2)
+size = Vector3(3.5, 0.5, 3.5)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="P1_palier_D_mur" type="CSGBox3D" parent="Verticalite/Parcours_tours" unique_id=530496089]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -56.6, 9.75, -13)
+size = Vector3(3.5, 0.5, 3.5)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="P1_palier_E" type="CSGBox3D" parent="Verticalite/Parcours_tours" unique_id=659318758]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -48.5, 7.25, -13.5)
+size = Vector3(3.5, 0.5, 3.5)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="P1_palier_E_poteau" type="CSGBox3D" parent="Verticalite/Parcours_tours" unique_id=242132264]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -48.5, 3.5, -13.5)
+size = Vector3(0.8, 7, 0.8)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="P1_tour_A" type="CSGBox3D" parent="Verticalite/Parcours_tours" unique_id=1135658382]
+transform = Transform3D(0.63570726, -0.31915388, 0.7028636, 0, 0.9105273, 0.41344914, -0.7719303, -0.2628326, 0.5788288, -40.826355, 13.356989, 9.0253525)
+size = Vector3(3, 0.5, 6.8466935)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="P1_A_B" type="CSGBox3D" parent="Verticalite/Parcours_tours" unique_id=1904197914]
+transform = Transform3D(-0.49613893, 0.38588586, -0.7777778, 0, 0.89580643, 0.44444448, 0.86824316, 0.22050619, -0.44444445, -47.78536, 13.09827, 4.122651)
+size = Vector3(3, 0.5, 5.3)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="P1_B_C" type="CSGBox3D" parent="Verticalite/Parcours_tours" unique_id=1391747053]
+transform = Transform3D(0.61714, -0.34724277, 0.70608824, 0, 0.8973569, 0.44130558, -0.7868533, -0.27234736, 0.55379486, -54.245625, 13.599138, -0.15343106)
+size = Vector3(3, 0.5, 3.0660036)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="P1_C_D_mur" type="CSGBox3D" parent="Verticalite/Parcours_tours" unique_id=1941551439]
+transform = Transform3D(1, 0, 0, 0, 0.9061832, 0.42288548, 0, -0.42288548, 0.9061832, -56.6, 11.3543005, -7.756752)
+size = Vector3(3, 0.5, 9.076473)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="P1_D_E" type="CSGBox3D" parent="Verticalite/Parcours_tours" unique_id=1199290192]
+transform = Transform3D(0.06161119, 0.47590685, -0.87733513, 0, 0.879005, 0.47681272, 0.9981003, -0.029376995, 0.054156546, -52.318043, 8.339523, -13.264318)
+size = Vector3(3, 0.5, 6.0431495)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="P1_E_balcon" type="CSGBox3D" parent="Verticalite/Parcours_tours" unique_id=868104821]
+transform = Transform3D(0.99813473, 0.040770203, -0.045439135, 0, 0.7443116, 0.66783255, 0.061048537, -0.66658694, 0.74292326, -48.586224, 5.7718725, -16.872633)
+size = Vector3(3, 0.5, 4.9194345)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="P2_palier_A" type="CSGBox3D" parent="Verticalite/Parcours_tours" unique_id=763172809]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.5, 13.25, 27)
+size = Vector3(3.5, 0.5, 3.5)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="P2_palier_A_poteau" type="CSGBox3D" parent="Verticalite/Parcours_tours" unique_id=996164565]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.5, 6.5, 27)
+size = Vector3(0.8, 13, 0.8)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="P2_palier_B_mur" type="CSGBox3D" parent="Verticalite/Parcours_tours" unique_id=1551776760]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.1, 14.75, 34)
+size = Vector3(3.5, 0.5, 3.5)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="P2_palier_B_mur_poteau" type="CSGBox3D" parent="Verticalite/Parcours_tours" unique_id=2051669268]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.1, 7.25, 34)
+size = Vector3(0.8, 14.5, 0.8)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="P2_palier_C_mur" type="CSGBox3D" parent="Verticalite/Parcours_tours" unique_id=1841050377]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23.1, 12.95, 41)
+size = Vector3(3.5, 0.5, 3.5)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="P2_tour_A" type="CSGBox3D" parent="Verticalite/Parcours_tours" unique_id=1904332129]
+transform = Transform3D(-0.7327935, -0.2525528, 0.6318472, 0, 0.928571, 0.37115496, -0.68045115, 0.27197993, -0.6804508, 23.212187, 13.869395, 24.079185)
+size = Vector3(3, 0.5, 4.8414392)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="P2_A_B" type="CSGBox3D" parent="Verticalite/Parcours_tours" unique_id=1285958066]
+transform = Transform3D(0.93742514, -0.12980162, 0.32308757, 0, 0.9279145, 0.37279302, -0.3481868, -0.34946558, 0.8698504, 21.703215, 13.868905, 30.239426)
+size = Vector3(3, 0.5, 4.8236804)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="P2_B_C_mur" type="CSGBox3D" parent="Verticalite/Parcours_tours" unique_id=1178677438]
+transform = Transform3D(-1, 0, 0, 0, 0.88928777, 0.45734805, 0, 0.45734805, -0.88928777, 23.1, 13.694739, 37.741375)
+size = Vector3(3, 0.5, 4.735734)
+material = SubResource("StandardMaterial3D_702kj")
+
+[node name="P2_C_rebord" type="CSGBox3D" parent="Verticalite/Parcours_tours" unique_id=369981609]
+transform = Transform3D(0, -0.45445308, 0.89077073, 0, 0.89077073, 0.45445308, -1, 0, 0, 16.932304, 10.665525, 41)
+size = Vector3(3, 0.5, 10.173905)
+material = SubResource("StandardMaterial3D_702kj")

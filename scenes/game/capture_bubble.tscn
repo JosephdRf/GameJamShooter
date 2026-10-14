@@ -10,6 +10,7 @@ grow_duration = 0.18
 radius = 0.7
 world_radius = 0.3
 capture = true
+puddle_radius = 3.6
 
 [node name="PopSound" parent="." index="1"]
 volume_db = 2.0

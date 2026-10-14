@@ -36,7 +36,7 @@ Les chemins sont regroupés dans `scripts/ui/screens.gd` (`Screens.TITLE`, `Scre
 
 6. En jeu, l'hôte peut mettre en pause (**P** ou **+**) : la partie est figée pour tous.
    « Quitter » ramène tout le monde à la sélection d'équipe.
-7. Un **compte à rebours** (1:00 par défaut) est affiché en haut au centre ; il est figé pendant la
+7. Un **compte à rebours** (2:00 par défaut) est affiché en haut au centre ; il est figé pendant la
    pause. À 0:00, tout le monde passe à l'écran de fin. L'hôte fait foi : il envoie le temps restant
    aux autres toutes les 0,5 s. Durée réglable avec `match_duration` sur le nœud `Game`
    (0 = pas de limite, chrono masqué).
@@ -64,10 +64,11 @@ par commande, avec sa touche clavier et son bouton de manette. Le code n'utilise
 | Se déplacer | `move_left/right/up/down` | Z/Q/S/D (W/A/S/D en QWERTY) ou flèches | Stick gauche | Stick gauche |
 | Tourner la caméra | `look_left/right/up/down` | Souris / trackpad | Stick droit | Stick droit |
 | Sauter | `jump` | Espace | B | Croix |
-| Dash (au sol, toutes les 2 s) | `dash` | Maj | Y | Carré |
+| Dash (au sol, toutes les 2 s ; gauche / droite l'infléchissent) | `dash` | Maj | Y | Carré |
 | Tirer une bulle (maintenir = en continu) | `shoot` | Clic gauche / T | ZL / ZR | L2 / R2 |
-| Viser (maintenir) : la caméra zoome, sans aide à la visée | `aim` | Clic droit | ZL | L2 |
-| Bulle de capture (toutes les 5 s) | `capture` | Clic molette | R | R1 |
+| Viser : la caméra zoome, sans aide à la visée (**désactivé pour l'instant** : aucune touche) | `aim` | — | — | — |
+| Bulle de capture (toutes les 1 s, 20 % d'eau) | `capture` | Clic molette | R | R1 |
+| Canon à eau (maintenir, prototype) | `water_cannon` | Clic droit | L | L1 |
 | **Menus** : naviguer / choisir son joueur | `menu_left/right` (+ `ui_*` de Godot) | Flèches (Q/D) | Stick gauche / croix | Stick gauche / croix |
 | **Menus** : valider | `ui_accept` | Entrée / Espace | A | Rond |
 | **Accueil** : démarrer ; **Sélection** : lancer la partie (hôte) | `start` | Entrée sur le bouton | + | Options |
@@ -107,15 +108,51 @@ Un joueur qui tombe de la plateforme meurt.
 ### Capture
 
 - **Clic molette** (action `capture`) : tire une grosse bulle, plus lente (18 m/s, **portée illimitée** : elle vole jusqu'à toucher quelque chose), au plus
-  une toutes les **5 s**.
-- Un adversaire touché est **piégé 2 s** dans une bulle à la couleur de l'équipe qui l'a eu : il lévite à
-  25 cm du sol en flottant et ne peut plus bouger, sauter, dasher ni tirer (il peut toujours tourner la
-  caméra et prendre des dégâts). Puis la bulle éclate et il retombe au sol. Rien sur un coéquipier ; un
+  une par seconde ; elle coûte **20 %** de la réserve d'eau.
+- Un adversaire touché est **piégé 2 s** dans une bulle à la couleur de l'équipe qui l'a eu : il décolle de
+  25 cm puis **s'élève lentement** (1 m de plus en 2 s, en flottant ; il s'arrête sous un plafond) et ne peut
+  plus bouger, sauter, dasher ni tirer (il peut toujours tourner la caméra et prendre des dégâts). Puis la bulle éclate et il retombe au sol. Rien sur un coéquipier ; un
   joueur déjà piégé ne l'est pas une 2e fois. Mort dans la bulle : elle disparaît.
 - Réglages : `scenes/game/capture_bubble.tscn` (scène héritée de la bulle normale : `speed`,
   `max_distance`, `radius`, `world_radius` : rayon plus petit contre le décor pour qu'elle frôle le sol
   sans éclater, `capture_duration`) et sur le joueur, groupe « Capture » (`capture_cooldown`,
-  `capture_lift`, `capture_bob`). Bulle autour du canard : nœud `CaptureBubble` de `player.tscn`.
+  `capture_lift`, `capture_rise`, `capture_bob`). Bulle autour du canard : nœud `CaptureBubble` de `player.tscn`.
+
+### Réserve d'eau
+
+- Jauge **EAU** en bas à gauche (`MatchHud`, nœud `Water`). Un tir coûte **5 %**, une grosse bulle **20 %**,
+  le jet **10 % par seconde**. Sans assez d'eau, rien ne part et la jauge clignote en rouge.
+- Après **2 s** sans dépenser d'eau, elle se recharge de plus en plus vite (la vitesse double toutes les
+  0,6 s) : pleine environ 4,5 s après le dernier tir, même vide. Pleine à la réapparition.
+- Réglages : groupe « Eau » du joueur (`water_per_shot`, `water_per_capture`, `water_per_second`,
+  `water_recharge_delay`, `water_recharge_rate`, `water_recharge_doubling`, `water_recharge_max_rate`).
+
+### Canon à eau (prototype)
+
+- **Clic droit maintenu** (action `water_cannon`) : jet d'eau continu vers le viseur. Les gouttes partent un peu vers
+  le haut pour que leur arc retombe sur le point visé (comme un tuyau d'arrosage) ; une sur cinq, plus lente,
+  retombe un peu avant. Là où le jet touche le sol, une flaque se forme et grandit (cf. Flaques). Chaque
+  goutte qui touche un adversaire lui inflige **0,4 PV** (`damage_per_drop`), soit environ 56 PV/s si tout
+  le jet le touche ; rien aux coéquipiers.
+- Code : `scripts/game/water_cannon.gd` (nœud `WaterCannon` de `game.tscn` : débit, vitesse, gravité,
+  dispersion, eau laissée au sol, taille des gouttes). Toutes les gouttes sont dessinées d'un coup
+  (MultiMesh). Réseau : seuls « canon en marche » et le point visé sont envoyés ; chaque ordinateur
+  simule les gouttes.
+
+### Flaques (prototype)
+
+- Une bulle qui éclate sur le sol (ou le dessus d'un meuble) laisse une **flaque d'eau** (rayon 2 m,
+  3,6 m pour la maxi-bulle : `puddle_radius`), de forme irrégulière. Deux flaques proches se rejoignent
+  en une seule ; tirer plusieurs fois au même endroit l'agrandit. Les flaques ne sèchent pas.
+- **Dash sur l'eau** : il ne s'use pas. Le canard garde sa vitesse tant qu'il glisse sur une flaque, et
+  la distance du dash ne compte que sur le sol sec (`dash_slides_on_water` sur le joueur). Contre un mur,
+  le dash se termine normalement.
+- **L'eau réagit** : à chaque éclatement, des ronds dans l'eau et des gouttes ; un canard qui marche
+  dedans fait un rond et un « splotch » à chaque pas (`WaterStepSound`), et laisse un sillage (ronds +
+  gerbes) quand il glisse dessus.
+- Code : `scripts/game/puddles.gd` (nœud `Puddles` de `game.tscn` : couleur, forme, résolution, budget de
+  peinture par image). Rien n'est envoyé en réseau : chaque ordinateur fait éclater sa copie de la bulle
+  au même endroit.
 
 ### Vie
 

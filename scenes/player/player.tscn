@@ -12,6 +12,7 @@
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/duck_death.tres" id="10_duck_death"]
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/duck_respawn.tres" id="11_duck_respawn"]
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/bubble_pop.tres" id="12_bubble_pop"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/duck_step_water.tres" id="13_step_water"]
 
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_gmlin"]
 animation = &"dash"
@@ -251,3 +252,10 @@ stream = ExtResource("12_bubble_pop")
 volume_db = 2.0
 pitch_scale = 0.55
 max_distance = 50.0
+
+[node name="WaterStepSound" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("13_step_water")
+volume_db = -10.0
+pitch_scale = 0.8
+max_distance = 20.0
+max_polyphony = 2

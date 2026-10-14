@@ -17,11 +17,20 @@ extends CharacterBody3D
 ## Sons (nœuds *Sound, joués sur tous les ordinateurs) : tir, pas calés sur
 ## l'animation (cf. FOOTSTEPS), dash, saut, touché, mort et réapparition.
 ##
+## Réserve d'eau (`water`, de 0 à 1, propre à l'ordinateur qui contrôle le canard) : un tir
+## en coûte `water_per_shot`, la grosse bulle `water_per_capture`, le jet `water_per_second`
+## en continu. Sans assez d'eau, rien ne part (signal water_denied : la jauge clignote).
+## Après `water_recharge_delay` s sans dépenser d'eau, elle se recharge de plus en plus vite
+## (la vitesse double toutes les `water_recharge_doubling` s).
+##
+## Canon à eau (prototype) : tant que l'action water_cannon (clic droit) est maintenue, le canard
+## arrose en continu vers le point visé (cannon_on, cannon_target ; gouttes simulées par WaterCannon).
+##
 ## Capture : l'action capture (clic molette) tire une grosse bulle (toutes les
 ## `capture_cooldown` s). Un adversaire touché est piégé (capture()) : enfermé dans une
-## bulle à la couleur de l'équipe qui l'a eu, il lévite `capture_lift` m au-dessus du
-## sol et ne peut ni bouger, ni sauter, ni dasher, ni tirer pendant la durée de la
-## bulle (2 s). Il peut toujours prendre des dégâts.
+## bulle à la couleur de l'équipe qui l'a eu, il décolle de `capture_lift` m puis
+## s'élève lentement de `capture_rise` m pendant toute la durée de la bulle (2 s), sans
+## pouvoir bouger, sauter, dasher ni tirer. Il peut toujours prendre des dégâts.
 
 ## Émis sur tous les ordinateurs quand la vie change / à la mort / à la réapparition.
 signal health_changed(health: float)
@@ -30,6 +39,8 @@ signal respawned
 ## Émis sur tous les ordinateurs quand ce joueur tire (Game crée la bulle ;
 ## `capture` : bulle de capture).
 signal shot(origin: Vector3, direction: Vector3, capture: bool)
+## Émis (ordinateur du joueur) quand un tir est refusé faute d'eau.
+signal water_denied
 
 ## Couleur de chaque équipe (index 0 = équipe 1).
 const TEAM_COLORS: Array[Color] = [
@@ -86,9 +97,15 @@ const FOOTSTEPS := {
 	&"walk": [0.49, 0.98],
 	&"run": [0.47, 0.95],
 }
-## Capture : vitesse de montée vers la hauteur de lévitation, vitesse du flottement.
+## Canon à eau : intervalle (s) entre deux envois du point visé aux autres ordinateurs.
+const CANNON_AIM_SYNC_INTERVAL := 0.066
+## Sillage sur l'eau pendant une glissade : un rond et une gerbe toutes les WAKE_INTERVAL s.
+const WAKE_INTERVAL := 0.035
+## Capture : vitesse à laquelle il rejoint sa hauteur de lévitation, vitesse du flottement.
 const CAPTURE_RISE_SPEED := 10.0
 const CAPTURE_BOB_SPEED := 4.0
+## Marge (m) au-dessus des pieds pour chercher un plafond pendant la montée (cf. _simulate_captured).
+const CAPTURE_CEILING_TEST := 0.02
 
 @export_range(1, 4) var player_id := 1:
 	set(value):
@@ -116,6 +133,12 @@ const CAPTURE_BOB_SPEED := 4.0
 @export var dash_duration := 0.4
 ## Temps minimum entre deux dashs (s).
 @export var dash_cooldown := 2.0
+## Sur l'eau (flaques), le dash ne s'use pas : il garde sa vitesse tant que le canard glisse
+## sur la flaque, et la distance du dash ne compte que sur le sol sec.
+@export var dash_slides_on_water := true
+## Pendant le dash, gauche / droite le font tourner (radians par seconde) ; avant / arrière
+## n'ont pas d'effet (ni accélérer ni freiner).
+@export var dash_steer_speed := 1.75
 @export_group("Tir")
 ## Temps minimum entre deux appuis sur la touche de tir (s).
 @export var fire_cooldown := 0.15
@@ -126,11 +149,25 @@ const CAPTURE_BOB_SPEED := 4.0
 @export var combat_stance_duration := 0.6
 @export_group("Capture")
 ## Temps minimum entre deux bulles de capture (s).
-@export var capture_cooldown := 5.0
-## Hauteur à laquelle lévite un joueur capturé, au-dessus du sol (m).
+@export var capture_cooldown := 1.0
+## Hauteur à laquelle décolle un joueur capturé, au-dessus du sol (m).
 @export var capture_lift := 0.25
+## Hauteur qu'il prend ensuite, lentement, pendant toute la capture (m).
+@export var capture_rise := 1.0
 ## Amplitude du flottement d'un joueur capturé (m).
 @export var capture_bob := 0.05
+@export_group("Eau")
+## Eau dépensée (fraction de la réserve) par un tir, une grosse bulle, et par seconde de jet.
+@export var water_per_shot := 0.05
+@export var water_per_capture := 0.2
+@export var water_per_second := 0.1
+## Temps sans dépenser d'eau avant que la réserve se recharge (s).
+@export var water_recharge_delay := 2.0
+## Recharge : vitesse au départ (fraction par seconde), qui double toutes les
+## `water_recharge_doubling` s, jusqu'à `water_recharge_max_rate`.
+@export var water_recharge_rate := 0.08
+@export var water_recharge_doubling := 0.6
+@export var water_recharge_max_rate := 0.9
 @export_group("Vie")
 @export var max_health := 100.0
 ## Vie regagnée par seconde (PV/s) quand le joueur ne prend pas de dégâts.
@@ -160,13 +197,20 @@ var health := 100.0:
 			_on_died()
 		elif not was_alive and health > 0.0:
 			_on_respawned()
-		elif health < previous and _hit_sound:
-			_hit_sound.play() # Touché (sur tous les ordinateurs : la vie est diffusée).
+		elif health < previous and _hit_sound and not _hit_sound.playing:
+			# Touché (sur tous les ordinateurs : la vie est diffusée). Pas relancé s'il joue déjà :
+			# le jet d'eau inflige des dégâts à chaque image.
+			_hit_sound.play()
 ## Posture de combat : direction horizontale (x, z) que regarde le canard pendant qu'il
 ## vise ou tire ; Vector2.ZERO sinon (il regarde alors là où il va). Diffusée par le nœud Sync.
 var sync_facing := Vector2.ZERO
 ## Vrai pendant qu'il est piégé dans une bulle de capture (sur tous les ordinateurs).
 var captured := false
+## Réserve d'eau, de 0 (vide) à 1 (pleine) ; tenue par l'ordinateur qui contrôle le canard.
+var water := 1.0
+## Canon à eau en marche, et point visé par le jet (sur tous les ordinateurs, cf. WaterCannon).
+var cannon_on := false
+var cannon_target := Vector3.ZERO
 
 var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var _spawn_position: Vector3
@@ -198,12 +242,21 @@ var _camera_base_y: float
 ## Animation et position (fraction) à l'image précédente, pour les bruits de pas.
 var _footstep_animation: StringName
 var _footstep_phase := 0.0
+## Flaques de la partie (Puddles), cherchées au premier besoin ; null hors d'une partie.
+var _puddles: Puddles
+## Temps restant avant le prochain rond du sillage (s).
+var _wake_left := 0.0
+## Temps restant avant le prochain envoi de cannon_target (s).
+var _cannon_sync_left := 0.0
+## Temps depuis la dernière dépense d'eau (s), pour la recharge.
+var _water_idle := INF
 ## Temps restant avant de pouvoir tirer une bulle de capture (s).
 var _capture_cooldown_left := 0.0
 ## Capture en cours (ordinateur qui a l'autorité) : temps restant (s), hauteur de
-## lévitation visée, temps écoulé (flottement).
+## décollage, durée totale et temps écoulé (s).
 var _captured_left := 0.0
 var _capture_height := 0.0
+var _capture_duration := 0.0
 var _capture_time := 0.0
 var _capture_tween: Tween
 
@@ -220,6 +273,8 @@ var _capture_tween: Tween
 @onready var _shoot_sound: AudioStreamPlayer3D = $ShootSound
 ## Autres sons du canard, chacun tiré au hasard dans assets/audio/sfx/duck_*.tres.
 @onready var _step_sound: AudioStreamPlayer3D = $StepSound
+## Pas dans l'eau : « splotch » au lieu du bruit de pas.
+@onready var _water_step_sound: AudioStreamPlayer3D = $WaterStepSound
 @onready var _dash_sound: AudioStreamPlayer3D = $DashSound
 @onready var _jump_sound: AudioStreamPlayer3D = $JumpSound
 @onready var _hit_sound: AudioStreamPlayer3D = $HitSound
@@ -266,6 +321,16 @@ func activate() -> void:
 func freeze() -> void:
 	active = false
 	velocity = Vector3.ZERO
+	cannon_on = false
+
+
+## Bout du canon, une fois le canard tourné vers sa visée (départ des bulles et du jet d'eau).
+func get_muzzle_position() -> Vector3:
+	if _muzzle == null:
+		return global_position
+	# Le canard n'a peut-être pas fini de se tourner vers sa visée.
+	var turn := atan2(sync_facing.x, sync_facing.y) - _model.rotation.y
+	return global_position + (_muzzle.global_position - global_position).rotated(Vector3.UP, turn)
 
 
 func _physics_process(delta: float) -> void:
@@ -339,6 +404,8 @@ func respawn() -> void:
 	_capture_cooldown_left = 0.0
 	sync_facing = Vector2.ZERO
 	_regen_cooldown_left = 0.0
+	water = 1.0
+	_water_idle = INF
 	health = max_health
 	reset_physics_interpolation()
 
@@ -363,15 +430,33 @@ func _simulate(delta: float) -> void:
 	var pressed := Input.is_action_just_pressed(&"shoot") and _since_last_shot >= fire_cooldown
 	var held := Input.is_action_pressed(&"shoot") and _since_last_shot >= auto_fire_interval
 	var capture_pressed := Input.is_action_just_pressed(&"capture") and _capture_cooldown_left == 0.0
+	var cannon := is_local and Input.is_action_pressed(&"water_cannon")
+	# Réserve d'eau : sans assez d'eau, rien ne part (et la jauge clignote au nouvel appui).
+	_recharge_water(delta)
+	if is_local and (pressed or held) and water < water_per_shot:
+		if pressed:
+			water_denied.emit()
+		pressed = false
+		held = false
+	if is_local and capture_pressed and water < water_per_capture:
+		water_denied.emit()
+		capture_pressed = false
+	if cannon and water <= 0.0:
+		if Input.is_action_just_pressed(&"water_cannon"):
+			water_denied.emit()
+		cannon = false
 	_combat_left = maxf(_combat_left - delta, 0.0)
-	if is_local and (camera.aiming or pressed or held or capture_pressed):
+	if is_local and (camera.aiming or pressed or held or capture_pressed or cannon):
 		_combat_left = combat_stance_duration
 	sync_facing = _aim_facing() if _combat_left > 0.0 else Vector2.ZERO
+	_update_cannon(cannon, delta)
 	if is_local and (pressed or held):
 		_since_last_shot = 0.0
+		_spend_water(water_per_shot)
 		_fire(false)
 	if is_local and capture_pressed:
 		_capture_cooldown_left = capture_cooldown
+		_spend_water(water_per_capture)
 		_fire(true)
 
 	var ladder_up := _ladder_climb_axis(direction)
@@ -384,7 +469,10 @@ func _simulate(delta: float) -> void:
 			velocity.y -= _gravity * gravity_scale * delta
 		if _dash_time > 0.0:
 			# Dash : vitesse horizontale selon la courbe (la gravité s'applique si on quitte le sol).
-			_dash_time = maxf(_dash_time - delta, 0.0)
+			if not _dash_paused_on_water():
+				_dash_time = maxf(_dash_time - delta, 0.0)
+			# Gauche / droite infléchissent un peu la trajectoire (input.x > 0 : vers la droite).
+			_dash_direction = _dash_direction.rotated(Vector3.UP, -input.x * dash_steer_speed * delta)
 			var speed := _dash_speed_at(1.0 - _dash_time / dash_duration)
 			velocity.x = _dash_direction.x * speed
 			velocity.z = _dash_direction.z * speed
@@ -416,34 +504,96 @@ func _ladder_climb_axis(direction: Vector3) -> Vector3:
 func _fire(capture: bool) -> void:
 	# Tout droit devant la caméra (à l'horizontale), depuis le centre du cube.
 	var target := aim()
-	# La bulle vise avec sa surface : son centre s'arrête à un rayon de la surface
-	# visée, sinon son bas frôlerait le sol (ou le mur) et elle éclaterait avant.
-	var radius := BubbleProjectile.CAPTURE_RADIUS if capture else BubbleProjectile.RADIUS
-	var aim_point: Vector3 = target.point + target.normal * radius
-	# Le canard n'a peut-être pas fini de se tourner vers sa visée : la bulle part
-	# de là où sera le bout du canon une fois tourné.
-	var origin := global_position
-	if _muzzle:
-		var turn := atan2(sync_facing.x, sync_facing.y) - _model.rotation.y
-		origin += (_muzzle.global_position - global_position).rotated(Vector3.UP, turn)
-	var shot_direction := (aim_point - origin).normalized()
-	# Cible trop proche (derrière le canon) : on tire simplement dans l'axe de la caméra.
-	if shot_direction.dot(camera.get_aim_ray()[1]) < 0.5:
-		shot_direction = camera.get_aim_ray()[1]
-	_shoot.rpc(origin, shot_direction, capture)
+	# Sur le décor (mur, sol, plafond, objet), la bulle vise avec sa surface : son centre
+	# s'arrête à son rayon de contact avec le décor (0,3 m) de la surface visée, et son bord
+	# la touche pile sous le viseur. Ce rayon est plus petit que la hauteur du canon (0,4 m) :
+	# la bulle descend vers un point du sol au lieu de partir à l'horizontale. Sur un canard,
+	# on vise le point lui-même.
+	var aim_point: Vector3 = target.point
+	if target.collider is not Player:
+		aim_point += target.normal * BubbleProjectile.WORLD_CONTACT_RADIUS
+	var origin := get_muzzle_position()
+	_shoot.rpc(origin, _shot_direction(origin, aim_point), capture)
 
 
-## Piégé dans une bulle de capture : immobile, il monte en douceur à la hauteur de
-## lévitation et y flotte, puis est libéré (la gravité le repose au sol).
+## Du bout du canon `origin` vers `aim_point` ; si la cible est trop proche (derrière le
+## canon), simplement dans l'axe de la caméra.
+func _shot_direction(origin: Vector3, aim_point: Vector3) -> Vector3:
+	var direction := (aim_point - origin).normalized()
+	if direction.dot(camera.get_aim_ray()[1]) < 0.5:
+		direction = camera.get_aim_ray()[1]
+	return direction
+
+
+## Vrai si la réserve d'eau est en train de se recharger.
+func is_water_recharging() -> bool:
+	return water < 1.0 and _water_idle >= water_recharge_delay
+
+
+func _spend_water(amount: float) -> void:
+	water = maxf(water - amount, 0.0)
+	_water_idle = 0.0
+
+
+## Après water_recharge_delay s sans dépense, la réserve se remplit de plus en plus vite.
+func _recharge_water(delta: float) -> void:
+	_water_idle += delta
+	var recharging_for := _water_idle - water_recharge_delay
+	if recharging_for < 0.0 or water >= 1.0:
+		return
+	var rate := minf(water_recharge_rate * pow(2.0, recharging_for / water_recharge_doubling), water_recharge_max_rate)
+	water = minf(water + rate * delta, 1.0)
+
+
+## Canon à eau (ordinateur qui contrôle ce canard) : le met en marche ou l'arrête pour tout
+## le monde, et pendant qu'il arrose, suit la visée et l'envoie régulièrement aux autres.
+func _update_cannon(want: bool, delta: float) -> void:
+	if want and not cannon_on:
+		cannon_target = aim().point # Avant le premier envoi : le jet part tout de suite au bon endroit.
+		_sync_cannon_target.rpc(cannon_target)
+	if want != cannon_on:
+		_set_cannon.rpc(want)
+	if not cannon_on:
+		return
+	_spend_water(water_per_second * delta)
+	cannon_target = aim().point
+	_cannon_sync_left -= delta
+	if _cannon_sync_left <= 0.0:
+		_cannon_sync_left = CANNON_AIM_SYNC_INTERVAL
+		_sync_cannon_target.rpc(cannon_target)
+
+
+@rpc("authority", "call_local", "reliable")
+func _set_cannon(value: bool) -> void:
+	cannon_on = value
+
+
+@rpc("authority", "call_remote", "unreliable_ordered")
+func _sync_cannon_target(point: Vector3) -> void:
+	cannon_target = point
+
+
+## Piégé dans une bulle de capture : immobile, il décolle, puis s'élève lentement (de
+## capture_rise m sur toute la durée) en flottant ; libéré, la gravité le repose au sol.
 func _simulate_captured(delta: float) -> void:
+	if cannon_on:
+		_set_cannon.rpc(false) # Piégé dans la bulle : plus de jet d'eau.
 	_captured_left -= delta
 	_capture_time += delta
 	velocity = Vector3.ZERO
 	_dash_time = 0.0
 	_combat_left = 0.0
 	sync_facing = Vector2.ZERO
-	var target_y := _capture_height + sin(_capture_time * CAPTURE_BOB_SPEED) * capture_bob
-	global_position.y = lerpf(global_position.y, target_y, 1.0 - exp(-CAPTURE_RISE_SPEED * delta))
+	var rise := capture_rise * clampf(_capture_time / _capture_duration, 0.0, 1.0)
+	var target_y := _capture_height + rise + sin(_capture_time * CAPTURE_BOB_SPEED) * capture_bob
+	var step := lerpf(global_position.y, target_y, 1.0 - exp(-CAPTURE_RISE_SPEED * delta)) - global_position.y
+	if step > 0.0:
+		# S'arrête sous un plafond, une étagère… Le test part 2 cm plus haut : sinon le sol
+		# sous ses pieds (contact au repos) compterait comme un obstacle et bloquerait la montée.
+		var ceiling := KinematicCollision3D.new()
+		if test_move(global_transform.translated(Vector3.UP * CAPTURE_CEILING_TEST), Vector3.UP * step, ceiling):
+			step = maxf(CAPTURE_CEILING_TEST + ceiling.get_travel().y, 0.0)
+	global_position.y += step
 	if _captured_left <= 0.0:
 		_set_captured.rpc(false, 0)
 
@@ -469,6 +619,7 @@ func _apply_capture(duration: float, team: int) -> void:
 	if not is_alive() or captured or duration <= 0.0:
 		return
 	_captured_left = duration
+	_capture_duration = duration
 	_capture_time = 0.0
 	# Hauteur de lévitation : capture_lift au-dessus du sol (sur place s'il n'y a pas de sol dessous).
 	var feet := (_collision_shape.shape as CapsuleShape3D).height / 2.0
@@ -564,6 +715,11 @@ func aim() -> Dictionary:
 	return {"point": hit.position, "normal": hit.normal, "collider": hit.collider}
 
 
+## Vrai si le point visé est à portée d'une bulle normale (sinon le viseur pâlit).
+func is_bubble_in_range() -> bool:
+	return get_muzzle_position().distance_to(aim().point) <= BubbleProjectile.RANGE
+
+
 ## Vrai si le viseur est sur un adversaire vivant.
 func is_aiming_at_enemy() -> bool:
 	var target := aim().collider as Player
@@ -600,7 +756,16 @@ func _update_model(velocity_now: Vector3, delta: float) -> void:
 		_turn_model_towards(Vector3(sync_facing.x, 0.0, sync_facing.y), 1.0 - exp(-AIM_TURN_SPEED * delta))
 	elif moving:
 		_turn_model_towards(horizontal, 1.0 - exp(-TURN_SPEED * delta))
-	_dash_animation_left = maxf(_dash_animation_left - delta, 0.0)
+	# Glissade sur l'eau : l'animation du dash dure aussi longtemps que la glissade (cf.
+	# _dash_paused_on_water ; les autres ordinateurs la devinent à sa vitesse), et l'eau
+	# s'écarte derrière le canard (sillage).
+	var sliding := _dash_animation_left > 0.0 and speed > move_speed and is_on_water()
+	if not (dash_slides_on_water and sliding):
+		_dash_animation_left = maxf(_dash_animation_left - delta, 0.0)
+	_wake_left -= delta
+	if sliding and _wake_left <= 0.0:
+		_wake_left = WAKE_INTERVAL
+		_puddles.wake(_feet_position(), horizontal)
 	var dashing := _dash_animation_left > 0.0
 	_animation_tree.set(&"parameters/conditions/dashing", dashing)
 	_animation_tree.set(&"parameters/conditions/dash_over", not dashing)
@@ -625,7 +790,10 @@ func _play_footsteps(enabled: bool) -> void:
 		for contact: float in FOOTSTEPS[animation]:
 			var crossed := (_footstep_phase < contact and contact <= phase) if phase >= _footstep_phase \
 					else (contact > _footstep_phase or contact <= phase) # L'animation a bouclé.
-			if crossed:
+			if crossed and is_on_water():
+				_water_step_sound.play()
+				_puddles.step_splash(_feet_position())
+			elif crossed:
 				_step_sound.play()
 	_footstep_animation = animation
 	_footstep_phase = phase
@@ -650,6 +818,7 @@ func _apply_damage(amount: float) -> void:
 func _on_died() -> void:
 	_respawn_left = respawn_delay
 	_death_sound.play()
+	cannon_on = false
 	if captured: # Mort dans la bulle : elle disparaît avec lui.
 		captured = false
 		_captured_left = 0.0
@@ -672,6 +841,26 @@ func _on_respawned() -> void:
 func _dash_speed_at(t: float) -> float:
 	var cruise := lerpf(dash_speed, move_speed, smoothstep(DASH_SLOWDOWN_START, 1.0, t))
 	return lerpf(_dash_start_speed, cruise, smoothstep(0.0, DASH_RAMP, t))
+
+
+## Vrai si le canard est sur une flaque d'eau (sous ses pieds).
+func is_on_water() -> bool:
+	if _puddles == null:
+		_puddles = get_tree().get_first_node_in_group(Puddles.GROUP) as Puddles
+	return _puddles != null and _puddles.is_wet(_feet_position())
+
+
+## Point du sol sous le canard (bas de sa capsule).
+func _feet_position() -> Vector3:
+	return global_position + Vector3.DOWN * (_collision_shape.shape as CapsuleShape3D).height / 2.0
+
+
+## Vrai si le dash en cours ne s'use pas cette image : le canard glisse sur l'eau, au sol.
+## Sauf pendant la montée en vitesse (il resterait à l'arrêt) et contre un mur (il resterait
+## bloqué en plein dash).
+func _dash_paused_on_water() -> bool:
+	return dash_slides_on_water and 1.0 - _dash_time / dash_duration >= DASH_RAMP \
+			and is_on_floor() and not is_on_wall() and is_on_water()
 
 
 ## Dash (au sol uniquement) dans la direction du joystick, ou devant la caméra s'il est au repos.
@@ -740,6 +929,7 @@ func _apply_color() -> void:
 	if _model == null: # Setter appelé avant que le nœud soit prêt.
 		return
 	for mesh: MeshInstance3D in _model.find_children("*", "MeshInstance3D", true, false):
+		mesh.layers = Puddles.DUCK_VISUAL_LAYER # Les flaques (Decals) ne colorent pas le canard.
 		if mesh.name in TEAM_COLORED_MESHES:
 			mesh.material_override = TEAM_MATERIALS[team_of(player_id) - 1]
 		else:

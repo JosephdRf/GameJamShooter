@@ -97,7 +97,7 @@ Un joueur qui tombe de la plateforme meurt.
 - Chaque appui tire une bulle vers le point visé (aussi vers le haut ou le bas), avec au moins 0,15 s entre
   deux appuis ; touche maintenue, une bulle toutes les 0,2 s. Elle sort
   du bout du canon du canard, petite, et atteint sa taille en 0,12 s.
-- La bulle éclate au premier contact : obstacle (sol, mur, objet…), joueur (**40 dégâts** à un adversaire,
+- La bulle éclate au premier contact : obstacle (sol, mur, objet…), joueur (**30 dégâts** à un adversaire,
   rien à un coéquipier), mur de la zone d'apparition adverse, ou au bout de **25 m**. Le nœud est alors supprimé.
 - **Zones d'apparition** : un mur invisible (calques 3 « spawn_blue » / 4 « spawn_red ») empêche les joueurs
   et les bulles de l'équipe adverse d'y entrer.

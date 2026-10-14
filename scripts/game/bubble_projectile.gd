@@ -28,7 +28,7 @@ extends Node3D
 ## Portée (m) : la bulle éclate au-delà. Bulle de capture : 1000 m, portée illimitée en
 ## pratique (elle vole jusqu'à toucher quelque chose) ; tirée dans le vide, elle finit par disparaître.
 @export var max_distance := 25.0
-@export var damage := 40.0
+@export var damage := 30.0
 ## Dégâts aussi sur les coéquipiers (sinon la bulle éclate sans les blesser).
 @export var friendly_fire := false
 ## Durée de l'animation d'éclatement (s).

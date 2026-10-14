@@ -171,8 +171,8 @@ transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 18.7
 size = Vector3(10.46054, 34.25757, 1.8)
 
 [node name="Mur_est_centre" type="CSGBox3D" parent="Structure" unique_id=1452036188]
-transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 40.977173, 17.090332, -1.8338916)
-size = Vector3(9.727341, 34.25757, 1.8)
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 40.977173, 17.090332, -3.1017025)
+size = Vector3(12.262962, 34.25757, 1.8)
 
 [node name="Mur_ouest_nord" type="CSGBox3D" parent="Structure" unique_id=1143280129]
 transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -59.49829, 17.090332, -10.733068)
@@ -228,8 +228,8 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 44.18076, 16.74179, 2.6500332
 size = Vector3(7.907281, 35.198914, 1.8)
 
 [node name="Mur_sud_interieur" type="CSGBox3D" parent="Structure" unique_id=1138602347]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19.721172, 16.74179, -26.402967)
-size = Vector3(3.1999648, 35.198914, 1.8)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.551003, 16.74179, -26.402967)
+size = Vector3(4.859626, 35.198914, 1.8)
 
 [node name="Mur_ouest_court" type="CSGBox3D" parent="Structure" unique_id=1816100438]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -55.49587, 16.503754, -22.496813)
@@ -240,26 +240,29 @@ transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, -51.
 size = Vector3(4.907324, 37.174347, 1.8)
 
 [node name="Mur_douche" type="CSGCylinder3D" parent="Structure" unique_id=1374954598]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40.169987, 17.15625, -25.0625)
-radius = 20.400002
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 34.995296, 17.15625, -20.211754)
+radius = 13.506
 height = 34.3125
 sides = 48
+metadata/_edit_lock_ = true
 
 [node name="Creux_douche" type="CSGCylinder3D" parent="Structure/Mur_douche" unique_id=139423319]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.010986328, 0, -0.009155273)
 operation = 2
-radius = 18.599998
+radius = 11.696
 height = 45.0
 sides = 48
+metadata/_edit_lock_ = true
 
 [node name="Ouverture_douche" type="CSGBox3D" parent="Structure/Mur_douche" unique_id=2092412698]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.757477, 0, 9.972382)
 operation = 2
 size = Vector3(23.481445, 30, 21.045227)
+metadata/_edit_lock_ = true
 
 [node name="Bac_douche" type="CSGCylinder3D" parent="Structure" unique_id=1015004740]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 39.984455, 1.5, -24.763668)
-radius = 18.599998
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36.26959, 1.5, -22.180843)
+radius = 13.5
 height = 3.0
 sides = 48
 
@@ -291,19 +294,27 @@ height = 0.9
 sides = 48
 material = SubResource("StandardMaterial3D_dj4vv")
 
-[node name="Tuyau_sortie" type="CSGCylinder3D" parent="Structure" unique_id=761915438]
-transform = Transform3D(0.57357645, 0.81915206, 0, -0.81915206, 0.57357645, 0, 0, 0, 1, 31.464264, 3.8276145, -39.09)
-radius = 2.4
-height = 5.04
-sides = 48
-material = SubResource("StandardMaterial3D_dj4vv")
-
 [node name="Coude_douche_ext" type="CSGSphere3D" parent="Structure" unique_id=1106182237]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.4, 2.382202, -39.09)
+transform = Transform3D(1, 2.1175826e-22, 0, 0, 0.99999994, 0, -3.5527137e-15, -9.256247e-30, 0.99999994, 29.4, 2.382202, -39.09)
 radius = 2.4
 radial_segments = 48
 rings = 24
 material = SubResource("StandardMaterial3D_dj4vv")
+
+[node name="Tuyau_sortie" type="CSGCylinder3D" parent="Structure" unique_id=761915438]
+transform = Transform3D(0.027144363, 0.1223007, -0.992122, -0.9937698, 0.11062594, -0.013552362, 0.10809691, 0.98630846, 0.12454155, 30.008926, 3.0866277, -33.04046)
+radius = 2.4
+height = 12.745098
+sides = 48
+material = SubResource("StandardMaterial3D_dj4vv")
+
+[node name="Tuyau_sortie_trou" type="CSGCylinder3D" parent="Structure" unique_id=399382427]
+transform = Transform3D(0.027144348, 0.12230063, -0.99212104, -0.9937698, 0.11062576, -0.013552339, 0.10809679, 0.9863079, 0.124541506, 30.08525, 3.0800674, -32.433094)
+operation = 2
+radius = 2.1
+height = 14.9361725
+sides = 48
+material = SubResource("StandardMaterial3D_juhtu")
 
 [node name="Tuyau_trou" type="CSGCylinder3D" parent="Structure" unique_id=426906060]
 transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 17.945587, 2.2915654, -39.093018)
@@ -335,14 +346,6 @@ operation = 2
 radius = 2.1
 radial_segments = 48
 rings = 24
-material = SubResource("StandardMaterial3D_juhtu")
-
-[node name="Tuyau_sortie_trou" type="CSGCylinder3D" parent="Structure" unique_id=399382427]
-transform = Transform3D(0.57357645, 0.81915206, 0, -0.81915206, 0.57357645, 0, 0, 0, 1, 32.447247, 4.42527, -39.09)
-operation = 2
-radius = 2.1
-height = 7.44
-sides = 48
 material = SubResource("StandardMaterial3D_juhtu")
 
 [node name="Fenetre" type="CSGCombiner3D" parent="." unique_id=1584347017]
@@ -427,21 +430,16 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41.16, 0, 14.01)
 use_collision = true
 
 [node name="Caisson" type="CSGBox3D" parent="Props/Penderie" unique_id=959438222]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 17.1, 0)
-size = Vector3(6.66, 34.2, 20.94)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.740925, 2.285022, 0)
+size = Vector3(10.521406, 4.570044, 20.94)
 material = SubResource("StandardMaterial3D_702kj")
 
 [node name="Douche_interieur" type="CSGCombiner3D" parent="Props" unique_id=1283898080]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40.17, 0, -25.05)
 use_collision = true
 
-[node name="Colonne" type="CSGBox3D" parent="Props/Douche_interieur" unique_id=2015646691]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 12, 0)
-size = Vector3(3.6, 24, 3.6)
-material = SubResource("StandardMaterial3D_q70t4")
-
 [node name="Banc" type="CSGBox3D" parent="Props/Douche_interieur" unique_id=1972248508]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 2.25, 4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.4169502, 4.010378, 6.785328)
 size = Vector3(6, 4.5, 10)
 material = SubResource("StandardMaterial3D_702kj")
 
@@ -887,39 +885,39 @@ shape = SubResource("BoxShape3D_lsyki")
 use_collision = true
 
 [node name="Plateau" type="CSGBox3D" parent="Verticalite/Ilot_central" unique_id=286494543]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.358829, 2.4836426, 0.8194523)
-size = Vector3(12, 7.032715, 19.081299)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.283389, 3.0004272, 0.8194523)
+size = Vector3(15.849121, 8.066284, 19.081299)
 material = SubResource("StandardMaterial3D_702kj")
 
 [node name="Plateau3" type="CSGBox3D" parent="Verticalite/Ilot_central/Plateau" unique_id=1721032430]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.37109375, -0.8147931, -7.3897963)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.37109375, -0.2083211, -7.3897963)
 operation = 2
-size = Vector3(5.9906387, 3.3836823, 6.0269165)
+size = Vector3(5.9906387, 4.5966263, 6.0269165)
 material = SubResource("StandardMaterial3D_702kj")
 
 [node name="Plateau2" type="CSGBox3D" parent="Verticalite/Ilot_central/Plateau" unique_id=579137342]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.14795876, 0.33467102, 1.8693523)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.9246578, 0.33467102, 1.8693523)
 operation = 2
-size = Vector3(10.488831, 4.9099426, 17.979614)
+size = Vector3(12.634064, 4.9099426, 17.979614)
 material = SubResource("StandardMaterial3D_702kj")
 
 [node name="Rampe_O" type="CSGPolygon3D" parent="Verticalite/Ilot_central" unique_id=700483346]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -24.927715, 0, 8.813047)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -29.346813, 0, 8.813047)
 polygon = PackedVector2Array(0, 0, 8.868888, 0, 8.868888, 6, 8.568888, 6)
 depth = 6.0
 material = SubResource("StandardMaterial3D_702kj")
 
 [node name="Rampe_E" type="CSGPolygon3D" parent="Verticalite/Ilot_central" unique_id=1256366604]
-transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 4.210059, 0, 2.8130474)
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 4.210059, 0, -5.649227)
 polygon = PackedVector2Array(0, 0, 8.868888, 0, 8.868888, 6, 8.568888, 6)
-depth = 6.0
+depth = 10.05
 material = SubResource("StandardMaterial3D_702kj")
 
 [node name="Belvedere_lavabo" type="CSGCombiner3D" parent="Verticalite" unique_id=1985768645]
 use_collision = true
 
 [node name="Rampe_lavabo" type="CSGPolygon3D" parent="Verticalite/Belvedere_lavabo" unique_id=1941336330]
-transform = Transform3D(-8.742278e-08, 0, -1, 0, 1, 0, 1, 0, -8.742278e-08, -16.397911, 0, -20.428076)
+transform = Transform3D(-8.742278e-08, 0, -1, 0, 1, 0, 1, 0, -8.742278e-08, -20.08347, 0, -20.428076)
 polygon = PackedVector2Array(0, 0, 12, 0, 12, 5.5, 11.7, 5.5)
 depth = 4.0
 material = SubResource("StandardMaterial3D_702kj")
@@ -951,7 +949,7 @@ material = SubResource("StandardMaterial3D_702kj")
 use_collision = true
 
 [node name="Passerelle_ilot_corbeille" type="CSGBox3D" parent="Verticalite/Circuit_haut" unique_id=279880625]
-transform = Transform3D(1, 0, 0, 0, 0.94703686, 0.32112506, 0, -0.32112506, 0.94703686, -11.691564, 6.0641303, 10.93867)
+transform = Transform3D(1, 0, 0, 0, 0.9627903, 0.2702497, 0, -0.2702497, 0.9627903, -11.691564, 6.9632707, 10.93867)
 size = Vector3(4, 0.5, 6.077614)
 material = SubResource("StandardMaterial3D_702kj")
 
@@ -1010,29 +1008,14 @@ material = SubResource("StandardMaterial3D_702kj")
 [node name="Pas_japonais_douche" type="CSGCombiner3D" parent="Verticalite" unique_id=729535601]
 use_collision = true
 
-[node name="Pilier_1" type="CSGBox3D" parent="Verticalite/Pas_japonais_douche" unique_id=2062040045]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 46.17, 3.7, -14.667695)
-size = Vector3(3.5, 1.6, 3.5)
-material = SubResource("StandardMaterial3D_702kj")
-
 [node name="Pilier_2" type="CSGBox3D" parent="Verticalite/Pas_japonais_douche" unique_id=870954063]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50.5623, 4.45, -19.06)
-size = Vector3(3.5, 3.1, 3.5)
-material = SubResource("StandardMaterial3D_702kj")
-
-[node name="Pilier_3" type="CSGBox3D" parent="Verticalite/Pas_japonais_douche" unique_id=1906101489]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 52.17, 5.2, -25.06)
-size = Vector3(3.5, 4.6, 3.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36.78893, 8.464149, -16.274672)
+size = Vector3(3.5, 5.108594, 3.5)
 material = SubResource("StandardMaterial3D_702kj")
 
 [node name="Pilier_4" type="CSGBox3D" parent="Verticalite/Pas_japonais_douche" unique_id=1007210404]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50.5623, 5.95, -31.06)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 37.0616, 5.95, -24.53256)
 size = Vector3(3.5, 6.1, 3.5)
-material = SubResource("StandardMaterial3D_702kj")
-
-[node name="Pilier_5" type="CSGBox3D" parent="Verticalite/Pas_japonais_douche" unique_id=1025588148]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 46.17, 6.7, -35.452305)
-size = Vector3(5, 7.6, 5)
 material = SubResource("StandardMaterial3D_702kj")
 
 [node name="Coin_balance" type="CSGCombiner3D" parent="Verticalite" unique_id=253449964]
@@ -1115,14 +1098,14 @@ transform = Transform3D(0.9957614, -0.021019664, 0.089542106, 0.017118588, 0.998
 size = Vector3(12.605717, 12.878918, 6)
 material = SubResource("StandardMaterial3D_702kj")
 
-[node name="Plateforme_D" type="CSGBox3D" parent="Verticalite/Marches_baignoire" unique_id=1720876532]
-transform = Transform3D(0.9856639, -0.012674806, -0.16824415, 0, 0.9971744, -0.075122915, 0.16872093, 0.07404595, 0.9828788, -36.766865, 11.731026, 25.87042)
-size = Vector3(10.041512, 1.0946169, 7.6254883)
+[node name="Plateforme_D_ext" type="CSGBox3D" parent="Verticalite/Marches_baignoire" unique_id=2134873710]
+transform = Transform3D(0.99360156, 0.015800796, -0.11185397, -0.0192092, 0.9993818, -0.0294592, 0.11132074, 0.03141875, 0.99329346, -43.439117, 12.13978, 29.172163)
+size = Vector3(23.236576, 6.187079, 2.0495605)
 material = SubResource("StandardMaterial3D_702kj")
 
-[node name="Plateforme_D_ext" type="CSGBox3D" parent="Verticalite/Marches_baignoire/Plateforme_D" unique_id=2134873710]
-transform = Transform3D(0.99813926, 0.020875271, 0.05733893, -0.023505777, 0.99868387, 0.045591105, -0.056309827, -0.04685404, 0.9973186, -6.0195236, 0.7366495, 4.3370724)
-size = Vector3(23.236576, 6.187079, 2.0495605)
+[node name="Plateforme_D" type="CSGBox3D" parent="Verticalite/Marches_baignoire" unique_id=1720876532]
+transform = Transform3D(0.9856639, -0.012674806, -0.16824415, 0, 0.9971744, -0.075122915, 0.16872093, 0.07404595, 0.9828788, -38.763336, 11.731026, 25.528675)
+size = Vector3(14.092533, 1.0946169, 7.6254883)
 material = SubResource("StandardMaterial3D_702kj")
 
 [node name="Plateforme_E" type="CSGBox3D" parent="Verticalite/Marches_baignoire" unique_id=1932616173]

@@ -69,6 +69,7 @@ var _debug_enemy: Player # DEBUG
 func _ready() -> void:
 	# La souris est capturée pour que le trackpad pilote la caméra.
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	Music.stop()
 	_place_players_on_spawn_zones()
 	for player: Player in _players.get_children():
 		player.face(_arena.global_position) # Au départ, chaque joueur regarde le centre.

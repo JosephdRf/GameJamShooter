@@ -15,6 +15,7 @@ const STALL_CHANCE := 0.3
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	Music.play(Music.MENU)
 	var tween := create_tween()
 	for step in _random_steps():
 		if step.value == null:

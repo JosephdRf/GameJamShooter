@@ -31,6 +31,7 @@ var _connecting := false
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	Music.play(Music.MENU)
 	_instructions.text = INSTRUCTIONS
 	_address_edit.text = _load_last_address()
 

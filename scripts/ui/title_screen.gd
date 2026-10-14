@@ -7,6 +7,7 @@ extends Control
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	Music.play(Music.MENU)
 	_start_button.pressed.connect(_start)
 	_start_button.grab_focus()
 

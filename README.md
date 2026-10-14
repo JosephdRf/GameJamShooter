@@ -123,6 +123,10 @@ Un joueur qui tombe de la plateforme meurt.
   l'animation** (instants où un pied se pose : `Player.FOOTSTEPS`), dash, saut, touché (canard en
   caoutchouc), mort (coin-coin), réapparition. Bulle : éclatement (`PopSound` de `bubble_projectile.tscn`).
 - Menus : autoload `UiSounds` (clic en naviguant, « plop » en validant), branché sur tous les boutons.
+- Musique : autoload `Music` (`play(Music.MENU)` / `stop()` dans le `_ready()` de chaque écran, en fondu).
+  « Happy Clappy Loop » (`music/happy_clappy_loop.wav`, OwlishMedia, OpenGameArt, CC0) boucle sans coupure
+  sur tous les menus, sans se relancer d'un écran à l'autre ; elle s'arrête en combat et reprend ensuite
+  là où elle s'était arrêtée.
 - Volume : `volume_db` de chaque nœud `*Sound` ; variation : `random_pitch` des `.tres`.
 - Sources : `sfx/bubble/` (Pixabay), `sfx/duck/` et `sfx/freesound/` (Freesound, CC0, voir `CREDITS.txt`).
 - **Testeur** : `python tools/sfx_tester/build_sfx_tester.py` puis ouvrir `tools/sfx_tester/sfx_tester.html`
@@ -177,6 +181,7 @@ Un joueur qui tombe de la plateforme meurt.
     ├── autoload/network_manager.gd  # Héberger/rejoindre, joueurs, lancement, pause, fin de combat
     ├── autoload/lan_discovery.gd    # Annonce/détection de l'hôte sur le réseau local (UDP 7778)
     ├── autoload/ui_sounds.gd        # Sons des menus (clic, validation), branchés sur tous les boutons
+    ├── autoload/music.gd            # Musique de fond (boucle des menus), en fondu d'un écran à l'autre
     ├── ui/screens.gd                # Chemins de tous les écrans (Screens.*)
     ├── ui/<écran>.gd                # Un script par scène de scenes/ui/
     ├── levels/bathroom_import.gd    # Import du .blend : échelle, couleurs, collisions

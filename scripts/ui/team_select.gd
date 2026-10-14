@@ -31,6 +31,7 @@ func _ready() -> void:
 		_leave.call_deferred()
 		return
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	Music.play(Music.MENU)
 	_build_cards()
 	_leave_button.pressed.connect(_leave)
 	_start_button.pressed.connect(NetworkManager.start_match)

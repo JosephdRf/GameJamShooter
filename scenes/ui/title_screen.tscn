@@ -2,6 +2,8 @@
 
 [ext_resource type="Script" path="res://scripts/ui/title_screen.gd" id="1_title"]
 [ext_resource type="Script" path="res://scripts/ui/tiled_background.gd" id="bg_tiles"]
+[ext_resource type="FontFile" path="res://assets/fonts/titan_one/TitanOne-Regular.ttf" id="2_font"]
+[ext_resource type="Texture2D" path="res://assets/ui/team_select/yellow_button.png" id="3_button"]
 
 [node name="TitleScreen" type="Control"]
 layout_mode = 3
@@ -22,30 +24,63 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("bg_tiles")
 
-[node name="Center" type="CenterContainer" parent="."]
+[node name="Layout" type="Control" parent="."]
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -640.0
+offset_top = -360.0
+offset_right = 640.0
+offset_bottom = 360.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 
-[node name="Layout" type="VBoxContainer" parent="Center"]
-layout_mode = 2
-theme_override_constants/separation = 64
-
-[node name="Title" type="Label" parent="Center/Layout"]
-theme_override_colors/font_outline_color = Color(0.07, 0.25, 0.45, 1)
-theme_override_constants/outline_size = 14
-layout_mode = 2
-theme_override_font_sizes/font_size = 96
+[node name="Title" type="Label" parent="Layout"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 90.0
+offset_top = 150.0
+offset_right = 1190.0
+offset_bottom = 330.0
+pivot_offset = Vector2(550, 90)
+theme_override_colors/font_color = Color(1, 0.82, 0.1, 1)
+theme_override_colors/font_outline_color = Color(0.1, 0.38, 0.72, 1)
+theme_override_colors/font_shadow_color = Color(0.07, 0.25, 0.45, 0.7)
+theme_override_constants/outline_size = 30
+theme_override_constants/shadow_offset_x = 0
+theme_override_constants/shadow_offset_y = 9
+theme_override_constants/shadow_outline_size = 30
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 130
 text = "Duck my Life"
 horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="StartButton" type="Button" parent="Center/Layout"]
+[node name="StartButton" type="TextureButton" parent="Layout"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(360, 80)
-layout_mode = 2
-size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 32
+layout_mode = 0
+offset_left = 475.0
+offset_top = 420.0
+offset_right = 805.0
+offset_bottom = 538.0
+pivot_offset = Vector2(165, 59)
+texture_normal = ExtResource("3_button")
+ignore_texture_size = true
+stretch_mode = 0
+
+[node name="Text" type="Label" parent="Layout/StartButton"]
+layout_mode = 0
+offset_right = 330.0
+offset_bottom = 112.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.62, 0.38, 0.0, 1)
+theme_override_constants/outline_size = 14
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 44
 text = "Démarrer"
+horizontal_alignment = 1
+vertical_alignment = 1

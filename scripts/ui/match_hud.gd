@@ -1,58 +1,40 @@
 extends CanvasLayer
 ## Interface affichée pendant le combat (instanciée dans scenes/game/game.tscn) :
-## score bleu | compte à rebours (clignote pendant la prolongation) | score rouge, et en dessous la barre de capture
-## de la zone ; en bas à gauche, la réserve d'eau du joueur. La scène de jeu
+## score bleu | compte à rebours | score rouge (Scoreboard : formes, chiffres jaunes
+## dans les dernières secondes, clignotement en prolongation, scores qui grossissent),
+## et en dessous la barre de capture de la zone ; en bas à gauche, la réserve d'eau du
+## joueur. La scène de jeu
 ## appelle les fonctions set_* ; ce script ne fait qu'afficher.
 
-## Jauge d'eau : couleur normale, en recharge, et du clignotement « pas assez d'eau ».
-const WATER_COLOR := Color(0.3, 0.68, 1.0)
-const WATER_RECHARGE_COLOR := Color(0.55, 0.82, 1.0)
+## Clignotement de la jauge d'eau quand il n'y a pas assez d'eau pour tirer.
 const WATER_DENIED_COLOR := Color(0.95, 0.3, 0.3)
-## Prolongation : durée d'un clignotement du chrono (s).
-const OVERTIME_BLINK_PERIOD := 0.6
 
-@onready var _timer_panel: Control = %TimerPanel
-@onready var _timer_label: Label = %TimerLabel
-@onready var _blue_score_label: Label = %BlueScoreLabel
-@onready var _red_score_label: Label = %RedScoreLabel
+@onready var _scoreboard: Scoreboard = %Scoreboard
 @onready var _capture: Control = %Capture
 @onready var _capture_label: Label = %CaptureLabel
 @onready var _capture_bar: ProgressBar = %CaptureBar
 @onready var _water: Control = %Water
-@onready var _water_bar: ProgressBar = %WaterBar
-@onready var _water_percent: Label = %WaterPercent
+@onready var _water_gauge: WaterGauge = %WaterGauge
 
 var _water_flash: Tween
-var _overtime_blink: Tween
 
 
 ## Affiche le temps restant au format m:ss, arrondi à la seconde supérieure
 ## (1:00 pendant la première seconde, puis 0:59…). Négatif = chrono masqué.
 func set_time_left(seconds: float) -> void:
-	_timer_panel.visible = seconds >= 0.0
-	var whole := ceili(maxf(seconds, 0.0))
-	_timer_label.text = "%d:%02d" % [whole / 60, whole % 60]
+	_scoreboard.set_time_left(seconds)
 
 
 ## Prolongation : le chrono (0:00) clignote tant que `enabled` est vrai.
 func set_overtime(enabled: bool) -> void:
-	if _overtime_blink:
-		_overtime_blink.kill()
-		_overtime_blink = null
-	_timer_label.modulate.a = 1.0
-	if not enabled:
-		return
-	_overtime_blink = create_tween().set_loops()
-	_overtime_blink.tween_property(_timer_label, ^"modulate:a", 0.15, OVERTIME_BLINK_PERIOD / 2.0)
-	_overtime_blink.tween_property(_timer_label, ^"modulate:a", 1.0, OVERTIME_BLINK_PERIOD / 2.0)
+	_scoreboard.set_overtime(enabled)
 
 
 ## Jauge d'eau : `ratio` de 0 à 1 (négatif = masquée), plus claire pendant la recharge.
 func set_water(ratio: float, recharging: bool) -> void:
 	_water.visible = ratio >= 0.0
-	_water_bar.value = ratio
-	_water_percent.text = "%d %%" % roundi(ratio * 100.0)
-	_water_fill().bg_color = WATER_RECHARGE_COLOR if recharging else WATER_COLOR
+	_water_gauge.ratio = maxf(ratio, 0.0)
+	_water_gauge.recharging = recharging
 
 
 ## Pas assez d'eau pour tirer : toute la jauge clignote en rouge (visible même vide) et
@@ -70,13 +52,9 @@ func flash_water() -> void:
 		shake.tween_property(_water, ^"position:x", x, 0.045).as_relative()
 
 
-func _water_fill() -> StyleBoxFlat:
-	return _water_bar.get_theme_stylebox(&"fill") as StyleBoxFlat
-
-
 func set_scores(blue: int, red: int) -> void:
-	_blue_score_label.text = str(blue)
-	_red_score_label.text = str(red)
+	_scoreboard.set_score(0, blue)
+	_scoreboard.set_score(1, red)
 
 
 ## Barre de capture : `team` = équipe qui capture (0 = barre masquée),

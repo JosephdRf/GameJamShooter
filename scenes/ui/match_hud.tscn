@@ -2,35 +2,8 @@
 
 [ext_resource type="Script" path="res://scripts/ui/match_hud.gd" id="1_hud"]
 [ext_resource type="FontFile" path="res://assets/fonts/titan_one/TitanOne-Regular.ttf" id="2_font"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_timer"]
-content_margin_left = 28.0
-content_margin_top = 4.0
-content_margin_right = 28.0
-content_margin_bottom = 4.0
-bg_color = Color(0.08, 0.09, 0.12, 0.85)
-corner_radius_top_left = 28
-corner_radius_top_right = 28
-corner_radius_bottom_right = 28
-corner_radius_bottom_left = 28
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_blue"]
-content_margin_left = 20.0
-content_margin_right = 20.0
-bg_color = Color(0.231, 0.51, 0.965, 1)
-corner_radius_top_left = 22
-corner_radius_top_right = 22
-corner_radius_bottom_right = 22
-corner_radius_bottom_left = 22
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_red"]
-content_margin_left = 20.0
-content_margin_right = 20.0
-bg_color = Color(0.898, 0.282, 0.302, 1)
-corner_radius_top_left = 22
-corner_radius_top_right = 22
-corner_radius_bottom_right = 22
-corner_radius_bottom_left = 22
+[ext_resource type="Script" path="res://scripts/ui/scoreboard.gd" id="3_scoreboard"]
+[ext_resource type="Script" path="res://scripts/ui/water_gauge.gd" id="4_water_gauge"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bar_bg"]
 bg_color = Color(0.08, 0.09, 0.12, 0.85)
@@ -46,21 +19,6 @@ corner_radius_top_left = 10
 corner_radius_top_right = 10
 corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_water_bg"]
-bg_color = Color(0.03, 0.05, 0.08, 0.9)
-corner_radius_top_left = 9
-corner_radius_top_right = 9
-corner_radius_bottom_right = 9
-corner_radius_bottom_left = 9
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_water_fill"]
-resource_local_to_scene = true
-bg_color = Color(0.3, 0.68, 1, 1)
-corner_radius_top_left = 9
-corner_radius_top_right = 9
-corner_radius_bottom_right = 9
-corner_radius_bottom_left = 9
 
 [node name="MatchHud" type="CanvasLayer"]
 layer = 5
@@ -81,53 +39,13 @@ size_flags_vertical = 0
 mouse_filter = 2
 theme_override_constants/separation = 10
 
-[node name="Row" type="HBoxContainer" parent="Top/Layout"]
+[node name="Scoreboard" type="Control" parent="Top/Layout"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(560, 120)
 layout_mode = 2
 size_flags_horizontal = 4
 mouse_filter = 2
-theme_override_constants/separation = 12
-
-[node name="BlueScore" type="PanelContainer" parent="Top/Layout/Row"]
-layout_mode = 2
-size_flags_vertical = 4
-mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_blue")
-
-[node name="BlueScoreLabel" type="Label" parent="Top/Layout/Row/BlueScore"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(56, 0)
-layout_mode = 2
-theme_override_font_sizes/font_size = 36
-text = "0"
-horizontal_alignment = 1
-
-[node name="TimerPanel" type="PanelContainer" parent="Top/Layout/Row"]
-unique_name_in_owner = true
-layout_mode = 2
-mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_timer")
-
-[node name="TimerLabel" type="Label" parent="Top/Layout/Row/TimerPanel"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(120, 0)
-layout_mode = 2
-theme_override_font_sizes/font_size = 48
-text = "1:00"
-horizontal_alignment = 1
-
-[node name="RedScore" type="PanelContainer" parent="Top/Layout/Row"]
-layout_mode = 2
-size_flags_vertical = 4
-mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_red")
-
-[node name="RedScoreLabel" type="Label" parent="Top/Layout/Row/RedScore"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(56, 0)
-layout_mode = 2
-theme_override_font_sizes/font_size = 36
-text = "0"
-horizontal_alignment = 1
+script = ExtResource("3_scoreboard")
 
 [node name="Capture" type="VBoxContainer" parent="Top/Layout"]
 unique_name_in_owner = true
@@ -163,48 +81,38 @@ theme_override_styles/fill = SubResource("StyleBoxFlat_bar_fill")
 max_value = 1.0
 show_percentage = false
 
-[node name="Water" type="PanelContainer" parent="."]
+[node name="Water" type="HBoxContainer" parent="."]
 unique_name_in_owner = true
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
-offset_left = 24.0
-offset_top = -76.0
-offset_right = 400.0
-offset_bottom = -24.0
+offset_left = 28.0
+offset_top = -92.0
+offset_right = 477.0
+offset_bottom = -28.0
 grow_vertical = 0
 mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_timer")
+theme_override_constants/separation = 18
 
-[node name="Row" type="HBoxContainer" parent="Water"]
+[node name="WaterLabel" type="Label" parent="Water"]
 layout_mode = 2
-mouse_filter = 2
-theme_override_constants/separation = 14
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.1, 0.38, 0.72, 1)
+theme_override_colors/font_shadow_color = Color(0.231, 0.51, 0.965, 1)
+theme_override_constants/outline_size = 10
+theme_override_constants/shadow_offset_x = 3
+theme_override_constants/shadow_offset_y = 3
+theme_override_constants/shadow_outline_size = 10
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 38
+text = "Eau"
+vertical_alignment = 1
 
-[node name="WaterLabel" type="Label" parent="Water/Row"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.55, 0.82, 1, 1)
-theme_override_font_sizes/font_size = 24
-text = "EAU"
-
-[node name="WaterBar" type="ProgressBar" parent="Water/Row"]
+[node name="WaterGauge" type="Control" parent="Water"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 22)
+custom_minimum_size = Vector2(0, 33)
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 mouse_filter = 2
-theme_override_styles/background = SubResource("StyleBoxFlat_water_bg")
-theme_override_styles/fill = SubResource("StyleBoxFlat_water_fill")
-max_value = 1.0
-step = 0.001
-value = 1.0
-show_percentage = false
-
-[node name="WaterPercent" type="Label" parent="Water/Row"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(72, 0)
-layout_mode = 2
-theme_override_font_sizes/font_size = 22
-text = "100 %"
-horizontal_alignment = 2
+script = ExtResource("4_water_gauge")

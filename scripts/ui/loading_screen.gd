@@ -1,6 +1,7 @@
 extends Control
-## Écran de chargement (fictif) : la barre progresse par à-coups pendant
-## DURATION secondes (bonds rapides, pauses), puis l'écran d'accueil s'affiche.
+## Écran de chargement (fictif) : la jauge (WaterGauge, comme la jauge d'eau du combat)
+## se remplit par à-coups pendant DURATION secondes (bonds rapides, pauses), puis l'écran
+## d'accueil s'affiche. « Chargement… » à gauche, pourcentage à droite.
 
 const DURATION := 3.0
 ## Temps passé à 100 % avant de changer d'écran (compris dans DURATION).
@@ -9,8 +10,11 @@ const STEP_COUNT := 9
 ## Probabilité qu'une étape soit un "blocage" (la barre ne bouge pas).
 const STALL_CHANCE := 0.3
 
-@onready var _bar: ProgressBar = %Bar
-@onready var _label: Label = %Label
+@onready var _gauge: WaterGauge = %Gauge
+@onready var _percent: Label = %Percent
+
+## Progression (%), animée par le tween.
+var _value := 0.0
 
 
 func _ready() -> void:
@@ -22,14 +26,15 @@ func _ready() -> void:
 			tween.tween_interval(step.duration)
 		else:
 			# Départ rapide puis ralentissement : un bond, comme un vrai chargement.
-			tween.tween_property(_bar, ^"value", step.value, step.duration) \
+			tween.tween_property(self, ^"_value", step.value, step.duration) \
 					.set_trans(Tween.TRANS_EXPO).set_ease(Tween.EASE_OUT)
 	tween.tween_interval(FINAL_HOLD)
 	tween.finished.connect(get_tree().change_scene_to_file.bind(Screens.TITLE))
 
 
 func _process(_delta: float) -> void:
-	_label.text = "Chargement…  %d %%" % roundi(_bar.value)
+	_gauge.ratio = _value / 100.0
+	_percent.text = "%d %%" % roundi(_gauge.get_shown_ratio() * 100.0) # Ce que montre la jauge.
 
 
 ## Étapes { value, duration } dont la durée totale vaut DURATION - FINAL_HOLD.

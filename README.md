@@ -7,8 +7,8 @@ caméra à la 3e personne. Un des joueurs héberge la partie (« listen server �
 
 | Écran | Scène | Mène à |
 |-------|-------|--------|
-| Chargement (fictif, 3 s) | `loading_screen.tscn` | Accueil |
-| Accueil | `title_screen.tscn` | **Démarrer** → Hôte/IP |
+| Chargement (fictif, 3 s, jauge d'eau `WaterGauge` + pourcentage) | `loading_screen.tscn` | Accueil |
+| Accueil (titre « Duck my Life » qui flotte, bouton jaune) | `title_screen.tscn` | **Démarrer** → Hôte/IP |
 | Hôte/IP | `connect_screen.tscn` | Héberger → Sélection d'équipe · Rejoindre → connexion réussie ? oui : Sélection d'équipe, non : reste ici avec un message |
 | Sélection d'équipe | `team_select.tscn` | **Lancer la partie** (hôte) → GAME |
 | GAME | `game/game.tscn` | Pause (hôte) · fin du combat → Écran de fin |
@@ -36,7 +36,10 @@ Les chemins sont regroupés dans `scripts/ui/screens.gd` (`Screens.TITLE`, `Scre
 
 6. En jeu, l'hôte peut mettre en pause (**P** ou **+**) : la partie est figée pour tous.
    « Quitter » ramène tout le monde à la sélection d'équipe.
-7. Un **compte à rebours** (2:00 par défaut) est affiché en haut au centre ; il est figé pendant la
+7. Un **compte à rebours** (2:00 par défaut) est affiché en haut au centre, sur un nuage de bulles, entre
+   les scores des deux équipes dans des bulles à leur couleur (`Scoreboard`, `scripts/ui/scoreboard.gd` :
+   police Titan One, formes qui respirent ; un score qui augmente gonfle avec sa bulle ; dans les
+   **20 dernières secondes** les chiffres passent au jaune et battent à chaque seconde). Il est figé pendant la
    pause. À 0:00, tout le monde passe à l'écran de fin, sauf si une zone est en cours de capture :
    **prolongation** (« Prolongation ! » 2 s, le 0:00 clignote) jusqu'à ce que la zone soit capturée
    ou que sa barre reparte à 0 (l'équipe est sortie). L'hôte fait foi : il envoie le temps restant
@@ -127,7 +130,8 @@ Un joueur qui tombe de la plateforme meurt.
 
 ### Réserve d'eau
 
-- Jauge **EAU** en bas à gauche (`MatchHud`, nœud `Water`). Un tir coûte **5 %**, une grosse bulle **20 %**,
+- Jauge **Eau** en bas à gauche (`MatchHud`, nœud `Water` : tube de `WaterGauge` dont l'eau ondule et fait
+  des bulles, plus claire pendant la recharge ; pas de pourcentage). Un tir coûte **5 %**, une grosse bulle **20 %**,
   le jet **20 % par seconde**. Sans assez d'eau, rien ne part et la jauge clignote en rouge.
 - Après **2 s** sans dépenser d'eau, elle se recharge de plus en plus vite (la vitesse double toutes les
   0,6 s) : pleine environ 4,5 s après le dernier tir, même vide. Pleine à la réapparition.
@@ -224,7 +228,7 @@ Un joueur qui tombe de la plateforme meurt.
 ├── addons/godot_ai_mcp/     # Plugin éditeur MCP (pilotage de l'éditeur par une IA)
 ├── assets/                  # Ressources brutes, importées par Godot
 │   ├── themes/ui_theme.tres # Thème commun à tous les écrans (taille de police…)
-│   ├── fonts/titan_one/     # Police des annonces et du texte de capture (Titan One, licence OFL)
+│   ├── fonts/titan_one/     # Police Titan One (licence OFL) : titres, menus, annonces, chrono, HUD
 │   ├── audio/{music,sfx}/   # sfx/*.tres : sons tirés au hasard dans sfx/<nom>/ (cf. Sons)
 │   ├── fonts/
 │   ├── icons/               # icon.png (icône du projet : rendu du canard bleu)
@@ -237,7 +241,7 @@ Un joueur qui tombe de la plateforme meurt.
 │   │   ├── title_screen.tscn    # Écran d'accueil : « Duck my Life » + Démarrer
 │   │   ├── connect_screen.tscn  # Écran hôte/IP (style sélection d'équipe) : Héberger / IP + Rejoindre / Quitter
 │   │   ├── team_select.tscn     # Sélection d'équipe (choix des joueurs)
-│   │   ├── match_hud.tscn       # HUD en jeu : compte à rebours (instancié dans game.tscn)
+│   │   ├── match_hud.tscn       # HUD en jeu : chrono et scores (Scoreboard), capture, eau (instancié dans game.tscn)
 │   │   ├── pause_menu.tscn      # Menu pause (instancié dans game.tscn)
 │   │   ├── end_screen.tscn      # Écran de fin : scores, équipe gagnante, Rejouer / Quitter
 │   │   ├── death_screen.tscn    # « You died » + image grisée (instancié dans game.tscn)

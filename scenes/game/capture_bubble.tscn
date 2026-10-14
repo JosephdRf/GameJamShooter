@@ -4,7 +4,7 @@
 
 [node name="CaptureBubble" instance=ExtResource("1_bubble")]
 speed = 18.0
-max_distance = 20.0
+max_distance = 1000.0
 damage = 0.0
 grow_duration = 0.18
 radius = 0.7

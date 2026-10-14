@@ -106,7 +106,7 @@ Un joueur qui tombe de la plateforme meurt.
 
 ### Capture
 
-- **Clic molette** (action `capture`) : tire une grosse bulle, plus lente (18 m/s, portée 20 m), au plus
+- **Clic molette** (action `capture`) : tire une grosse bulle, plus lente (18 m/s, **portée illimitée** : elle vole jusqu'à toucher quelque chose), au plus
   une toutes les **5 s**.
 - Un adversaire touché est **piégé 2 s** dans une bulle à la couleur de l'équipe qui l'a eu : il lévite à
   25 cm du sol en flottant et ne peut plus bouger, sauter, dasher ni tirer (il peut toujours tourner la

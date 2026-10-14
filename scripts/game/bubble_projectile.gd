@@ -25,7 +25,8 @@ extends Node3D
 
 ## Vitesse (m/s).
 @export var speed := 30.0
-## Portée (m) : la bulle éclate au-delà.
+## Portée (m) : la bulle éclate au-delà. Bulle de capture : 1000 m, portée illimitée en
+## pratique (elle vole jusqu'à toucher quelque chose) ; tirée dans le vide, elle finit par disparaître.
 @export var max_distance := 25.0
 @export var damage := 40.0
 ## Dégâts aussi sur les coéquipiers (sinon la bulle éclate sans les blesser).

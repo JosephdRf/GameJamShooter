@@ -20,7 +20,7 @@ extends Node3D
 		radius = value
 		_update_shape()
 ## Hauteur du centre des joueurs au-dessus du sol à l'apparition (m) : moitié du canard.
-@export var spawn_height := 0.8125
+@export var spawn_height := 1.05625
 
 @onready var _disk: MeshInstance3D = $Disk
 @onready var _ring: MeshInstance3D = $Ring

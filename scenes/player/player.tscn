@@ -159,8 +159,8 @@ transitions = ["Start", "idle", SubResource("AnimationNodeStateMachineTransition
 graph_offset = Vector2(-66.96011, -155.07498)
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_duck"]
-radius = 0.6125
-height = 1.5625
+radius = 0.79625
+height = 2.03125
 
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_sync"]
 properties/0/path = NodePath(".:sync_position")
@@ -184,8 +184,8 @@ rim_tint = 0.2
 
 [sub_resource type="SphereMesh" id="SphereMesh_capture"]
 material = SubResource("StandardMaterial3D_capture")
-radius = 1.1875
-height = 2.375
+radius = 1.54375
+height = 3.0875
 
 [node name="Player" type="CharacterBody3D" unique_id=867554235]
 collision_layer = 2
@@ -193,7 +193,7 @@ collision_mask = 11
 script = ExtResource("1_player")
 
 [node name="Model" parent="." unique_id=964723069 instance=ExtResource("3_duck")]
-transform = Transform3D(1.625, 0, 0, 0, 1.625, 0, 0, 0, 1.625, 0, -0.78125, 0)
+transform = Transform3D(2.1125, 0, 0, 0, 2.1125, 0, 0, 0, 2.1125, 0, -1.015625, 0)
 
 [node name="AnimationTree" type="AnimationTree" parent="." unique_id=1228192790]
 root_node = NodePath("../Model")
@@ -210,7 +210,7 @@ parameters/walk/blend_position = Vector2(0, 1)
 shape = SubResource("CapsuleShape3D_duck")
 
 [node name="PlayerCamera" parent="." unique_id=1108729630 instance=ExtResource("2_camera")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.4375, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.86875, 0)
 
 [node name="Sync" type="MultiplayerSynchronizer" parent="." unique_id=167297076]
 replication_config = SubResource("SceneReplicationConfig_sync")
@@ -257,7 +257,7 @@ volume_db = -6.0
 max_distance = 40.0
 
 [node name="CaptureBubble" type="MeshInstance3D" parent="." unique_id=100894634]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0625, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08125, 0)
 visible = false
 cast_shadow = 0
 mesh = SubResource("SphereMesh_capture")

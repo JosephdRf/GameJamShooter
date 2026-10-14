@@ -10,7 +10,7 @@ transform = Transform3D(1, 0, 0, 0, 0.999391, 0.034899, 0, -0.034899, 0.999391, 
 
 [node name="SpringArm" type="SpringArm3D" parent="Pitch"]
 collision_mask = 1
-spring_length = 3.2
+spring_length = 5.2
 margin = 0.2
 
 [node name="Camera" type="Camera3D" parent="Pitch/SpringArm"]

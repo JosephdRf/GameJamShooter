@@ -1,44 +1,50 @@
 extends Control
-## Écran hôte/IP : héberger la partie, ou rejoindre l'hôte avec son IP.
+## Écran hôte/IP, au style de la sélection d'équipe : serviette bleue « Héberger »,
+## serviette rouge avec l'IP de l'hôte et « Rejoindre », bulle « Quitter ».
 ##   - Héberger -> sélection d'équipe.
 ##   - Rejoindre -> connexion réussie ? oui : sélection d'équipe ; non : message ici.
 ## Un seul hôte par réseau : si LanDiscovery détecte déjà une partie, "Héberger"
-## est désactivé et l'IP de l'hôte est pré-remplie.
-## Échap : annule la connexion en cours, sinon revient à l'écran d'accueil.
+## est grisé et l'IP de l'hôte est pré-remplie.
+## Les boutons grossissent au survol (et au focus clavier / manette).
+## Échap, B / Retour arrière (hors saisie de l'IP) ou « Quitter » : annule la connexion
+## en cours, sinon revient à l'écran d'accueil.
 
 const SETTINGS_PATH := "user://settings.cfg"
-
-const INSTRUCTIONS := """[font_size=26][b]Avant de lancer une partie[/b][/font_size]
-
-[b]1. Même réseau.[/b] Tous les ordinateurs sur le même Wi-Fi : le plus simple est le [b]partage de connexion du téléphone[/b] de l'hôte (eduroam et les Wi-Fi d'école bloquent souvent les connexions entre ordinateurs).
-
-[b]2. Un seul hôte.[/b] Un ordinateur clique sur [b]Héberger[/b] : son adresse IP s'affiche. Sur Mac, accepter la demande « connexions entrantes » si elle apparaît. Une fois la partie détectée sur le réseau, les autres ne peuvent plus héberger.
-
-[b]3. Les autres rejoignent.[/b] Ils saisissent l'IP de l'hôte (pré-remplie si la partie est détectée) et cliquent sur [b]Rejoindre[/b].
-
-[b]4. Choix des équipes.[/b] Chacun choisit son cube, valide, puis l'hôte lance la partie."""
+## Échelle d'un bouton serviette survolé, et de la bulle « Quitter » survolée.
+const BUTTON_HOVER_SCALE := 1.06
+const BUBBLE_HOVER_SCALE := 1.12
+## Vitesse de l'animation d'échelle (plus élevé = plus rapide).
+const SCALE_SPEED := 14.0
+## Teinte d'un bouton désactivé.
+const DISABLED_MODULATE := Color(0.5, 0.52, 0.58)
+const NETWORK_TIP := "Tous les ordinateurs doivent être sur le même partage de connexion"
 
 var _connecting := false
+## Bouton -> vrai tant que la souris le survole.
+var _hovered := {}
 
-@onready var _instructions: RichTextLabel = %Instructions
-@onready var _host_button: Button = %HostButton
+@onready var _info: Label = %Info
+@onready var _host_button: TextureButton = %HostButton
+@onready var _host_text: Label = $Layout/Towel1/HostButton/Text
+@onready var _host_hint: Label = %HostHint
 @onready var _address_edit: LineEdit = %AddressEdit
-@onready var _join_button: Button = %JoinButton
-@onready var _discovered: Label = %Discovered
+@onready var _join_button: TextureButton = %JoinButton
 @onready var _status: Label = %Status
-@onready var _back_button: Button = %BackButton
+@onready var _leave_button: TextureButton = %LeaveButton
 
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	Music.play(Music.MENU)
-	_instructions.text = INSTRUCTIONS
 	_address_edit.text = _load_last_address()
 
 	_host_button.pressed.connect(_on_host_pressed)
 	_join_button.pressed.connect(_on_join_pressed)
 	_address_edit.text_submitted.connect(func(_text: String) -> void: _on_join_pressed())
-	_back_button.pressed.connect(_back)
+	_leave_button.pressed.connect(_cancel_or_back)
+	for button: BaseButton in [_host_button, _join_button, _leave_button]:
+		button.mouse_entered.connect(func() -> void: _hovered[button] = true)
+		button.mouse_exited.connect(func() -> void: _hovered[button] = false)
 
 	NetworkManager.connection_succeeded.connect(_go_to_team_select)
 	NetworkManager.connection_failed.connect(_on_connection_failed)
@@ -56,35 +62,54 @@ func _exit_tree() -> void:
 	LanDiscovery.stop_listening()
 
 
+func _process(delta: float) -> void:
+	# La souris l'emporte sur le focus : seul le bouton survolé grossit.
+	var mouse_over_any: bool = _hovered.values().has(true)
+	for button: BaseButton in [_host_button, _join_button, _leave_button]:
+		var target := 1.0
+		if not button.disabled and (_hovered.get(button, false) or (button.has_focus() and not mouse_over_any)):
+			target = BUBBLE_HOVER_SCALE if button == _leave_button else BUTTON_HOVER_SCALE
+		button.scale = button.scale.lerp(Vector2.ONE * target, 1.0 - exp(-SCALE_SPEED * delta))
+
+
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed(&"ui_cancel"):
+	# Retour arrière dans le champ IP efface un caractère : le champ le consomme avant d'arriver ici.
+	if event.is_action_pressed(&"ui_cancel") or event.is_action_pressed(&"menu_back"):
 		get_viewport().set_input_as_handled()
-		if _connecting:
-			NetworkManager.leave()
-			_connecting = false
-			_status.text = "Connexion annulée."
-			_refresh()
-			_join_button.grab_focus()
-		else:
-			_back()
+		_cancel_or_back()
+
+
+func _cancel_or_back() -> void:
+	if not _connecting:
+		_back()
+		return
+	NetworkManager.leave()
+	_connecting = false
+	_status.text = "Connexion annulée."
+	_refresh()
+	_join_button.grab_focus()
 
 
 func _refresh() -> void:
 	var hosts := LanDiscovery.get_hosts()
 	var host_taken := not hosts.is_empty()
 	_host_button.disabled = _connecting or host_taken
-	_host_button.text = "Partie déjà hébergée" if host_taken else "Héberger la partie"
+	_host_button.modulate = DISABLED_MODULATE if _host_button.disabled else Color.WHITE
+	_host_text.text = "Déjà hébergée" if host_taken else "Héberger"
+	_host_text.add_theme_font_size_override(&"font_size", 36 if host_taken else 44)
+	_host_hint.text = "Une partie existe déjà\nsur ce réseau" if host_taken else "Crée la partie\nsur cet ordinateur"
 	_join_button.disabled = _connecting
+	_join_button.modulate = DISABLED_MODULATE if _join_button.disabled else Color.WHITE
 	_address_edit.editable = not _connecting
 	if host_taken:
-		_discovered.text = "Partie détectée sur %s : rejoins-la." % hosts[0]
+		_info.text = "Partie détectée sur %s : rejoins-la." % hosts[0]
 		# Pré-remplit l'IP, sauf si le joueur est en train d'en saisir une autre.
 		if not _connecting and not _address_edit.has_focus():
 			_address_edit.text = hosts[0]
 		if _host_button.has_focus():
 			_join_button.grab_focus()
 	else:
-		_discovered.text = ""
+		_info.text = NETWORK_TIP
 
 
 func _on_host_pressed() -> void:
@@ -111,7 +136,7 @@ func _on_join_pressed() -> void:
 		return
 	_save_last_address(address)
 	_connecting = true
-	_status.text = "Connexion à %s… (Échap pour annuler)" % address
+	_status.text = "Connexion à %s… (Retour pour annuler)" % address
 	_refresh()
 
 

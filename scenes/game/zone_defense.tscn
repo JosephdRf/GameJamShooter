@@ -13,8 +13,8 @@ emission_enabled = true
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_disk"]
 resource_local_to_scene = true
-top_radius = 3.5
-bottom_radius = 3.5
+top_radius = 6.0
+bottom_radius = 6.0
 height = 0.04
 radial_segments = 48
 rings = 1
@@ -28,8 +28,8 @@ shader_parameter/height = 5.0
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_wall"]
 resource_local_to_scene = true
-top_radius = 3.5
-bottom_radius = 3.5
+top_radius = 6.0
+bottom_radius = 6.0
 height = 5.0
 radial_segments = 48
 rings = 1
@@ -43,8 +43,8 @@ albedo_color = Color(1, 1, 1, 1)
 
 [sub_resource type="TorusMesh" id="TorusMesh_ring"]
 resource_local_to_scene = true
-inner_radius = 3.3
-outer_radius = 3.5
+inner_radius = 5.8
+outer_radius = 6.0
 rings = 64
 ring_segments = 8
 
@@ -72,4 +72,4 @@ mesh = SubResource("TorusMesh_ring")
 [node name="Light" type="OmniLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 0)
 light_energy = 0.0
-omni_range = 7.0
+omni_range = 12.0

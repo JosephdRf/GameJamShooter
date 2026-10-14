@@ -45,6 +45,12 @@ func get_active_zone() -> ZoneDefense:
 	return null
 
 
+## Vrai si une équipe est en train de capturer la zone active (même contestée).
+func is_capture_in_progress() -> bool:
+	var zone := get_active_zone()
+	return zone != null and zone.capturing_team != 0
+
+
 func _physics_process(delta: float) -> void:
 	if multiplayer.is_server() and _active_index != -1:
 		_zones[_active_index].update_capture(_players, delta)

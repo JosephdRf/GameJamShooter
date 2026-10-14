@@ -1,8 +1,45 @@
-[gd_scene format=3]
+[gd_scene format=3 uid="uid://d0b8do4pi23d"]
 
-[ext_resource type="Script" path="res://scripts/ui/connect_screen.gd" id="1_connect"]
+[ext_resource type="Script" uid="uid://bc4rlsy80rhcd" path="res://scripts/ui/connect_screen.gd" id="1_connect"]
+[ext_resource type="Script" uid="uid://hw04xpngnvnj" path="res://scripts/ui/tiled_background.gd" id="2_bg"]
+[ext_resource type="Texture2D" uid="uid://cc6o1f8lnr1oa" path="res://assets/ui/team_select/blue_towel.png" id="3_blue_towel"]
+[ext_resource type="Texture2D" uid="uid://kune4s0iy0rr" path="res://assets/ui/team_select/red_towel.png" id="4_red_towel"]
+[ext_resource type="Texture2D" uid="uid://bro22np6hixv0" path="res://assets/ui/team_select/blue_button.png" id="5_blue_button"]
+[ext_resource type="Texture2D" uid="uid://dkti2fgepfr8i" path="res://assets/ui/team_select/red_button.png" id="6_red_button"]
+[ext_resource type="Texture2D" uid="uid://dd5tgv82yhfqk" path="res://assets/ui/team_select/quitter.png" id="7_quitter"]
+[ext_resource type="Script" uid="uid://bua0hknfs70nn" path="res://scripts/ui/button_prompt.gd" id="8_prompt"]
 
-[node name="ConnectScreen" type="Control"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_field"]
+content_margin_left = 16.0
+content_margin_right = 16.0
+bg_color = Color(0.97, 0.98, 1, 1)
+border_width_left = 5
+border_width_top = 5
+border_width_right = 5
+border_width_bottom = 5
+border_color = Color(0.55, 0.08, 0.12, 1)
+corner_radius_top_left = 26
+corner_radius_top_right = 26
+corner_radius_bottom_right = 26
+corner_radius_bottom_left = 26
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_field_focus"]
+draw_center = false
+border_width_left = 5
+border_width_top = 5
+border_width_right = 5
+border_width_bottom = 5
+border_color = Color(1, 0.8, 0.1, 1)
+corner_radius_top_left = 26
+corner_radius_top_right = 26
+corner_radius_bottom_right = 26
+corner_radius_bottom_left = 26
+expand_margin_left = 3.0
+expand_margin_top = 3.0
+expand_margin_right = 3.0
+expand_margin_bottom = 3.0
+
+[node name="ConnectScreen" type="Control" unique_id=1679785348]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,96 +48,249 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_connect")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="Control" parent="." unique_id=1697278066]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.08, 0.09, 0.12, 1)
+mouse_filter = 2
+script = ExtResource("2_bg")
 
-[node name="Margin" type="MarginContainer" parent="."]
+[node name="Layout" type="Control" parent="." unique_id=147043763]
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -640.0
+offset_top = -360.0
+offset_right = 640.0
+offset_bottom = 360.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 64
-theme_override_constants/margin_top = 32
-theme_override_constants/margin_right = 64
-theme_override_constants/margin_bottom = 32
+mouse_filter = 2
 
-[node name="Layout" type="VBoxContainer" parent="Margin"]
-layout_mode = 2
-theme_override_constants/separation = 24
-
-[node name="Title" type="Label" parent="Margin/Layout"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 48
+[node name="Title" type="Label" parent="Layout" unique_id=1748995365]
+layout_mode = 0
+offset_left = 140.0
+offset_top = 14.0
+offset_right = 1140.0
+offset_bottom = 108.0
+theme_override_colors/font_color = Color(1, 0.82, 0.1, 1)
+theme_override_colors/font_shadow_color = Color(0.07, 0.25, 0.45, 0.6)
+theme_override_colors/font_outline_color = Color(0.1, 0.38, 0.72, 1)
+theme_override_constants/shadow_offset_x = 0
+theme_override_constants/shadow_offset_y = 5
+theme_override_constants/outline_size = 18
+theme_override_font_sizes/font_size = 64
 text = "Héberger ou rejoindre"
 horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="Columns" type="HBoxContainer" parent="Margin/Layout"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_constants/separation = 64
-
-[node name="Instructions" type="RichTextLabel" parent="Margin/Layout/Columns"]
+[node name="Info" type="Label" parent="Layout" unique_id=1691292894]
 unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 3
-size_flags_stretch_ratio = 1.6
-theme_override_font_sizes/normal_font_size = 18
-theme_override_font_sizes/bold_font_size = 18
-bbcode_enabled = true
-fit_content = true
-scroll_active = false
+layout_mode = 0
+offset_left = 40.0
+offset_top = 110.0
+offset_right = 1240.0
+offset_bottom = 174.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.07, 0.25, 0.45, 1)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 20
+text = "Tous les ordinateurs doivent être sur le même partage de connexion"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
 
-[node name="Actions" type="VBoxContainer" parent="Margin/Layout/Columns"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_constants/separation = 16
+[node name="Towel1" type="TextureRect" parent="Layout" unique_id=1824892867]
+layout_mode = 0
+offset_left = 100.0
+offset_top = 182.0
+offset_right = 608.0
+offset_bottom = 502.0
+mouse_filter = 2
+texture = ExtResource("3_blue_towel")
+expand_mode = 1
+stretch_mode = 5
 
-[node name="HostButton" type="Button" parent="Margin/Layout/Columns/Actions"]
+[node name="HostButton" type="TextureButton" parent="Layout/Towel1" unique_id=440070155]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 72)
-layout_mode = 2
-theme_override_font_sizes/font_size = 28
-text = "Héberger la partie"
+layout_mode = 0
+offset_left = 76.0
+offset_top = 34.0
+offset_right = 406.0
+offset_bottom = 152.0
+pivot_offset = Vector2(165, 59)
+focus_neighbor_right = NodePath("../../Towel2/AddressEdit")
+focus_neighbor_bottom = NodePath("../../LeaveButton")
+texture_normal = ExtResource("5_blue_button")
+ignore_texture_size = true
+stretch_mode = 0
 
-[node name="JoinLabel" type="Label" parent="Margin/Layout/Columns/Actions"]
-layout_mode = 2
-text = "… ou rejoindre l'hôte avec son IP :"
+[node name="Text" type="Label" parent="Layout/Towel1/HostButton" unique_id=2133769769]
+layout_mode = 0
+offset_right = 330.0
+offset_bottom = 112.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.1, 0.38, 0.72, 1)
+theme_override_constants/outline_size = 14
+theme_override_font_sizes/font_size = 44
+text = "Héberger"
+horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="AddressEdit" type="LineEdit" parent="Margin/Layout/Columns/Actions"]
+[node name="HostHint" type="Label" parent="Layout/Towel1" unique_id=1339010444]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 56)
-layout_mode = 2
-placeholder_text = "ex. 172.20.10.2"
+layout_mode = 0
+offset_left = 76.0
+offset_top = 162.0
+offset_right = 406.0
+offset_bottom = 280.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.07, 0.25, 0.45, 1)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 24
+text = "Crée la partie
+sur cet ordinateur"
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="Towel2" type="TextureRect" parent="Layout" unique_id=343311576]
+layout_mode = 0
+offset_left = 672.0
+offset_top = 182.0
+offset_right = 1180.0
+offset_bottom = 502.0
+mouse_filter = 2
+texture = ExtResource("4_red_towel")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="AddressEdit" type="LineEdit" parent="Layout/Towel2" unique_id=1363028265]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 86.0
+offset_top = 48.0
+offset_right = 396.0
+offset_bottom = 136.0
+focus_neighbor_left = NodePath("../../Towel1/HostButton")
+focus_neighbor_bottom = NodePath("../JoinButton")
+theme_override_colors/font_color = Color(0.55, 0.08, 0.12, 1)
+theme_override_colors/font_placeholder_color = Color(0.55, 0.08, 0.12, 0.4)
+theme_override_colors/caret_color = Color(0.55, 0.08, 0.12, 1)
+theme_override_font_sizes/font_size = 34
+theme_override_styles/normal = SubResource("StyleBoxFlat_field")
+theme_override_styles/read_only = SubResource("StyleBoxFlat_field")
+theme_override_styles/focus = SubResource("StyleBoxFlat_field_focus")
+placeholder_text = "IP de l'hôte"
 alignment = 1
 
-[node name="JoinButton" type="Button" parent="Margin/Layout/Columns/Actions"]
+[node name="JoinButton" type="TextureButton" parent="Layout/Towel2" unique_id=1403770829]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 56)
-layout_mode = 2
+layout_mode = 0
+offset_left = 76.0
+offset_top = 162.0
+offset_right = 406.0
+offset_bottom = 280.0
+pivot_offset = Vector2(165, 59)
+focus_neighbor_left = NodePath("../../Towel1/HostButton")
+focus_neighbor_top = NodePath("../AddressEdit")
+focus_neighbor_bottom = NodePath("../../LeaveButton")
+texture_normal = ExtResource("6_red_button")
+ignore_texture_size = true
+stretch_mode = 0
+
+[node name="Text" type="Label" parent="Layout/Towel2/JoinButton" unique_id=72587178]
+layout_mode = 0
+offset_right = 330.0
+offset_bottom = 112.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.72, 0.1, 0.16, 1)
+theme_override_constants/outline_size = 14
+theme_override_font_sizes/font_size = 44
 text = "Rejoindre"
+horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="Discovered" type="Label" parent="Margin/Layout/Columns/Actions"]
+[node name="Status" type="Label" parent="Layout" unique_id=1308582081]
 unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(0.55, 0.85, 0.6, 1)
+layout_mode = 0
+offset_left = 100.0
+offset_top = 512.0
+offset_right = 1180.0
+offset_bottom = 556.0
+theme_override_colors/font_color = Color(1, 0.86, 0.3, 1)
+theme_override_colors/font_outline_color = Color(0.07, 0.25, 0.45, 1)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 22
+horizontal_alignment = 1
+vertical_alignment = 1
 autowrap_mode = 3
 
-[node name="Status" type="Label" parent="Margin/Layout/Columns/Actions"]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.75, 0.4, 1)
-autowrap_mode = 3
+[node name="AcceptHint" type="HBoxContainer" parent="Layout" unique_id=1810526206]
+layout_mode = 0
+offset_left = 36.0
+offset_top = 600.0
+offset_right = 336.0
+offset_bottom = 644.0
+mouse_filter = 2
+theme_override_constants/separation = 14
 
-[node name="BackButton" type="Button" parent="Margin/Layout/Columns/Actions"]
-unique_name_in_owner = true
+[node name="Prompt" type="Control" parent="Layout/AcceptHint" unique_id=152084684]
+custom_minimum_size = Vector2(44, 44)
 layout_mode = 2
-size_flags_vertical = 10
+mouse_filter = 2
+script = ExtResource("8_prompt")
+
+[node name="Label" type="Label" parent="Layout/AcceptHint" unique_id=690506921]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.07, 0.25, 0.45, 1)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 22
+text = "Valider"
+vertical_alignment = 1
+
+[node name="BackHint" type="HBoxContainer" parent="Layout" unique_id=1917209260]
+layout_mode = 0
+offset_left = 36.0
+offset_top = 652.0
+offset_right = 336.0
+offset_bottom = 696.0
+mouse_filter = 2
+theme_override_constants/separation = 14
+
+[node name="Prompt" type="Control" parent="Layout/BackHint" unique_id=1186739231]
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("8_prompt")
+role = 1
+
+[node name="Label" type="Label" parent="Layout/BackHint" unique_id=1705370463]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.07, 0.25, 0.45, 1)
+theme_override_constants/outline_size = 8
+theme_override_font_sizes/font_size = 22
 text = "Retour"
+vertical_alignment = 1
+
+[node name="LeaveButton" type="TextureButton" parent="Layout" unique_id=974853685]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 820.0
+offset_top = 535.0
+offset_right = 1200.0
+offset_bottom = 767.0
+pivot_offset = Vector2(190, 116)
+focus_neighbor_left = NodePath("../Towel1/HostButton")
+focus_neighbor_top = NodePath("../Towel2/JoinButton")
+texture_normal = ExtResource("7_quitter")
+ignore_texture_size = true
+stretch_mode = 5

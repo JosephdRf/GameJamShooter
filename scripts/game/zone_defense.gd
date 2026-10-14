@@ -1,36 +1,52 @@
 @tool
 class_name ZoneDefense
 extends Node3D
-## Zone ronde à capturer (mode défense de zone, cf. ZoneDefenseMode).
+## Zone à capturer, ronde ou rectangulaire (mode défense de zone, cf. ZoneDefenseMode).
 ##
 ## Une fois activée, la zone reste `timeout` secondes (décompte en pause tant
 ## qu'une équipe la capture). Pour la capturer, une équipe doit y rester seule
 ## `capture_time` secondes :
 ##   - la zone prend la couleur de l'équipe présente ;
 ##   - si l'équipe qui capture quitte la zone, la progression repart à 0 ;
+##     un canard compte comme dedans tant que son corps touche la zone (centre
+##     jusqu'à un rayon de capsule hors du bord) ;
 ##   - si les deux équipes sont dans la zone, la progression est en pause.
 ## Capturée ou expirée, la zone disparaît et émet `finished`.
 ##
 ## Réseau : l'hôte décide (présence, progression, capture) et envoie l'état aux
 ## autres ordinateurs ; entre deux envois, ceux-ci font avancer la barre seuls.
 ##
-## Position, rayon, points et durées se règlent sur chaque instance, dans la
-## scène de jeu (la zone est visible dans l'éditeur, masquée en jeu).
+## Position, forme (rayon ou taille), points et durées se règlent sur chaque
+## instance, dans la scène de jeu (la zone est visible dans l'éditeur, masquée en jeu).
+## Le centre de la zone se place au niveau du sol.
 
 ## Émis sur l'hôte : `team` = équipe qui a capturé (1 ou 2), 0 si temps écoulé.
 signal finished(team: int)
 
 ## Intervalle (s) entre deux envois de l'état par l'hôte.
 const SYNC_INTERVAL := 0.1
-## Un cube compte comme présent jusqu'à cette hauteur au-dessus de la zone (m).
-const MAX_HEIGHT := 3.0
 const IDLE_COLOR := Color(1, 0.95, 0.7) # Jaune pâle : visible sur le sol clair.
+## Largeur du liseré au bord de la zone (m).
+const RING_WIDTH := 0.2
 
-@export var radius := 3.5:
+enum Shape { CIRCLE, RECTANGLE }
+
+@export var shape := Shape.CIRCLE:
+	set(value):
+		shape = value
+		_update_shape()
+## Rayon d'une zone ronde (m).
+@export var radius := 6.0:
 	set(value):
 		radius = value
 		_update_shape()
-## Hauteur du mur translucide qui entoure la zone (m), pour la voir de loin.
+## Taille d'une zone rectangulaire (m) : x le long de l'axe X local, y le long de l'axe Z local.
+@export var size := Vector2(10.0, 10.0):
+	set(value):
+		size = value
+		_update_shape()
+## Hauteur du mur translucide qui entoure la zone (m), pour la voir de loin. Un canard
+## compte comme présent tant que son centre est sous le haut du mur (même en sautant).
 @export var wall_height := 5.0:
 	set(value):
 		wall_height = value
@@ -124,12 +140,20 @@ func teams_inside(players: Array[Player]) -> Array[int]:
 	for player in players:
 		if not player.is_alive():
 			continue
-		var offset := player.global_position - global_position
-		var inside := Vector2(offset.x, offset.z).length() <= radius and offset.y > -1.0 and offset.y < MAX_HEIGHT
 		var team := Player.team_of(player.player_id)
-		if inside and not teams.has(team):
+		if contains(player.global_position, player.get_body_radius()) and not teams.has(team):
 			teams.append(team)
 	return teams
+
+
+## Vrai si un corps de rayon `margin` centré en `point` touche la zone.
+func contains(point: Vector3, margin := 0.0) -> bool:
+	var offset := global_transform.affine_inverse() * point
+	if offset.y <= -1.0 or offset.y >= wall_height:
+		return false
+	if shape == Shape.RECTANGLE:
+		return absf(offset.x) <= size.x / 2.0 + margin and absf(offset.z) <= size.y / 2.0 + margin
+	return Vector2(offset.x, offset.z).length() <= radius + margin
 
 
 func _process(delta: float) -> void:
@@ -185,13 +209,56 @@ func _update_visuals() -> void:
 func _update_shape() -> void:
 	if not is_node_ready():
 		return
-	(_disk.mesh as CylinderMesh).top_radius = radius
-	(_disk.mesh as CylinderMesh).bottom_radius = radius
-	(_wall.mesh as CylinderMesh).top_radius = radius
-	(_wall.mesh as CylinderMesh).bottom_radius = radius
-	(_wall.mesh as CylinderMesh).height = wall_height
+	var light_range := radius
+	if shape == Shape.RECTANGLE:
+		var floor_mesh := BoxMesh.new()
+		floor_mesh.size = Vector3(size.x, 0.04, size.y)
+		_disk.mesh = floor_mesh
+		# Mur : boîte sans dessus ni dessous (le shader masque les faces horizontales).
+		var wall := BoxMesh.new()
+		wall.size = Vector3(size.x, wall_height, size.y)
+		_wall.mesh = wall
+		_ring.mesh = _rectangle_ring()
+		light_range = size.length() / 2.0
+	else:
+		_disk.mesh = _cylinder(radius, 0.04, true)
+		_wall.mesh = _cylinder(radius, wall_height, false)
+		var ring := TorusMesh.new()
+		ring.outer_radius = radius
+		ring.inner_radius = radius - RING_WIDTH
+		ring.rings = 64
+		ring.ring_segments = 8
+		_ring.mesh = ring
 	_wall.position.y = wall_height / 2.0
 	(_wall.material_override as ShaderMaterial).set_shader_parameter(&"height", wall_height)
-	(_ring.mesh as TorusMesh).outer_radius = radius
-	(_ring.mesh as TorusMesh).inner_radius = radius - 0.2
-	_light.omni_range = radius * 2.0
+	_light.omni_range = light_range * 2.0
+
+
+func _cylinder(cylinder_radius: float, height: float, caps: bool) -> CylinderMesh:
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = cylinder_radius
+	mesh.bottom_radius = cylinder_radius
+	mesh.height = height
+	mesh.radial_segments = 48
+	mesh.rings = 1
+	mesh.cap_top = caps
+	mesh.cap_bottom = caps
+	return mesh
+
+
+## Liseré d'une zone rectangulaire : 4 baguettes le long des bords (même épaisseur que le
+## tore d'une zone ronde, aplati par l'échelle du nœud Ring).
+func _rectangle_ring() -> ArrayMesh:
+	var tool := SurfaceTool.new()
+	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var half := size / 2.0 - Vector2.ONE * RING_WIDTH / 2.0
+	for side: Array in [
+		[Vector3(size.x, RING_WIDTH, RING_WIDTH), Vector3(0, 0, half.y)],
+		[Vector3(size.x, RING_WIDTH, RING_WIDTH), Vector3(0, 0, -half.y)],
+		[Vector3(RING_WIDTH, RING_WIDTH, size.y), Vector3(half.x, 0, 0)],
+		[Vector3(RING_WIDTH, RING_WIDTH, size.y), Vector3(-half.x, 0, 0)],
+	]:
+		var bar := BoxMesh.new()
+		bar.size = side[0]
+		tool.append_from(bar, 0, Transform3D(Basis(), side[1]))
+	return tool.commit()

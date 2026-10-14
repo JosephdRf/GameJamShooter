@@ -103,7 +103,7 @@ const FOOTSTEPS := {
 	&"run": [0.47, 0.95],
 }
 ## Hauteur minimale du départ des bulles au-dessus des pieds (m), cf. get_muzzle_position.
-const MIN_MUZZLE_HEIGHT := 0.42
+const MIN_MUZZLE_HEIGHT := 0.6825
 ## Canon à eau : intervalle (s) entre deux envois du point visé aux autres ordinateurs.
 const CANNON_AIM_SYNC_INTERVAL := 0.066
 ## Sillage sur l'eau pendant une glissade : un rond et une gerbe toutes les WAKE_INTERVAL s.
@@ -319,6 +319,12 @@ func _ready() -> void:
 	_apply_color()
 	if not Engine.is_editor_hint():
 		_create_muzzle()
+	# L'éditeur enregistre parfois les triangles du mélange des marches avant ses points :
+	# ils sont alors ignorés au chargement et la marche reste figée. On les recalcule.
+	var walk_space := (_animation_tree.tree_root as AnimationNodeStateMachine).get_node(&"walk") as AnimationNodeBlendSpace2D
+	if walk_space and walk_space.get_triangle_count() == 0:
+		walk_space.auto_triangles = false
+		walk_space.auto_triangles = true
 	_model_base_y = _model.position.y
 	_floor_snap_default = floor_snap_length
 	_camera_base_y = camera.position.y
@@ -923,6 +929,11 @@ func is_on_water() -> bool:
 ## d'un autre ordinateur, qui ne fait pas de move_and_slide ici).
 func _ground_normal() -> Vector3:
 	return get_floor_normal() if is_on_floor() else Vector3.UP
+
+
+## Rayon de la capsule du canard (m).
+func get_body_radius() -> float:
+	return (_collision_shape.shape as CapsuleShape3D).radius
 
 
 ## Point du sol sous le canard (bas de sa capsule).

@@ -20,7 +20,8 @@ extends Node3D
 ## Les canards (calque visuel DUCK_VISUAL_LAYER) ne sont pas mouillés par les Decals.
 ##
 ## Rendu : autour de l'eau, un halo de sol mouillé (plus sombre, mat) ; l'eau elle-même est
-## brillante (reflets de la lumière), bleu clair au bord et plus sombre là où elle est profonde, avec de petites rides (normal map partagée,
+## brillante (reflets de la lumière), d'une seule teinte (plus d'eau au même endroit ne la fonce
+## pas ; seul son bord est un peu plus sombre), avec de petites rides (normal map partagée,
 ## sans raccord d'un carreau à l'autre). Chaque éclatement fait des ronds dans l'eau et
 ## quelques gouttes (_play_splash). Les canards font aussi réagir l'eau : un rond à chaque pas
 ## (step_splash) et un sillage quand ils glissent dessus (wake), cf. Player. Ronds et gouttes
@@ -59,11 +60,8 @@ const DRIP_RING_EVERY := 3
 ## Humidité à partir de laquelle il y a de l'eau (une tache vaut 1 en son centre).
 @export var threshold := 0.5
 @export_group("Rendu")
-## Couleur de l'eau peu profonde (bord) ; l'alpha règle sa transparence.
+## Couleur de l'eau (une seule teinte, quelle que soit la quantité) ; l'alpha règle sa transparence.
 @export var water_color := Color(0.25, 0.55, 0.72, 0.6)
-## Couleur de l'eau profonde (beaucoup d'humidité) et son opacité.
-@export var deep_color := Color(0.04, 0.25, 0.4)
-@export var deep_alpha := 0.85
 ## Bord de la flaque, un peu plus sombre (largeur en humidité au-dessus du seuil).
 @export var rim_width := 0.1
 ## Halo de sol mouillé autour de l'eau : couleur (alpha = intensité) et largeur (en
@@ -79,7 +77,7 @@ const DRIP_RING_EVERY := 3
 ## Temps (s) après le dernier arrosage au bout duquel l'eau a disparu.
 @export var water_lifetime := 30.0
 ## Pendant ses dernières secondes (s), l'eau pâlit jusqu'à disparaître.
-@export var fade_duration := 10.0
+@export var fade_duration := 3.0
 ## Couleur vers laquelle l'eau pâlit (de plus en plus claire avant de disparaître).
 @export var fade_color := Color(0.85, 0.92, 0.96)
 @export_group("Éclaboussure")
@@ -326,15 +324,14 @@ func _evaporate(job: Dictionary, deadline: int) -> bool:
 
 
 ## Couleur d'un pixel selon son humidité : halo de sol mouillé juste sous le seuil, puis
-## eau de plus en plus profonde (plus sombre, plus opaque) au-dessus. `fade` (0 à 1) : en fin
-## de vie, l'eau pâlit (plus claire, plus transparente) jusqu'à disparaître.
+## eau d'une seule teinte au-dessus (bord un peu plus sombre). `fade` (0 à 1) : en fin de
+## vie, l'eau pâlit (plus claire, plus transparente) jusqu'à disparaître.
 func _shade(chunk: Dictionary, px: int, py: int, wetness: float, fade := 0.0) -> void:
 	var damp := smoothstep(threshold - damp_width, threshold - 0.04, wetness)
 	var water := smoothstep(threshold - 0.04, threshold + 0.04, wetness)
-	var depth := smoothstep(threshold, threshold + 1.2, wetness)
 	var rim := (1.0 - smoothstep(threshold, threshold + rim_width, wetness)) * water
-	var water_rgb := water_color.lerp(deep_color, depth).darkened(rim * 0.3)
-	var water_alpha := minf(lerpf(water_color.a, deep_alpha, depth) + rim * 0.15, 1.0)
+	var water_rgb := Color(water_color.r, water_color.g, water_color.b).darkened(rim * 0.3)
+	var water_alpha := minf(water_color.a + rim * 0.15, 1.0)
 	var color := Color(damp_color, damp * damp_color.a).lerp(Color(water_rgb, water_alpha), water)
 	if fade > 0.0:
 		color = Color(Color(color.r, color.g, color.b).lerp(fade_color, fade * 0.7), color.a * (1.0 - fade))

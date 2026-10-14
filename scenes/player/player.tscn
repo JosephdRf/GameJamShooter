@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://bpbpwppaq4fmw" path="res://scripts/player/player.gd" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/player/player_camera.tscn" id="2_camera"]
-[ext_resource type="PackedScene" uid="uid://dbbvnlau4bc6d" path="res://assets/models/duck_v3.glb" id="3_duck"]
+[ext_resource type="PackedScene" uid="uid://cmucfelbu2ck5" path="res://assets/models/duck_v4.glb" id="3_duck"]
 [ext_resource type="Script" uid="uid://dpjjqetgj67d1" path="res://scripts/player/aim_assist.gd" id="4_aim_assist"]
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/bubble_shoot.tres" id="5_shoot_sound"]
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/duck_step.tres" id="6_duck_step"]
@@ -33,8 +33,32 @@ animation = &"idle"
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_0owmy"]
 animation = &"run"
 
-[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_qek5x"]
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_fm80t"]
 animation = &"walk"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_gx1jg"]
+animation = &"walk_back"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_ugbui"]
+animation = &"walk_left"
+
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_fcs02"]
+animation = &"walk_right"
+
+[sub_resource type="AnimationNodeBlendSpace2D" id="AnimationNodeBlendSpace2D_myrg7"]
+sync_mode = 1
+blend_point_0/node = SubResource("AnimationNodeAnimation_fm80t")
+blend_point_0/pos = Vector2(0, 1)
+blend_point_0/name = &"0"
+blend_point_1/node = SubResource("AnimationNodeAnimation_gx1jg")
+blend_point_1/pos = Vector2(0, -1)
+blend_point_1/name = &"1"
+blend_point_2/node = SubResource("AnimationNodeAnimation_ugbui")
+blend_point_2/pos = Vector2(-1, 0)
+blend_point_2/name = &"2"
+blend_point_3/node = SubResource("AnimationNodeAnimation_fcs02")
+blend_point_3/pos = Vector2(1, 0)
+blend_point_3/name = &"3"
 
 [sub_resource type="AnimationNodeStateMachineTransition" id="AnimationNodeStateMachineTransition_5gtgg"]
 advance_mode = 2
@@ -128,7 +152,7 @@ states/idle/node = SubResource("AnimationNodeAnimation_75vfm")
 states/idle/position = Vector2(260, 60)
 states/run/node = SubResource("AnimationNodeAnimation_0owmy")
 states/run/position = Vector2(740, 60)
-states/walk/node = SubResource("AnimationNodeAnimation_qek5x")
+states/walk/node = SubResource("AnimationNodeBlendSpace2D_myrg7")
 states/walk/position = Vector2(500, -60)
 transitions = ["Start", "idle", SubResource("AnimationNodeStateMachineTransition_5gtgg"), "idle", "walk", SubResource("AnimationNodeStateMachineTransition_h17s1"), "idle", "run", SubResource("AnimationNodeStateMachineTransition_je7p5"), "idle", "dash_start", SubResource("AnimationNodeStateMachineTransition_fm80t"), "dash_end", "idle", SubResource("AnimationNodeStateMachineTransition_gx1jg"), "walk", "idle", SubResource("AnimationNodeStateMachineTransition_ugbui"), "walk", "run", SubResource("AnimationNodeStateMachineTransition_fcs02"), "walk", "dash_start", SubResource("AnimationNodeStateMachineTransition_myrg7"), "dash_end", "walk", SubResource("AnimationNodeStateMachineTransition_kvlxm"), "run", "idle", SubResource("AnimationNodeStateMachineTransition_uf5tr"), "run", "walk", SubResource("AnimationNodeStateMachineTransition_lgqa7"), "run", "dash_start", SubResource("AnimationNodeStateMachineTransition_8ydkj"), "dash_end", "run", SubResource("AnimationNodeStateMachineTransition_3j4b4"), "dash_start", "dash", SubResource("AnimationNodeStateMachineTransition_yj68g"), "dash", "dash_end", SubResource("AnimationNodeStateMachineTransition_ioxgp")]
 
@@ -178,6 +202,7 @@ parameters/conditions/dashing = false
 parameters/conditions/idle = false
 parameters/conditions/run = false
 parameters/conditions/walk = false
+parameters/walk/blend_position = Vector2(0, 1)
 
 [node name="CollisionShape" type="CollisionShape3D" parent="." unique_id=767325698]
 shape = SubResource("CapsuleShape3D_duck")
@@ -192,61 +217,61 @@ public_visibility = false
 [node name="AimAssist" type="Node" parent="." unique_id=1508507568]
 script = ExtResource("4_aim_assist")
 
-[node name="ShootSound" type="AudioStreamPlayer3D" parent="."]
+[node name="ShootSound" type="AudioStreamPlayer3D" parent="." unique_id=367830752]
 stream = ExtResource("5_shoot_sound")
 volume_db = -4.0
 max_distance = 40.0
 max_polyphony = 4
 
-[node name="StepSound" type="AudioStreamPlayer3D" parent="."]
+[node name="StepSound" type="AudioStreamPlayer3D" parent="." unique_id=1903025501]
 stream = ExtResource("6_duck_step")
 volume_db = -12.0
 max_distance = 20.0
 max_polyphony = 2
 
-[node name="DashSound" type="AudioStreamPlayer3D" parent="."]
+[node name="DashSound" type="AudioStreamPlayer3D" parent="." unique_id=755489996]
 stream = ExtResource("7_duck_dash")
 volume_db = -6.0
 max_distance = 40.0
 
-[node name="JumpSound" type="AudioStreamPlayer3D" parent="."]
+[node name="JumpSound" type="AudioStreamPlayer3D" parent="." unique_id=906929060]
 stream = ExtResource("8_duck_jump")
 volume_db = -8.0
 max_distance = 30.0
 
-[node name="HitSound" type="AudioStreamPlayer3D" parent="."]
+[node name="HitSound" type="AudioStreamPlayer3D" parent="." unique_id=1371857851]
 stream = ExtResource("9_duck_hit")
 volume_db = -3.0
 max_distance = 40.0
 max_polyphony = 2
 
-[node name="DeathSound" type="AudioStreamPlayer3D" parent="."]
+[node name="DeathSound" type="AudioStreamPlayer3D" parent="." unique_id=1147114290]
 stream = ExtResource("10_duck_death")
 max_distance = 50.0
 
-[node name="RespawnSound" type="AudioStreamPlayer3D" parent="."]
+[node name="RespawnSound" type="AudioStreamPlayer3D" parent="." unique_id=796215112]
 stream = ExtResource("11_duck_respawn")
 volume_db = -6.0
 max_distance = 40.0
 
-[node name="CaptureBubble" type="MeshInstance3D" parent="."]
+[node name="CaptureBubble" type="MeshInstance3D" parent="." unique_id=100894634]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
 visible = false
 cast_shadow = 0
 mesh = SubResource("SphereMesh_capture")
 
-[node name="CaptureShootSound" type="AudioStreamPlayer3D" parent="."]
+[node name="CaptureShootSound" type="AudioStreamPlayer3D" parent="." unique_id=1504277734]
 stream = ExtResource("5_shoot_sound")
 pitch_scale = 0.6
 max_distance = 40.0
 
-[node name="CaptureSound" type="AudioStreamPlayer3D" parent="."]
+[node name="CaptureSound" type="AudioStreamPlayer3D" parent="." unique_id=1886093087]
 stream = ExtResource("5_shoot_sound")
 volume_db = 2.0
 pitch_scale = 0.45
 max_distance = 50.0
 
-[node name="ReleaseSound" type="AudioStreamPlayer3D" parent="."]
+[node name="ReleaseSound" type="AudioStreamPlayer3D" parent="." unique_id=1386927576]
 stream = ExtResource("12_bubble_pop")
 volume_db = 2.0
 pitch_scale = 0.55

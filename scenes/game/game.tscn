@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://8frli3h0t7l"]
 
 [ext_resource type="Script" uid="uid://ct6xu3fx6l8rk" path="res://scripts/game/game.gd" id="1_game"]
-[ext_resource type="PackedScene" uid="uid://flgmol2ni2u" path="res://scenes/levels/arena2.tscn" id="2_otnwt"]
+[ext_resource type="PackedScene" path="res://scenes/levels/arena.tscn" id="2_otnwt"]
 [ext_resource type="PackedScene" path="res://scenes/player/player_1.tscn" id="3_player1"]
 [ext_resource type="PackedScene" uid="uid://comxab82c6pea" path="res://scenes/player/player_2.tscn" id="4_player2"]
 [ext_resource type="PackedScene" path="res://scenes/player/player_3.tscn" id="5_player3"]
@@ -36,10 +36,10 @@ collision_mask = 7
 [node name="SpawnZones" type="Node3D" parent="." unique_id=618915540]
 
 [node name="ZoneSpawnBlue" parent="SpawnZones" unique_id=850163800 instance=ExtResource("11_spawn")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 44.2, 4.5, 12.618617)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, -16)
 
 [node name="ZoneSpawnRed" parent="SpawnZones" unique_id=1839208674 instance=ExtResource("11_spawn")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -51.907993, 0, -17.944)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0, 17)
 team = 2
 
 [node name="Projectiles" type="Node3D" parent="." unique_id=1331130396]
@@ -48,13 +48,13 @@ team = 2
 script = ExtResource("9_mode")
 
 [node name="ZoneLeft" parent="ZoneDefenseMode" unique_id=1765327171 instance=ExtResource("10_zone")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.868975, 0, -24.019016)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -20.5, 0, 0.5)
 
 [node name="ZoneCenter" parent="ZoneDefenseMode" unique_id=211882194 instance=ExtResource("10_zone")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.7873335, 0, 1.9407368)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2, 0, 0.5)
 
 [node name="ZoneRight" parent="ZoneDefenseMode" unique_id=1842881901 instance=ExtResource("10_zone")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.60273, 0, 18.89371)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 0, 0.5)
 
 [node name="DamageOverlay" parent="." unique_id=1423110258 instance=ExtResource("12_damage")]
 

@@ -178,15 +178,19 @@ Un joueur qui tombe de la plateforme meurt.
   dans le dossier du même nom (`shoot/`, `pop/`, `step/`…). Les sons sont découpés et calés sur leur
   attaque : ils partent pile au moment de l'action.
 - Canard (nœuds `*Sound` de `player.tscn`, entendus sur tous les ordinateurs, en 3D) : tir, **pas calés sur
-  l'animation** (instants où un pied se pose : `Player.FOOTSTEPS`), dash, saut, touché (canard en
+  l'animation** (instants où un pied se pose : `Player.FOOTSTEPS`), dash, saut (décollage) et atterrissage (après un saut ou une chute), touché (canard en
   caoutchouc), mort (coin-coin), réapparition. Bulle : éclatement (`PopSound` de `bubble_projectile.tscn`).
+- Zone capturée : cloche de réussite (`CaptureSound` de `game.tscn`, `sfx/capture/`), entendue partout.
 - Menus : autoload `UiSounds` (clic en naviguant, « plop » en validant), branché sur tous les boutons.
-- Musique : autoload `Music` (`play(Music.MENU)` / `stop()` dans le `_ready()` de chaque écran, en fondu).
-  « Happy Clappy Loop » (`music/happy_clappy_loop.wav`, OwlishMedia, OpenGameArt, CC0) boucle sans coupure
-  sur tous les menus, sans se relancer d'un écran à l'autre ; elle s'arrête en combat et reprend ensuite
-  là où elle s'était arrêtée.
+- Musique : autoload `Music` (`play(...)` dans le `_ready()` de chaque écran ; changement en fondu).
+  Menus : « Happy Clappy Loop » (`music/happy_clappy_loop.wav`, OwlishMedia, OpenGameArt, CC0) boucle sans
+  coupure, sans se relancer d'un écran à l'autre, et reprend là où elle s'était arrêtée après un combat.
+  Combat : « Glorious Morning 2 » (`music/glorious_morning_2.mp3`), en boucle, depuis le début à chaque
+  partie, un peu moins forte (`Music.VOLUMES_DB`) car mixée plus fort que celle des menus.
 - Volume : `volume_db` de chaque nœud `*Sound` ; variation : `random_pitch` des `.tres`.
-- Sources : `sfx/bubble/` (Pixabay), `sfx/duck/` et `sfx/freesound/` (Freesound, CC0, voir `CREDITS.txt`).
+- Sources : `sfx/bubble/` (Pixabay), `sfx/duck/` et `sfx/freesound/` (Freesound, CC0, voir `CREDITS.txt`),
+  `sfx/jump/` et `sfx/land/` (saut sur béton : décollage et réception, La Sonothèque, voir `CREDITS.txt`),
+  `sfx/capture/` (« success_bell », MLaudio, Freesound, CC0).
 - **Testeur** : `python tools/sfx_tester/build_sfx_tester.py` puis ouvrir `tools/sfx_tester/sfx_tester.html`
   pour écouter tous les sons du jeu (et des candidats Freesound) et simuler des tirs.
 

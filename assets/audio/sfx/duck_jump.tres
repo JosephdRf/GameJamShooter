@@ -1,6 +1,6 @@
 [gd_resource type="AudioStreamRandomizer" format=3]
 
-[ext_resource type="AudioStream" path="res://assets/audio/sfx/jump/jump_01.wav" id="1"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/jump/jump_beton.wav" id="1"]
 
 [resource]
 playback_mode = 0

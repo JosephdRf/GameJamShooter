@@ -104,6 +104,9 @@ const FOOTSTEPS := {
 }
 ## Hauteur minimale du départ des bulles au-dessus des pieds (m), cf. get_muzzle_position.
 const MIN_MUZZLE_HEIGHT := 0.6825
+## Vitesse de chute (m/s) au-delà de laquelle toucher le sol fait le son d'atterrissage
+## (après un saut : ~8,5 m/s ; les marches montées ou descendues en marchant n'en font pas).
+const LAND_SOUND_MIN_SPEED := 4.0
 ## Canon à eau : intervalle (s) entre deux envois du point visé aux autres ordinateurs.
 const CANNON_AIM_SYNC_INTERVAL := 0.066
 ## Sillage sur l'eau pendant une glissade : un rond et une gerbe toutes les WAKE_INTERVAL s.
@@ -291,6 +294,7 @@ var _capture_tween: Tween
 @onready var _water_step_sound: AudioStreamPlayer3D = $WaterStepSound
 @onready var _dash_sound: AudioStreamPlayer3D = $DashSound
 @onready var _jump_sound: AudioStreamPlayer3D = $JumpSound
+@onready var _land_sound: AudioStreamPlayer3D = $LandSound
 @onready var _hit_sound: AudioStreamPlayer3D = $HitSound
 @onready var _death_sound: AudioStreamPlayer3D = $DeathSound
 @onready var _respawn_sound: AudioStreamPlayer3D = $RespawnSound
@@ -514,8 +518,12 @@ func _simulate(delta: float) -> void:
 
 	# Pendant le dash, collé au sol de plus loin (suit une descente rapide au lieu de s'envoler).
 	floor_snap_length = dash_floor_snap if _dash_time > 0.0 else _floor_snap_default
+	var fall_speed := -velocity.y
+	var was_on_floor := is_on_floor()
 	if not _step_up(delta):
 		move_and_slide()
+	if is_local and not was_on_floor and is_on_floor() and fall_speed > LAND_SOUND_MIN_SPEED:
+		_play_land.rpc()
 
 	if global_position.y < kill_height:
 		_apply_damage(health)
@@ -760,6 +768,12 @@ func _play_dash() -> void:
 @rpc("authority", "call_local", "reliable")
 func _play_jump() -> void:
 	_jump_sound.play()
+
+
+## Sur tous les ordinateurs (appelé par celui qui contrôle ce cube) : son d'atterrissage.
+@rpc("authority", "call_local", "reliable")
+func _play_land() -> void:
+	_land_sound.play()
 
 
 ## Direction horizontale (x, z) du rayon du viseur.

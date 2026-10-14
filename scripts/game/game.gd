@@ -65,6 +65,7 @@ var _debug_mode := false
 @onready var _damage_overlay: CanvasLayer = $DamageOverlay
 @onready var _death_screen: CanvasLayer = $DeathScreen
 @onready var _announcer: CanvasLayer = $Announcer
+@onready var _capture_sound: AudioStreamPlayer = $CaptureSound
 @onready var _crosshair: CanvasLayer = $Crosshair
 @onready var _debug_layer: CanvasLayer = $DebugHealth
 @onready var _debug_health: Label = $DebugHealth/Label
@@ -73,7 +74,7 @@ var _debug_mode := false
 func _ready() -> void:
 	# La souris est capturée pour que le trackpad pilote la caméra.
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-	Music.stop()
+	Music.play(Music.COMBAT, true) # Depuis le début à chaque partie.
 	_place_players_on_spawn_zones()
 	for player: Player in _players.get_children():
 		player.face(_arena.global_position) # Au départ, chaque joueur regarde le centre.
@@ -190,7 +191,9 @@ func _on_match_started() -> void:
 	_mode.start(players)
 
 
+## Sur tous les ordinateurs : message et cloche de réussite (entendue de partout).
 func _on_zone_captured(team: int) -> void:
+	_capture_sound.play()
 	var local_team := 0
 	for player: Player in _players.get_children():
 		if player.is_local:

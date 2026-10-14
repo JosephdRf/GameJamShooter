@@ -17,6 +17,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/crosshair.tscn" id="15_crosshair"]
 [ext_resource type="Script" uid="uid://ccrs2teg755sq" path="res://scripts/game/puddles.gd" id="16_puddles"]
 [ext_resource type="Script" uid="uid://dgk0js86d4r0g" path="res://scripts/game/water_cannon.gd" id="17_water_cannon"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/zone_captured.tres" id="18_capture_sound"]
 
 [node name="Game" type="Node3D" unique_id=234620878]
 script = ExtResource("1_game")
@@ -68,6 +69,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.796054, 6.0566416, -25.6885
 
 [node name="ZoneDefense4" parent="ZoneDefenseMode" unique_id=634020543 instance=ExtResource("10_zone")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 34.4435, 3, -20.20451)
+
+[node name="CaptureSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("18_capture_sound")
+volume_db = -4.0
 
 [node name="DamageOverlay" parent="." unique_id=1423110258 instance=ExtResource("12_damage")]
 

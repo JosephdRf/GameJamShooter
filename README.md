@@ -65,8 +65,8 @@ par commande, avec sa touche clavier et son bouton de manette. Le code n'utilise
 | Tourner la caméra | `look_left/right/up/down` | Souris / trackpad | Stick droit | Stick droit |
 | Sauter | `jump` | Espace | B | Croix |
 | Dash (au sol, toutes les 2 s) | `dash` | Maj | Y | Carré |
-| Tirer une bulle (maintenir = en continu) | `shoot` | Clic droit | ZR | R2 |
-| Viser (maintenir) : la caméra zoome, sans aide à la visée | `aim` | Clic gauche | ZL | L2 |
+| Tirer une bulle (maintenir = en continu) | `shoot` | Clic gauche / T | ZL / ZR | L2 / R2 |
+| Viser (maintenir) : la caméra zoome, sans aide à la visée | `aim` | Clic droit | ZL | L2 |
 | Bulle de capture (toutes les 5 s) | `capture` | Clic molette | R | R1 |
 | **Menus** : naviguer / choisir son joueur | `menu_left/right` (+ `ui_*` de Godot) | Flèches (Q/D) | Stick gauche / croix | Stick gauche / croix |
 | **Menus** : valider | `ui_accept` | Entrée / Espace | A | Rond |

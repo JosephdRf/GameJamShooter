@@ -445,8 +445,14 @@ func _simulate(delta: float) -> void:
 	if is_local:
 		input = Input.get_vector(&"move_left", &"move_right", &"move_up", &"move_down")
 		if Input.is_action_just_pressed(&"jump") and is_on_floor():
-			velocity.y = jump_velocity
-			_play_jump.rpc()
+			# Sur le socle d'un sèche-cheveux : le saut devient un envol (cf. HairDryer).
+			var dryer := HairDryer.under(get_tree(), _feet_position())
+			if dryer:
+				velocity.y = dryer.launch_speed
+				_play_updraft.rpc()
+			else:
+				velocity.y = jump_velocity
+				_play_jump.rpc()
 	var direction := Vector3(input.x, 0.0, input.y).rotated(Vector3.UP, camera.get_yaw())
 
 	_dash_cooldown_left = maxf(_dash_cooldown_left - delta, 0.0)
@@ -495,7 +501,11 @@ func _simulate(delta: float) -> void:
 		# son inclinaison), sans gravité ; sinon on la traverserait sans avoir fini de monter.
 		velocity = ladder_up * climb_speed
 	else:
-		if not is_on_floor():
+		var updraft := HairDryer.column_at(get_tree(), global_position) if not is_on_floor() else null
+		if updraft:
+			# Dans la colonne d'air chaud d'un sèche-cheveux : porté vers le haut.
+			velocity.y = updraft.lift(global_position, velocity.y, _gravity * gravity_scale, delta)
+		elif not is_on_floor():
 			velocity.y -= _gravity * gravity_scale * delta
 		if _dash_time > 0.0:
 			# Dash : vitesse selon la courbe. Au sol, elle suit la surface (pente montante ou
@@ -774,6 +784,17 @@ func _play_jump() -> void:
 @rpc("authority", "call_local", "reliable")
 func _play_land() -> void:
 	_land_sound.play()
+
+
+## Sur tous les ordinateurs : envol depuis un sèche-cheveux (son du saut plus grave,
+## bouffée d'air chaud).
+@rpc("authority", "call_local", "reliable")
+func _play_updraft() -> void:
+	_jump_sound.play()
+	_dash_sound.play()
+	var dryer := HairDryer.under(get_tree(), _feet_position())
+	if dryer:
+		dryer.puff()
 
 
 ## Direction horizontale (x, z) du rayon du viseur.

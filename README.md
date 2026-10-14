@@ -145,7 +145,7 @@ Un joueur qui tombe de la plateforme meurt.
 ### Flaques (prototype)
 
 - Une bulle qui éclate sur le sol (ou le dessus d'un meuble) laisse une **flaque d'eau** (rayon 2 m,
-  3,6 m pour la maxi-bulle : `puddle_radius`), de forme irrégulière. Deux flaques proches se rejoignent
+  7,2 m pour la maxi-bulle : `puddle_radius`), de forme irrégulière. Deux flaques proches se rejoignent
   en une seule ; tirer plusieurs fois au même endroit l'agrandit.
 - **Évaporation** : l'eau disparaît **30 s** après son dernier arrosage, en pâlissant pendant les 3 dernières
   secondes ; réarroser une flaque la rafraîchit (groupe « Évaporation » du nœud `Puddles`).
@@ -158,6 +158,16 @@ Un joueur qui tombe de la plateforme meurt.
 - Code : `scripts/game/puddles.gd` (nœud `Puddles` de `game.tscn` : couleur, forme, résolution, budget de
   peinture par image). Rien n'est envoyé en réseau : chaque ordinateur fait éclater sa copie de la bulle
   au même endroit.
+
+### Sèche-cheveux (prototype)
+
+- Au centre d'`arena4` (au pied de la rampe de l'îlot central) : un sèche-cheveux allumé, debout au milieu d'un socle rond (liseré orange).
+  Le jet est toujours actif : tout canard en l'air dans la colonne d'air chaud est porté vers le haut et
+  flotte vers 13 m (en montant et descendant un peu : la puissance du souffle oscille) tant qu'il y reste ; il retombe en en sortant par le côté. Sauter
+  depuis le socle lance l'envol (au lieu d'un saut de 2 m).
+- Air chaud visible (jet, colonne qui fait onduler l'arrière-plan, filets d'air, lueur de la buse) et audible.
+- Scène `scenes/game/hair_dryer.tscn` (à poser n'importe où), script `scripts/game/hair_dryer.gd` : `zone_radius`,
+  `launch_speed`, `updraft_speed`, `lift_acceleration`, `lift_gravity`, `column_height`, `hover_height`, `power_variation`, `power_period`, `air_color`. Shader : `assets/shaders/hot_air.gdshader`.
 
 ### Vie
 

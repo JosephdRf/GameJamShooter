@@ -1,28 +1,31 @@
 extends Control
-## Sélection d'équipe : 4 cartes (joueurs 1-2 = équipe bleue, 3-4 = équipe rouge).
+## Sélection d'équipe (maquette : assets/ui/team_select/maquette.png) : deux serviettes,
+## bleue (joueurs 1-2) et rouge (joueurs 3-4), avec un bouton par joueur.
 ##
-## Chaque ordinateur déplace son choix avec le joystick gauche ou ← →. Un joueur
-## déjà pris par un autre ordinateur est grisé et sauté.
-## A (ou Entrée) valide le choix et place le curseur sur "Lancer la partie" ;
-## B (ou Retour arrière) annule la validation. L'hôte lance la partie avec Start
-## ou le bouton. Échap / "Quitter le salon" -> écran hôte/IP.
+## Chaque ordinateur choisit son joueur avec le joystick gauche ou ← →, ou en cliquant
+## sur un joueur libre. Un joueur déjà pris par un autre ordinateur est grisé et sauté.
+## A (ou Entrée, ou un clic sur son propre joueur) valide le choix et place le curseur
+## sur « Lancer » ; B (ou Retour arrière) annule la validation. L'hôte lance la partie
+## avec Start ou la bulle « Lancer ». Échap / bulle « Quitter » -> écran hôte/IP.
+## Les boutons grossissent au survol (et au focus clavier / manette) ; le joueur choisi
+## par cet ordinateur reste un peu plus gros.
 ## Nécessite une session réseau (sinon retour à l'écran hôte/IP).
 
-const CARD_SIZE := Vector2(210, 250)
-const TAKEN_COLOR := Color(0.24, 0.25, 0.28)
+## Échelle d'un bouton survolé, et du joueur choisi par cet ordinateur.
+const HOVER_SCALE := 1.12
+const MINE_SCALE := 1.05
+## Vitesse de l'animation d'échelle (plus élevé = plus rapide).
+const SCALE_SPEED := 14.0
+## Teinte d'un joueur pris par un autre ordinateur.
+const TAKEN_MODULATE := Color(0.5, 0.52, 0.58)
 
-var _cards: Array[PanelContainer] = []
-var _card_titles: Array[Label] = []
-var _card_states: Array[Label] = []
+## Bouton -> vrai tant que la souris le survole.
+var _hovered := {}
 
 @onready var _info: Label = %Info
-@onready var _hint: Label = %Hint
-@onready var _team_slots: Array[HBoxContainer] = [
-	$Margin/Layout/Teams/Team1/Slots,
-	$Margin/Layout/Teams/Team2/Slots,
-]
-@onready var _leave_button: Button = %LeaveButton
-@onready var _start_button: Button = %StartButton
+@onready var _players: Array[TextureButton] = [%Player1, %Player2, %Player3, %Player4]
+@onready var _leave_button: TextureButton = %LeaveButton
+@onready var _start_button: TextureButton = %StartButton
 
 
 func _ready() -> void:
@@ -32,7 +35,13 @@ func _ready() -> void:
 		return
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	Music.play(Music.MENU)
-	_build_cards()
+	%AcceptHint/Label.text = "Sélectionner  (Entrée)"
+	%BackHint/Label.text = "Annuler  (Retour arrière)"
+	for i in _players.size():
+		_players[i].pressed.connect(_on_player_pressed.bind(i + 1))
+	for button: BaseButton in _players + [_start_button, _leave_button]:
+		button.mouse_entered.connect(func() -> void: _hovered[button] = true)
+		button.mouse_exited.connect(func() -> void: _hovered[button] = false)
 	_leave_button.pressed.connect(_leave)
 	_start_button.pressed.connect(NetworkManager.start_match)
 	_start_button.visible = multiplayer.is_server()
@@ -40,7 +49,7 @@ func _ready() -> void:
 	_refresh()
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if not NetworkManager.is_my_slot_locked():
 		if Input.is_action_just_pressed(&"menu_left"):
 			UiSounds.play_click()
@@ -51,6 +60,7 @@ func _process(_delta: float) -> void:
 	if multiplayer.is_server() and Input.is_action_just_pressed(&"start"):
 		UiSounds.play_confirm()
 		NetworkManager.start_match()
+	_animate_scales(delta)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -64,6 +74,15 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed(&"ui_cancel"):
 		get_viewport().set_input_as_handled()
 		_leave()
+
+
+## Clic sur un joueur : le choisir s'il est libre, valider (ou annuler) si c'est le sien.
+## (Le son de validation est joué par UiSounds, branché sur tous les boutons.)
+func _on_player_pressed(player_id: int) -> void:
+	if NetworkManager.get_my_slot() == player_id:
+		NetworkManager.set_my_slot_locked(not NetworkManager.is_my_slot_locked())
+	elif not NetworkManager.is_my_slot_locked():
+		NetworkManager.choose_slot(player_id)
 
 
 func _set_locked(value: bool) -> void:
@@ -83,71 +102,40 @@ func _leave() -> void:
 	get_tree().change_scene_to_file(Screens.CONNECT)
 
 
-func _build_cards() -> void:
-	for player_id in range(1, NetworkManager.MAX_PLAYERS + 1):
-		var card := PanelContainer.new()
-		card.custom_minimum_size = CARD_SIZE
-		card.add_theme_stylebox_override(&"panel", StyleBoxFlat.new())
-
-		var content := VBoxContainer.new()
-		content.alignment = BoxContainer.ALIGNMENT_CENTER
-		content.add_theme_constant_override(&"separation", 12)
-		card.add_child(content)
-
-		var title := Label.new()
-		title.text = "Joueur %d" % player_id
-		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		title.add_theme_font_size_override(&"font_size", 30)
-		content.add_child(title)
-
-		var state := Label.new()
-		state.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		content.add_child(state)
-
-		_team_slots[Player.team_of(player_id) - 1].add_child(card)
-		_cards.append(card)
-		_card_titles.append(title)
-		_card_states.append(state)
+## Grossit en douceur les boutons survolés / avec le focus, et le joueur choisi.
+func _animate_scales(delta: float) -> void:
+	var my_slot := NetworkManager.get_my_slot()
+	for button: BaseButton in _players + [_start_button, _leave_button]:
+		var target := 1.0
+		if _hovered.get(button, false) or button.has_focus():
+			target = HOVER_SCALE
+		elif button in _players and _players.find(button) + 1 == my_slot:
+			target = MINE_SCALE
+		var weight := 1.0 - exp(-SCALE_SPEED * delta)
+		button.scale = button.scale.lerp(Vector2.ONE * target, weight)
 
 
 func _refresh() -> void:
 	var my_id := multiplayer.get_unique_id()
-	for i in _cards.size():
+	for i in _players.size():
 		var player_id := i + 1
 		var owner_id: int = NetworkManager.slots.get(player_id, 0)
-		var color := Player.color_of(player_id)
-		var style := _cards[i].get_theme_stylebox(&"panel") as StyleBoxFlat
-		style.set_corner_radius_all(16)
-		style.set_border_width_all(0)
-		var text_color := Color.WHITE
-
 		var is_locked: bool = NetworkManager.locked.get(player_id, false)
+		var state: Label = _players[i].get_node(^"State")
 		if owner_id == my_id:
-			style.bg_color = color
-			style.set_border_width_all(6)
-			style.border_color = Color.WHITE
-			_card_states[i].text = "✔  TOI  ·  prêt" if is_locked else "◀   TOI   ▶"
+			_players[i].modulate = Color.WHITE
+			state.text = "Toi  ✔ prêt" if is_locked else "Toi"
 		elif owner_id == 0:
-			style.bg_color = color.darkened(0.6)
-			text_color = Color(1, 1, 1, 0.75)
-			_card_states[i].text = "Libre"
+			_players[i].modulate = Color.WHITE
+			state.text = ""
 		else:
-			style.bg_color = TAKEN_COLOR
-			text_color = Color(0.55, 0.56, 0.6)
-			_card_states[i].text = ("Pris par l'hôte" if owner_id == 1 else "Pris") + ("  ·  prêt" if is_locked else "")
-
-		_card_titles[i].add_theme_color_override(&"font_color", text_color)
-		_card_states[i].add_theme_color_override(&"font_color", text_color)
-
-	if NetworkManager.is_my_slot_locked():
-		_hint.text = "B (ou Retour arrière) pour changer de joueur  ·  Échap pour quitter le salon"
-	else:
-		_hint.text = "Joystick gauche ou ← → pour choisir  ·  A (ou Entrée) pour valider  ·  Échap pour quitter le salon"
+			_players[i].modulate = TAKEN_MODULATE
+			state.text = ("Pris par l'hôte" if owner_id == 1 else "Pris") + ("  ✔ prêt" if is_locked else "")
 
 	var count := NetworkManager.get_connected_count()
 	if multiplayer.is_server():
 		var addresses := NetworkManager.get_local_ipv4_addresses()
 		var ip_text := "  ou  ".join(addresses) if not addresses.is_empty() else "introuvable (es-tu connecté à un réseau ?)"
-		_info.text = "Tu héberges la partie. Les autres ordinateurs doivent rejoindre l'IP :  %s\nOrdinateurs connectés : %d / %d" % [ip_text, count, NetworkManager.MAX_PLAYERS]
+		_info.text = "Tu héberges la partie. Les autres ordinateurs doivent rejoindre l'IP : %s\nOrdinateurs connectés : %d / %d" % [ip_text, count, NetworkManager.MAX_PLAYERS]
 	else:
 		_info.text = "Connecté à l'hôte  ·  Ordinateurs connectés : %d / %d\nEn attente que l'hôte lance la partie…" % [count, NetworkManager.MAX_PLAYERS]

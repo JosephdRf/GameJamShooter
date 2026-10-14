@@ -125,6 +125,14 @@ func move_my_slot(direction: int) -> void:
 		_request_move_slot.rpc_id(1, direction)
 
 
+## Choisit directement le joueur `player_id` (s'il est libre et que le choix n'est pas validé).
+func choose_slot(player_id: int) -> void:
+	if multiplayer.is_server():
+		_choose_slot(1, player_id)
+	else:
+		_request_choose_slot.rpc_id(1, player_id)
+
+
 ## Hôte uniquement : lance la partie pour tous les ordinateurs connectés.
 func start_match() -> void:
 	if not multiplayer.is_server() or _in_game:
@@ -185,6 +193,12 @@ static func get_local_ipv4_addresses() -> PackedStringArray:
 func _request_move_slot(direction: int) -> void:
 	if multiplayer.is_server():
 		_move_slot(multiplayer.get_remote_sender_id(), direction)
+
+
+@rpc("any_peer", "reliable")
+func _request_choose_slot(player_id: int) -> void:
+	if multiplayer.is_server():
+		_choose_slot(multiplayer.get_remote_sender_id(), player_id)
 
 
 @rpc("any_peer", "reliable")
@@ -252,6 +266,15 @@ func _move_slot(peer_id: int, direction: int) -> void:
 			_broadcast_slots()
 			return
 		target += direction
+
+
+func _choose_slot(peer_id: int, player_id: int) -> void:
+	var current := _slot_of(peer_id)
+	if current == 0 or locked[current] or not slots.has(player_id) or slots[player_id] != 0:
+		return
+	slots[current] = 0
+	slots[player_id] = peer_id
+	_broadcast_slots()
 
 
 func _set_locked(peer_id: int, value: bool) -> void:

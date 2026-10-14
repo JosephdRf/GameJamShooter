@@ -1,7 +1,7 @@
 @tool
 class_name Player
 extends CharacterBody3D
-## Joueur (canard, modèle assets/models/duck_v3.glb, textures dans assets/materials).
+## Joueur (canard, modèle assets/models/duck_v4.glb, textures dans assets/materials).
 ## L'équipe (et donc la couleur du réservoir d'eau sur le dos) dépend de `player_id` :
 ## joueurs 1-2 = équipe bleue, joueurs 3-4 = équipe rouge.
 ##
@@ -61,10 +61,15 @@ const REMOTE_SMOOTHING := 25.0
 ## réglables dans l'éditeur). Le script ne fait que renseigner ses conditions :
 ## idle à l'arrêt, walk en dessous de RUN_SPEED (m/s), run au-delà ; dashing pendant
 ## le dash (dash_start → dash), dash_over ensuite (dash → dash_end).
+## L'état walk mélange walk / walk_back / walk_left / walk_right (BlendSpace2D) selon
+## la direction du déplacement vue par le canard : en posture de combat (il regarde là
+## où il vise), il recule ou marche de côté, et reste dans walk même au-delà de RUN_SPEED.
 const MOVING_SPEED := 0.3
 const RUN_SPEED := 4.0
 ## Vitesse à laquelle le canard se tourne vers sa direction de déplacement.
 const TURN_SPEED := 14.0
+## Vitesse à laquelle le mélange des marches (avant, arrière, côtés) suit la direction.
+const STRAFE_BLEND_SPEED := 10.0
 ## Posture de combat : vitesse à laquelle il se tourne vers sa visée (demi-tour en ~0,1 s).
 const AIM_TURN_SPEED := 30.0
 ## Courbe du dash (fractions de dash_duration) : fin de la montée en vitesse,
@@ -92,7 +97,7 @@ const STEP_MIN_HEIGHT := 0.01
 ## Vitesse à laquelle le modèle et la caméra rattrapent une marche montée d'un coup.
 const STEP_SMOOTHING := 18.0
 ## Bruits de pas : instants (fractions de l'animation) où un pied se pose, relevés sur
-## les pistes foot_ik_L / foot_ik_R de walk et run (assets/models/duck_v3.glb).
+## les pistes foot_ik_L / foot_ik_R de walk et run (assets/models/duck_v4.glb).
 const FOOTSTEPS := {
 	&"walk": [0.49, 0.98],
 	&"run": [0.47, 0.95],
@@ -226,6 +231,8 @@ var _dash_start_speed := 0.0
 ## Temps restant du dash pour ses animations (condition « dashing »), décompté sur
 ## tous les ordinateurs (cf. _play_dash).
 var _dash_animation_left := 0.0
+## Direction du déplacement vue par le canard (x : droite, y : avant), pour l'état walk.
+var _strafe := Vector2(0, 1)
 ## Bout du canon (Marker3D créé dans _ready sur le mesh du pistolet) : départ des bulles.
 var _muzzle: Marker3D
 ## Temps écoulé depuis le dernier tir (s).
@@ -751,7 +758,8 @@ func _update_model(velocity_now: Vector3, delta: float) -> void:
 	var horizontal := Vector3(velocity_now.x, 0.0, velocity_now.z)
 	var speed := horizontal.length()
 	var moving := speed > MOVING_SPEED and is_alive()
-	if sync_facing != Vector2.ZERO and is_alive():
+	var combat := sync_facing != Vector2.ZERO and is_alive()
+	if combat:
 		# Posture de combat : il regarde là où il vise, même en reculant.
 		_turn_model_towards(Vector3(sync_facing.x, 0.0, sync_facing.y), 1.0 - exp(-AIM_TURN_SPEED * delta))
 	elif moving:
@@ -770,8 +778,15 @@ func _update_model(velocity_now: Vector3, delta: float) -> void:
 	_animation_tree.set(&"parameters/conditions/dashing", dashing)
 	_animation_tree.set(&"parameters/conditions/dash_over", not dashing)
 	_animation_tree.set(&"parameters/conditions/idle", not moving)
-	_animation_tree.set(&"parameters/conditions/walk", moving and speed <= RUN_SPEED)
-	_animation_tree.set(&"parameters/conditions/run", moving and speed > RUN_SPEED)
+	_animation_tree.set(&"parameters/conditions/walk", moving and (combat or speed <= RUN_SPEED))
+	_animation_tree.set(&"parameters/conditions/run", moving and not combat and speed > RUN_SPEED)
+	# Le modèle regarde vers +Z : sa droite est -X.
+	var strafe := Vector2(0, 1)
+	if combat and moving:
+		var local := _model.global_basis.inverse() * horizontal
+		strafe = Vector2(-local.x, local.z).normalized()
+	_strafe = _strafe.lerp(strafe, 1.0 - exp(-STRAFE_BLEND_SPEED * delta))
+	_animation_tree.set(&"parameters/walk/blend_position", _strafe)
 	# Au sol : les canards des autres ordinateurs n'ont pas is_on_floor(), on regarde leur vitesse verticale.
 	var grounded := is_on_floor() if is_multiplayer_authority() else absf(velocity_now.y) < 1.0
 	_play_footsteps(active and moving and grounded)

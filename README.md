@@ -1,4 +1,4 @@
-# Bubble Shooter
+# Duck my Life
 
 Jeu Godot **4.7** **2v2 en réseau local** : 4 ordinateurs, chacun contrôle un canard,
 caméra à la 3e personne. Un des joueurs héberge la partie (« listen server »).
@@ -204,12 +204,12 @@ Un joueur qui tombe de la plateforme meurt.
 │   ├── fonts/
 │   ├── icons/               # icon.svg (icône du projet)
 │   ├── materials/           # duck_*.tres : matériaux texturés du canard (corps, pistolet, réservoir bleu/rouge)
-│   ├── models/              # bain-de-coin-coin.blend : l'arène (importée via Blender) ; duck_v3.glb : le canard
+│   ├── models/              # bain-de-coin-coin.blend : l'arène (importée via Blender) ; duck_v4.glb : le canard
 │   └── textures/            # Textures du canard (diffuse / normal / roughness)
 ├── scenes/                  # Scènes (.tscn), un sous-dossier par domaine
 │   ├── ui/                  # Un fichier par écran, modifiable indépendamment
 │   │   ├── loading_screen.tscn  # Écran de chargement (scène de départ)
-│   │   ├── title_screen.tscn    # Écran d'accueil : « Bubble Shooter » + Démarrer
+│   │   ├── title_screen.tscn    # Écran d'accueil : « Duck my Life » + Démarrer
 │   │   ├── connect_screen.tscn  # Écran hôte/IP : Héberger / Rejoindre
 │   │   ├── team_select.tscn     # Sélection d'équipe (choix des joueurs)
 │   │   ├── match_hud.tscn       # HUD en jeu : compte à rebours (instancié dans game.tscn)
@@ -226,7 +226,7 @@ Un joueur qui tombe de la plateforme meurt.
 │   ├── game/bubble_projectile.tscn  # Bulle tirée (vitesse, portée, dégâts)
 │   ├── levels/arena.tscn    # Salle de bain (.blend) + lumières + barrière invisible devant
 │   └── player/
-│       ├── player.tscn          # Scène de base : canard (assets/models/duck_v3.glb) + AnimationTree + caméra + synchro réseau
+│       ├── player.tscn          # Scène de base : canard (assets/models/duck_v4.glb) + AnimationTree + caméra + synchro réseau
 │       ├── player_1.tscn … player_4.tscn  # Une scène héritée par joueur (id → couleur, équipe)
 │       └── player_camera.tscn   # Caméra 3e personne (SpringArm3D)
 └── scripts/                 # Scripts GDScript, même découpage que scenes/
@@ -302,16 +302,19 @@ Un joueur qui tombe de la plateforme meurt.
 
 ### Le canard et ses animations
 
-- Modèle `assets/models/duck_v3.glb` (exporté de Blender avec son armature `Duck_Rig`) ; textures
+- Modèle `assets/models/duck_v4.glb` (exporté de Blender avec son armature `Duck_Rig`) ; textures
   appliquées par `player.gd` avec les matériaux `assets/materials/duck_*.tres` (réservoir, tuyau et
   ceinture en `duck_container_blue` / `duck_container_red` selon l'équipe).
-- `idle`, `walk` et `run` sont mises en boucle dans les options d'import du `.glb` (double-clic sur le
-  fichier › onglet Animation › Loop Mode). `dash_loop` devient `dash` à l'import (le suffixe `_loop`
-  la met en boucle).
+- `idle`, `walk`, `run`, `walk_back`, `walk_left` et `walk_right` sont mises en boucle dans les options
+  d'import du `.glb` (double-clic sur le fichier › onglet Animation › Loop Mode).
 - Le nœud `AnimationTree` de `player.tscn` est une machine à états : sélectionner le nœud pour
   l'ouvrir dans le panneau du bas. Les transitions (fondus, priorités) se règlent en cliquant sur les
   flèches. `player.gd` ne fait que renseigner les conditions : `idle` / `walk` / `run` selon la
   vitesse (`MOVING_SPEED`, `RUN_SPEED`), `dashing` pendant le dash puis `dash_over`.
+- L'état `walk` est un BlendSpace2D : `walk` (avant), `walk_back`, `walk_left`, `walk_right`. En posture
+  de combat (pendant le tir, la visée et 0,6 s après), le canard regarde là où il vise ; il joue la
+  marche qui correspond à sa direction (reculer, pas de côté), même à pleine vitesse. Sinon il regarde
+  où il va : marche avant, ou `run` au-delà de `RUN_SPEED`.
 - Dash : `dash_start` est jouée en 0,2 s (timeline personnalisée de son nœud, la moitié de
   `dash_duration`), puis `dash` en boucle jusqu'à la fin du dash, puis `dash_end` avant de revenir à
   la marche. Le début du dash est envoyé aux autres ordinateurs (RPC `_play_dash`).

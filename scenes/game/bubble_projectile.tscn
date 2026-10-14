@@ -20,6 +20,7 @@ rim_tint = 0.2
 [node name="BubbleProjectile" type="Node3D" unique_id=1486090387]
 script = ExtResource("1_bubble")
 world_radius = 0.3
+visual_radius = 0.3
 
 [node name="Mesh" type="MeshInstance3D" parent="." unique_id=1919264022]
 cast_shadow = 0

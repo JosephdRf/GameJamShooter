@@ -16,6 +16,7 @@
 [ext_resource type="PackedScene" path="res://scenes/ui/announcer.tscn" id="14_announcer"]
 [ext_resource type="PackedScene" path="res://scenes/ui/crosshair.tscn" id="15_crosshair"]
 [ext_resource type="Script" path="res://scripts/game/puddles.gd" id="16_puddles"]
+[ext_resource type="Script" path="res://scripts/game/water_cannon.gd" id="17_water_cannon"]
 
 [node name="Game" type="Node3D" unique_id=234620878]
 script = ExtResource("1_game")
@@ -47,6 +48,9 @@ team = 2
 
 [node name="Puddles" type="Node3D" parent="."]
 script = ExtResource("16_puddles")
+
+[node name="WaterCannon" type="Node3D" parent="."]
+script = ExtResource("17_water_cannon")
 
 [node name="ZoneDefenseMode" type="Node3D" parent="." unique_id=126924625]
 script = ExtResource("9_mode")

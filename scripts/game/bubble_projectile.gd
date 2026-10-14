@@ -28,9 +28,9 @@ extends Node3D
 
 ## Vitesse (m/s).
 @export var speed := 30.0
-## Portée (m) : la bulle éclate au-delà. Bulle de capture : 1000 m, portée illimitée en
+## Portée (m) : la bulle éclate au-delà (le viseur pâlit au-delà de RANGE, cf. Crosshair). Bulle de capture : 1000 m, portée illimitée en
 ## pratique (elle vole jusqu'à toucher quelque chose) ; tirée dans le vide, elle finit par disparaître.
-@export var max_distance := 25.0
+@export var max_distance := RANGE
 @export var damage := 30.0
 ## Dégâts aussi sur les coéquipiers (sinon la bulle éclate sans les blesser).
 @export var friendly_fire := false
@@ -46,6 +46,11 @@ extends Node3D
 ## négatif = `radius`. Plus petit que la bulle, elle frôle le sol sans éclater : la bulle
 ## de capture est plus grosse que la hauteur du canon au-dessus du sol (0,4 m).
 @export var world_radius := -1.0
+## Rayon visible de la bulle (m) ; négatif = `radius`. La bulle normale est dessinée à la
+## taille de son contact avec le décor (0,3 m) : plus petite que la hauteur du canon
+## (0,4 m), elle file au-dessus du sol au lieu d'y être à moitié enfoncée. Elle garde un
+## contact plus généreux (`radius`) avec les canards.
+@export var visual_radius := -1.0
 @export_group("Capture")
 ## Bulle de capture : piège l'adversaire touché (sans dégâts) au lieu de le blesser.
 @export var capture := false
@@ -58,6 +63,8 @@ extends Node3D
 
 ## Rayon du SphereMesh de la scène (m).
 const RADIUS := 0.455
+## Portée de la bulle normale (m), cf. max_distance.
+const RANGE := 25.0
 ## Rayon de la bulle de capture (m), cf. `radius` de capture_bubble.tscn.
 const CAPTURE_RADIUS := 0.7
 ## Rayon de contact avec le décor des bulles (m), cf. `world_radius` des deux scènes.
@@ -92,7 +99,7 @@ func launch(shooter: Player, origin: Vector3, direction: Vector3, deals_damage: 
 	_direction = direction.normalized()
 	_shooter_team = Player.team_of(shooter.player_id)
 	var mesh := $Mesh as MeshInstance3D
-	mesh.scale = Vector3.ONE * radius / RADIUS
+	mesh.scale = Vector3.ONE * (visual_radius if visual_radius >= 0.0 else radius) / RADIUS
 	if _team_materials.is_empty():
 		var base := mesh.get_active_material(0) as StandardMaterial3D
 		for team_color in Player.TEAM_COLORS:

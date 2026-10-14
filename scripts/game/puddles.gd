@@ -36,6 +36,8 @@ const LAYER_HEIGHT := 0.5
 const DUCK_VISUAL_LAYER := 2
 ## Groupe du nœud des flaques (un par partie), pour que les joueurs le trouvent.
 const GROUP := &"puddles"
+## Canon à eau : un rond dans l'eau toutes les DRIP_RING_EVERY gouttes (cf. drip).
+const DRIP_RING_EVERY := 3
 
 ## Résolution de la carte d'humidité (pixels par mètre). Le coût d'une flaque est
 ## proportionnel à son carré.
@@ -82,6 +84,8 @@ var _noise := FastNoiseLite.new()
 var _ripples: ImageTexture
 var _ring_mesh: QuadMesh
 var _drop_mesh: SphereMesh
+## Gouttes du canon à eau reçues (cf. drip) : seule une sur DRIP_RING_EVERY fait un rond.
+var _drips := 0
 
 ## Carreau (Vector3i(x, étage, z)) -> { wet: PackedFloat32Array, albedo: Image,
 ## orm: Image, decal: Decal, dirty: bool }.
@@ -113,9 +117,10 @@ func is_wet(point: Vector3) -> bool:
 	return (_chunks[key].wet as PackedFloat32Array)[i] > threshold
 
 
-## Ajoute une tache d'eau de rayon `radius` (m) centrée sur `point` (surface du sol).
-func add_puddle(point: Vector3, radius: float, amount := 1.0) -> void:
-	if splash_effects:
+## Ajoute une tache d'eau de rayon `radius` (m) centrée sur `point` (surface du sol), avec
+## une éclaboussure (ronds et gouttes) si `splash`.
+func add_puddle(point: Vector3, radius: float, amount := 1.0, splash := true) -> void:
+	if splash and splash_effects:
 		_play_splash(point, radius)
 	var layer := roundi(point.y / LAYER_HEIGHT)
 	var reach := radius * (1.0 + shape_noise) # Place pour les lobes les plus grands.
@@ -239,6 +244,18 @@ func _play_splash(point: Vector3, radius: float) -> void:
 	_spawn_ring(point, radius * 1.1, 0.0, splash_duration)
 	_spawn_ring(point, radius * 0.7, 0.12, splash_duration)
 	_spawn_drops(point, splash_drops, Vector3.UP, 35.0, 2.5, 4.5, 0.15)
+
+
+## Goutte du canon à eau qui touche `point` (surface de normale `normal`) : de temps en temps,
+## un petit rond discret au sol, ou quelques gouttelettes qui rejaillissent ailleurs.
+func drip(point: Vector3, normal := Vector3.UP) -> void:
+	_drips += 1
+	if not splash_effects or _drips % DRIP_RING_EVERY != 0:
+		return
+	if normal.y > 0.7:
+		_spawn_ring(point, 0.5, 0.0, 0.35, 0.3)
+	else:
+		_spawn_drops(point - Vector3.UP * 0.05, 3, (normal + Vector3.UP * 0.5).normalized(), 50.0, 1.0, 2.5, 0.05, 0.6)
 
 
 ## Pas d'un canard dans l'eau (`point` sous son pied) : petit rond et quelques gouttes.

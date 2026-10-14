@@ -53,6 +53,7 @@ var _debug_mode := false
 @onready var _spawn_zones: Node3D = $SpawnZones
 @onready var _projectiles: Node3D = $Projectiles
 @onready var _puddles: Puddles = $Puddles
+@onready var _water_cannon: WaterCannon = $WaterCannon
 @onready var _mode: ZoneDefenseMode = $ZoneDefenseMode
 @onready var _hud: CanvasLayer = $MatchHud
 @onready var _damage_overlay: CanvasLayer = $DamageOverlay
@@ -74,6 +75,7 @@ func _ready() -> void:
 		player.died.connect(_on_player_died.bind(player))
 		player.respawned.connect(_on_player_respawned.bind(player))
 		player.shot.connect(_on_player_shot.bind(player))
+		player.water_denied.connect(func() -> void: if player.is_local: _hud.flash_water())
 	_apply_slots()
 	_debug_layer.visible = _debug_mode
 	time_left = match_duration
@@ -188,11 +190,14 @@ func _update_crosshair() -> void:
 	for player: Player in _players.get_children():
 		if player.is_local:
 			_crosshair.visible = player.is_alive() and not _ended
+			_hud.set_water(player.water, player.is_water_recharging())
 			_crosshair.set_on_target(_crosshair.visible and player.is_aiming_at_enemy())
+			_crosshair.set_in_range(player.is_bubble_in_range())
 			_crosshair.set_aim(player.camera.aim_offset,
 					player.aim_assist.box_size if _debug_mode and player.aim_assist.is_active() else Vector2.ZERO)
 			return
 	_crosshair.visible = false
+	_hud.set_water(-1.0, false) # Pas de joueur local : pas de jauge.
 
 
 func _update_capture_bar() -> void:
@@ -225,6 +230,7 @@ func _finish_match(scores: Dictionary) -> void:
 	for player: Player in _players.get_children():
 		player.freeze()
 	_projectiles.process_mode = Node.PROCESS_MODE_DISABLED
+	_water_cannon.process_mode = Node.PROCESS_MODE_DISABLED
 	_mode.process_mode = Node.PROCESS_MODE_DISABLED # Plus de capture ni de points.
 	_announcer.show_finish(finish_duration)
 	if not multiplayer.is_server():

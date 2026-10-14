@@ -13,10 +13,13 @@ extends CanvasLayer
 @export var tick_distance := 40.0
 @export var tick_distance_on_target := 26.0
 @export var tick_length := 18.0
+## Opacité du viseur quand le point visé est hors de portée des bulles.
+@export var out_of_range_alpha := 0.35
 ## Debug mode : couleur du rectangle de l'aide à la visée.
 @export var assist_box_color := Color(1, 1, 1, 0.35)
 
 var _on_target := false
+var _in_range := true
 var _spread := 1.0 # 1 = au repos, 0 = sur une cible.
 ## Décalage du viseur depuis le centre de l'écran (px, à 1080 px de haut).
 var _offset := Vector2.ZERO
@@ -32,6 +35,13 @@ func _ready() -> void:
 
 func set_on_target(on_target: bool) -> void:
 	_on_target = on_target
+
+
+## Hors de portée des bulles : le viseur pâlit (la bulle éclatera avant d'arriver).
+func set_in_range(in_range: bool) -> void:
+	if in_range != _in_range:
+		_in_range = in_range
+		_canvas.queue_redraw()
 
 
 ## Position du viseur (décalage depuis le centre) et rectangle de l'aide à la visée à afficher.
@@ -56,6 +66,8 @@ func _draw_crosshair() -> void:
 		_canvas.draw_rect(Rect2(_canvas.size / 2.0 - box / 2.0, box), assist_box_color, false, 2.0 * ui_scale)
 	var center := _canvas.size / 2.0 + _offset * ui_scale
 	var tint := target_color.lerp(color, _spread)
+	if not _in_range:
+		tint.a *= out_of_range_alpha
 	_ring(center, dot_radius * ui_scale, tint, 2.5 * ui_scale)
 	_canvas.draw_circle(center, 2.5 * ui_scale, tint)
 	var distance := lerpf(tick_distance_on_target, tick_distance, _spread) * ui_scale

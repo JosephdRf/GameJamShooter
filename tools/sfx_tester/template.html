@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Testeur de sons</title>
+<!-- Modèle : ne pas ouvrir directement. Générer sfx_tester.html avec build_sfx_tester.py. -->
+<style>
+:root {
+  --bg: #f4f7fb; --panel: #ffffff; --ink: #14202e; --muted: #5d6b7c; --line: #dfe6ef;
+  --accent: #2f7de1; --accent-ink: #ffffff; --soft: #e8f1fc; --keep: #1f9d6b; --playing: #fff4d6;
+  --wave: invert(0.15);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f151d; --panel: #18212c; --ink: #e6edf5; --muted: #93a2b4; --line: #2a3644;
+    --accent: #5aa0f2; --accent-ink: #0f151d; --soft: #1e2d40; --keep: #3cc48d; --playing: #3a3218;
+    --wave: invert(0.9);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f151d; --panel: #18212c; --ink: #e6edf5; --muted: #93a2b4; --line: #2a3644;
+  --accent: #5aa0f2; --accent-ink: #0f151d; --soft: #1e2d40; --keep: #3cc48d; --playing: #3a3218;
+  --wave: invert(0.9);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
+header { position: sticky; top: 0; z-index: 5; background: var(--panel); border-bottom: 1px solid var(--line); padding: 12px 16px; }
+.bar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; max-width: 1100px; margin: 0 auto; }
+h1 { font-size: 18px; margin: 0 12px 0 0; }
+label.ctl { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; }
+input[type=range] { width: 110px; accent-color: var(--accent); }
+input[type=search] { padding: 6px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); color: var(--ink); min-width: 160px; }
+button { font: inherit; cursor: pointer; border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 8px; padding: 5px 10px; }
+button:hover { border-color: var(--accent); }
+button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.tabs { display: flex; gap: 6px; }
+.tabs button[aria-selected="true"] { background: var(--soft); border-color: var(--accent); font-weight: 600; }
+main { max-width: 1100px; margin: 0 auto; padding: 16px; }
+.hint { color: var(--muted); font-size: 13px; margin: 0 0 14px; }
+.sim { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-bottom: 16px; }
+.sim strong { margin-right: 6px; }
+section.group { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; margin-bottom: 16px; overflow: hidden; }
+.group-head { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.group-head h2 { font-size: 16px; margin: 0; }
+.group-head .count { color: var(--muted); font-weight: 400; font-size: 13px; margin-left: 6px; }
+.row { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 14px; border-top: 1px solid var(--line); }
+.row:first-of-type { border-top: 0; }
+.row.playing { background: var(--playing); }
+.row.kept { box-shadow: inset 4px 0 0 var(--keep); }
+.play { width: 36px; height: 36px; border-radius: 50%; padding: 0; font-size: 14px; }
+.meta { min-width: 0; }
+.title { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sub { color: var(--muted); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sub a { color: var(--accent); }
+.wave { display: block; height: 28px; width: 100%; max-width: 360px; object-fit: fill; filter: var(--wave); opacity: .55; margin-top: 3px; }
+.actions { display: flex; gap: 8px; align-items: center; }
+.keep { display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(--muted); cursor: pointer; white-space: nowrap; }
+.keep input { width: 18px; height: 18px; accent-color: var(--keep); }
+.hidden { display: none !important; }
+dialog { border: 1px solid var(--line); border-radius: 12px; background: var(--panel); color: var(--ink); width: min(720px, calc(100vw - 32px)); }
+dialog textarea { width: 100%; height: 260px; font: 12px/1.4 ui-monospace, Consolas, monospace; background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
+@media (max-width: 600px) {
+  .row { grid-template-columns: 40px minmax(0, 1fr); }
+  .actions { grid-column: 2; }
+  input[type=search] { min-width: 0; width: 100%; }
+  header { position: static; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <h1>🦆 Testeur de sons</h1>
+    <div class="tabs" role="tablist">
+      <button role="tab" data-tab="local" aria-selected="true">Sons du jeu</button>
+      <button role="tab" data-tab="online" aria-selected="false">Candidats en ligne (CC0)</button>
+    </div>
+    <label class="ctl">Volume <input id="volume" type="range" min="0" max="1" step="0.01" value="0.8"></label>
+    <label class="ctl">Variation de hauteur ±<span id="pitchLabel">12</span> %
+      <input id="pitch" type="range" min="0" max="30" step="1" value="12"></label>
+    <input id="filter" type="search" placeholder="Filtrer…">
+    <button id="stop" title="Raccourci : Échap">■ Stop</button>
+    <button id="export" class="primary">Sélection (<span id="keptCount">0</span>)</button>
+  </div>
+</header>
+<main>
+  <div id="tab-local">
+    <p class="hint">Sons présents dans <code>assets/audio/</code>. « Au hasard » imite le jeu : un son tiré au hasard, jamais le même deux fois de suite, avec la variation de hauteur choisie en haut.</p>
+    <div class="sim">
+      <strong>Simuler en jeu</strong>
+      <button data-sim="shot">Un tir (tir → éclatement)</button>
+      <button data-sim="burst">Tir continu 2 s</button>
+      <button data-sim="melee">4 joueurs qui tirent</button>
+      <label class="ctl">Distance de la bulle <input id="distance" type="range" min="1" max="25" step="1" value="12"> <span id="distanceLabel">12</span> m</label>
+    </div>
+    <div id="local"></div>
+  </div>
+  <div id="tab-online" class="hidden">
+    <p class="hint">Aperçus Freesound (licence <strong>CC0</strong> : libres, sans attribution obligatoire), écoutés en streaming, rien n'est téléchargé.
+      Cochez « Garder » pour les sons à récupérer, puis « Sélection » pour copier la liste.</p>
+    <div id="online"></div>
+  </div>
+</main>
+<dialog id="exportDialog">
+  <h2 style="margin-top:0;font-size:16px">Sons sélectionnés</h2>
+  <p class="hint">Copiez cette liste et collez-la à Claude pour qu'il télécharge et intègre ces sons.</p>
+  <textarea id="exportText" readonly></textarea>
+  <p style="display:flex;gap:8px;justify-content:flex-end;margin-bottom:0">
+    <button id="clearKept">Tout décocher</button>
+    <button id="copyExport" class="primary">Copier</button>
+    <button id="closeExport">Fermer</button>
+  </p>
+</dialog>
+<script>
+const DATA = /*DATA*/null;
+const STORE_KEY = "gjs-sfx-tester-kept";
+const BUBBLE_SPEED = 30; // m/s, comme BubbleProjectile.speed
+
+const store = {
+  get() { try { return JSON.parse(localStorage.getItem(STORE_KEY)) || {}; } catch { return {}; } },
+  set(v) { try { localStorage.setItem(STORE_KEY, JSON.stringify(v)); } catch {} },
+};
+let kept = store.get();
+const playing = new Set();
+const lastPick = {};
+const $ = (s) => document.querySelector(s);
+
+function pitchRange() { return Number($("#pitch").value) / 100; }
+
+/** Joue un son ; renvoie l'élément audio. Plusieurs sons peuvent se superposer. */
+function play(item, row, { pitch = true, volume = 1 } = {}) {
+  const audio = new Audio(item.src || item.mp3);
+  audio.volume = Math.min(1, Number($("#volume").value) * volume);
+  audio.preservesPitch = false;
+  if (pitch) audio.playbackRate = 1 + (Math.random() * 2 - 1) * pitchRange();
+  playing.add(audio);
+  if (row) row.classList.add("playing");
+  const done = () => { playing.delete(audio); if (row) row.classList.remove("playing"); };
+  audio.addEventListener("ended", done);
+  audio.addEventListener("error", done);
+  audio.play().catch(done);
+  return audio;
+}
+
+function stopAll() {
+  for (const a of playing) { a.pause(); }
+  playing.clear();
+  document.querySelectorAll(".row.playing").forEach((r) => r.classList.remove("playing"));
+}
+
+/** Tire un son du groupe au hasard, jamais le même deux fois de suite (comme AudioStreamRandomizer). */
+function playRandom(group, opts) {
+  const n = group.items.length;
+  if (!n) return;
+  let i = Math.floor(Math.random() * n);
+  if (n > 1 && i === lastPick[group.key]) i = (i + 1 + Math.floor(Math.random() * (n - 1))) % n;
+  lastPick[group.key] = i;
+  const row = document.querySelector(`[data-group="${group.key}"] .row[data-index="${i}"]`);
+  play(group.items[i], row, opts);
+}
+
+function esc(s) { return String(s ?? "").replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`); }
+function fmtDur(d) { return d == null ? "" : d < 1 ? `${Math.round(d * 1000)} ms` : `${d.toFixed(2)} s`; }
+function idOf(item) { return item.page || item.src; }
+
+function renderGroups(container, groups, online) {
+  container.innerHTML = "";
+  for (const group of groups) {
+    const section = document.createElement("section");
+    section.className = "group";
+    section.dataset.group = group.key;
+    section.innerHTML = `
+      <div class="group-head">
+        <h2>${esc(group.label)}<span class="count">${group.items.length} sons</span></h2>
+        <div class="actions">
+          <button data-act="random">🎲 Au hasard</button>
+          <button data-act="burst">Rafale ×5</button>
+        </div>
+      </div>`;
+    group.items.forEach((item, i) => {
+      const row = document.createElement("div");
+      row.className = "row";
+      row.dataset.index = i;
+      row.dataset.search = `${group.label} ${item.title} ${item.user || ""} ${item.q || ""}`.toLowerCase();
+      const sub = online
+        ? `${fmtDur(item.dur)} · par <a href="${item.page}" target="_blank" rel="noopener">${esc(item.user)}</a> · ${item.dl} téléchargements · recherche « ${esc(item.q)} »`
+        : `${fmtDur(item.dur)} · <code>${esc(item.res)}</code>`;
+      row.innerHTML = `
+        <button class="play" title="Écouter">▶</button>
+        <div class="meta">
+          <div class="title" title="${esc(item.title)}">${esc(item.title)}</div>
+          <div class="sub">${sub}</div>
+          ${online ? `<img class="wave" loading="lazy" alt="" src="${item.wave}">` : ""}
+        </div>
+        <div class="actions">${online
+          ? `<label class="keep"><input type="checkbox"> Garder</label>`
+          : `<button data-act="copy" title="Copier le chemin res://">Copier le chemin</button>`}</div>`;
+      row.querySelector(".play").addEventListener("click", () => play(item, row, { pitch: false }));
+      const box = row.querySelector(".keep input");
+      if (box) {
+        box.checked = !!kept[idOf(item)];
+        row.classList.toggle("kept", box.checked);
+        box.addEventListener("change", () => {
+          if (box.checked) kept[idOf(item)] = { cat: group.label, title: item.title, user: item.user, page: item.page, dur: item.dur };
+          else delete kept[idOf(item)];
+          row.classList.toggle("kept", box.checked);
+          store.set(kept);
+          updateKeptCount();
+        });
+      }
+      const copy = row.querySelector('[data-act="copy"]');
+      if (copy) copy.addEventListener("click", () => navigator.clipboard?.writeText(item.res));
+      section.appendChild(row);
+    });
+    section.querySelector('[data-act="random"]').addEventListener("click", () => playRandom(group));
+    section.querySelector('[data-act="burst"]').addEventListener("click", () => {
+      for (let k = 0; k < 5; k++) setTimeout(() => playRandom(group), k * 200);
+    });
+    container.appendChild(section);
+  }
+}
+
+function findLocal(name) { return DATA.local.find((g) => g.label.endsWith(name)); }
+
+/** Un tir : son de tir, puis éclatement quand la bulle a parcouru la distance choisie. */
+function simulateShot(volume = 1, delayFactor = 1) {
+  const shoot = findLocal("shoot"), pop = findLocal("pop");
+  if (shoot) playRandom(shoot, { volume });
+  const distance = Number($("#distance").value) * delayFactor;
+  if (pop) setTimeout(() => playRandom(pop, { volume }), (distance / BUBBLE_SPEED) * 1000);
+}
+
+document.querySelectorAll("[data-sim]").forEach((b) => b.addEventListener("click", () => {
+  const kind = b.dataset.sim;
+  if (kind === "shot") simulateShot();
+  if (kind === "burst") for (let k = 0; k < 10; k++) setTimeout(simulateShot, k * 200); // auto_fire_interval
+  if (kind === "melee") for (let p = 0; p < 4; p++) {
+    const offset = Math.random() * 200, volume = p === 0 ? 1 : 0.35 + Math.random() * 0.4;
+    for (let k = 0; k < 8; k++) setTimeout(() => simulateShot(volume, 0.4 + Math.random() * 1.2), offset + k * 200 + Math.random() * 60);
+  }
+}));
+
+function updateKeptCount() { $("#keptCount").textContent = Object.keys(kept).length; }
+
+function showTab(name) {
+  document.querySelectorAll("[role=tab]").forEach((t) => t.setAttribute("aria-selected", String(t.dataset.tab === name)));
+  $("#tab-local").classList.toggle("hidden", name !== "local");
+  $("#tab-online").classList.toggle("hidden", name !== "online");
+}
+
+document.querySelectorAll("[role=tab]").forEach((t) => t.addEventListener("click", () => showTab(t.dataset.tab)));
+$("#pitch").addEventListener("input", () => { $("#pitchLabel").textContent = $("#pitch").value; });
+$("#distance").addEventListener("input", () => { $("#distanceLabel").textContent = $("#distance").value; });
+$("#stop").addEventListener("click", stopAll);
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") stopAll(); });
+$("#filter").addEventListener("input", () => {
+  const q = $("#filter").value.trim().toLowerCase();
+  document.querySelectorAll(".row").forEach((r) => r.classList.toggle("hidden", q && !r.dataset.search.includes(q)));
+});
+$("#export").addEventListener("click", () => {
+  const lines = Object.values(kept).sort((a, b) => a.cat.localeCompare(b.cat))
+    .map((k) => `[${k.cat}] ${k.title} (${fmtDur(k.dur)}) par ${k.user} : ${k.page}`);
+  $("#exportText").value = lines.length ? lines.join("\n") : "Aucun son coché pour l'instant.";
+  $("#exportDialog").showModal();
+});
+$("#copyExport").addEventListener("click", () => navigator.clipboard?.writeText($("#exportText").value));
+$("#closeExport").addEventListener("click", () => $("#exportDialog").close());
+$("#clearKept").addEventListener("click", () => {
+  kept = {}; store.set(kept); updateKeptCount();
+  document.querySelectorAll(".keep input").forEach((b) => { b.checked = false; b.closest(".row").classList.remove("kept"); });
+  $("#exportText").value = "Aucun son coché pour l'instant.";
+});
+
+renderGroups($("#local"), DATA.local, false);
+renderGroups($("#online"), DATA.online, true);
+updateKeptCount();
+</script>
+</body>
+</html>

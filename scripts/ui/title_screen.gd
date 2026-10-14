@@ -7,6 +7,7 @@ extends Control
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	Music.play(Music.MENU)
 	_start_button.pressed.connect(_start)
 	_start_button.grab_focus()
 
@@ -14,6 +15,7 @@ func _ready() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed(&"start"):
 		get_viewport().set_input_as_handled()
+		UiSounds.play_confirm() # Le bouton, lui, a son propre son (UiSounds).
 		_start()
 	elif event.is_action_pressed(&"ui_cancel"):
 		get_viewport().set_input_as_handled()

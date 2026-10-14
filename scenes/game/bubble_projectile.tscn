@@ -1,10 +1,11 @@
 [gd_scene format=3 uid="uid://b5osoclmgb7yu"]
 
 [ext_resource type="Script" uid="uid://dprr7ffmdd6a" path="res://scripts/game/bubble_projectile.gd" id="1_bubble"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/bubble_pop.tres" id="2_pop_sound"]
 
 [sub_resource type="SphereMesh" id="SphereMesh_bubble"]
-radius = 0.35
-height = 0.7
+radius = 0.455
+height = 0.91
 radial_segments = 16
 rings = 8
 
@@ -23,3 +24,7 @@ script = ExtResource("1_bubble")
 cast_shadow = 0
 mesh = SubResource("SphereMesh_bubble")
 surface_material_override/0 = SubResource("StandardMaterial3D_bubble")
+
+[node name="PopSound" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("2_pop_sound")
+max_distance = 40.0

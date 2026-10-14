@@ -56,39 +56,66 @@ Dans l'éditeur : **F5** lance le jeu depuis l'écran de chargement, **F6** sur 
 
 ## Contrôles
 
-| Action | Clavier + trackpad | Manette (Switch Pro) |
-|--------|-------------------------------|----------------------|
-| Se déplacer | Z/Q/S/D (W/A/S/D en QWERTY) ou flèches | Joystick gauche |
-| Tourner la caméra | Souris / trackpad | Joystick droit |
-| Sauter | Espace | B (bouton du bas) |
-| Dash (au sol, toutes les 2 s) | K | Y (bouton de gauche ; Carré sur PlayStation) |
-| Tirer une bulle | T | ZL / ZR (L2 / R2 sur PlayStation) |
-| **Menus** : naviguer / choisir son joueur | Flèches (Q/D) | Joystick gauche / croix |
-| **Menus** : valider | Entrée | A (bouton de droite) |
-| **Sélection** : changer de joueur après validation | Retour arrière | B (bouton du bas) |
-| **Sélection** : lancer la partie (hôte) | Entrée sur « Lancer la partie » | Start (+) |
-| **En jeu** : pause (hôte uniquement) | P | Start (+) |
-| **En jeu** : test, s'infliger 10 dégâts (version de développement) | H | — |
-| **Pause** : reprendre (hôte) | P / Échap / Retour arrière | + / B |
-| Retour à l'écran précédent (menus) | Échap | — |
-| Quitter le jeu (accueil, en jeu, écran de fin) | Échap | — |
+Les actions se modifient dans **Projet › Paramètres du projet › Contrôles** (Input Map) : une action
+par commande, avec sa touche clavier et son bouton de manette. Le code n'utilise que ces actions.
+
+| Commande | Action | Clavier + trackpad | Switch Pro | PlayStation |
+|----------|--------|--------------------|------------|-------------|
+| Se déplacer | `move_left/right/up/down` | Z/Q/S/D (W/A/S/D en QWERTY) ou flèches | Stick gauche | Stick gauche |
+| Tourner la caméra | `look_left/right/up/down` | Souris / trackpad | Stick droit | Stick droit |
+| Sauter | `jump` | Espace | B | Croix |
+| Dash (au sol, toutes les 2 s) | `dash` | Maj | Y | Carré |
+| Tirer une bulle (maintenir = en continu) | `shoot` | Clic gauche / T | ZL / ZR | L2 / R2 |
+| Viser (maintenir) : la caméra zoome, sans aide à la visée | `aim` | Clic droit | ZL | L2 |
+| Bulle de capture (toutes les 5 s) | `capture` | Clic molette | R | R1 |
+| **Menus** : naviguer / choisir son joueur | `menu_left/right` (+ `ui_*` de Godot) | Flèches (Q/D) | Stick gauche / croix | Stick gauche / croix |
+| **Menus** : valider | `ui_accept` | Entrée / Espace | A | Rond |
+| **Accueil** : démarrer ; **Sélection** : lancer la partie (hôte) | `start` | Entrée sur le bouton | + | Options |
+| **Sélection** : changer de joueur après validation | `menu_back` | Retour arrière | B | Croix |
+| **En jeu** : pause (hôte uniquement) | `pause` | P | + | Options |
+| **Pause** : reprendre (hôte) | `pause` / `menu_back` / `ui_cancel` | P / Retour arrière / Échap | + / B | Options / Croix |
+| **En jeu** : test, s'infliger 10 dégâts (version de développement) | `debug_damage` | H | — | — |
+| **En jeu** : debug mode (PV, rectangle de l'aide à la visée), désactivé au lancement | `debug_mode` | Ctrl + D | — | — |
+| Retour à l'écran précédent (menus) / quitter le jeu | `ui_cancel` | Échap | — | — |
 
 La souris est capturée au lancement (curseur invisible) pour piloter la caméra.
 Chaque ordinateur contrôle son canard au clavier/trackpad **ou** avec n'importe quelle manette branchée. Les déplacements sont relatifs à la caméra.
+Un canard monte en marchant sur les reliefs de 55 cm au plus (`max_step_height`), sans sauter (les marches
+du toboggan font 50 cm). Échelles (groupe `echelles` : une `Area3D` par échelle) : en avançant vers une échelle,
+le canard monte le long de celle-ci à `climb_speed`.
 Un joueur qui tombe de la plateforme meurt.
 
 ### Tir
 
 - **Viseur** au centre de l'écran (`scenes/ui/crosshair.tscn`) : il se resserre et passe au rouge sur un
   adversaire. La caméra est placée façon Splatoon : derrière et au-dessus du canard, presque horizontale.
-- Chaque appui tire une bulle vers le point visé (aussi vers le haut ou le bas), 4 tirs/s au plus. Elle sort
+- **Aide à la visée** (`scripts/player/aim_assist.gd`, nœud `AimAssist` du joueur) : si un adversaire visible
+  entre dans un rectangle de 200 × 150 px autour du centre de l'écran (affiché en debug mode, Ctrl + D),
+  le viseur glisse vers lui sans bouger la caméra, et les bulles partent vers le viseur.
+- **Visée** (action `aim` maintenue) : la caméra avance le long de son bras et resserre son champ
+  (`aim_fov`, `aim_arm_length` sur `PlayerCamera`) ; l'aide à la visée est coupée, le viseur reste au centre.
+- Chaque appui tire une bulle vers le point visé (aussi vers le haut ou le bas), avec au moins 0,15 s entre
+  deux appuis ; touche maintenue, une bulle toutes les 0,2 s. Elle sort
   du bout du canon du canard, petite, et atteint sa taille en 0,12 s.
 - La bulle éclate au premier contact : obstacle (sol, mur, objet…), joueur (**40 dégâts** à un adversaire,
   rien à un coéquipier), mur de la zone d'apparition adverse, ou au bout de **25 m**. Le nœud est alors supprimé.
 - **Zones d'apparition** : un mur invisible (calques 3 « spawn_blue » / 4 « spawn_red ») empêche les joueurs
   et les bulles de l'équipe adverse d'y entrer.
 - Réglages : sur `scenes/game/bubble_projectile.tscn` (`speed`, `max_distance`, `damage`, `friendly_fire`,
-  taille du mesh = taille de la zone de contact) et sur le joueur (`fire_cooldown`, groupe « Tir »).
+  taille du mesh = taille de la zone de contact) et sur le joueur (`fire_cooldown`, `auto_fire_interval`, groupe « Tir »).
+
+### Capture
+
+- **Clic molette** (action `capture`) : tire une grosse bulle, plus lente (18 m/s, portée 20 m), au plus
+  une toutes les **5 s**.
+- Un adversaire touché est **piégé 2 s** dans une bulle à la couleur de l'équipe qui l'a eu : il lévite à
+  25 cm du sol en flottant et ne peut plus bouger, sauter, dasher ni tirer (il peut toujours tourner la
+  caméra et prendre des dégâts). Puis la bulle éclate et il retombe au sol. Rien sur un coéquipier ; un
+  joueur déjà piégé ne l'est pas une 2e fois. Mort dans la bulle : elle disparaît.
+- Réglages : `scenes/game/capture_bubble.tscn` (scène héritée de la bulle normale : `speed`,
+  `max_distance`, `radius`, `world_radius` : rayon plus petit contre le décor pour qu'elle frôle le sol
+  sans éclater, `capture_duration`) et sur le joueur, groupe « Capture » (`capture_cooldown`,
+  `capture_lift`, `capture_bob`). Bulle autour du canard : nœud `CaptureBubble` de `player.tscn`.
 
 ### Vie
 
@@ -102,11 +129,30 @@ Un joueur qui tombe de la plateforme meurt.
 - Pour infliger des dégâts (futures armes) : `player.take_damage(montant)`, depuis n'importe quel ordinateur.
 - Réglages (inspecteur du joueur, groupe « Vie ») : `max_health`, `regen_rate`, `regen_delay`, `respawn_delay`.
 
-> **Note sur les boutons :** Godot utilise une disposition *positionnelle* (style Xbox). Le saut est sur le bouton du **bas** (`JOY_BUTTON_A` dans Godot) : B sur Switch Pro, A sur Xbox, Croix sur PlayStation. Le dash est sur le bouton de **gauche** (`JOY_BUTTON_X`) : Y sur Switch Pro, X sur Xbox, Carré sur PlayStation. Modifiables via `JUMP_BUTTON` / `DASH_BUTTON` dans `scripts/autoload/input_manager.gd`.
+### Sons
+
+- Chaque événement tire un son au hasard (jamais le même deux fois de suite), un peu plus aigu ou
+  grave à chaque fois : ressources `AudioStreamRandomizer` de `assets/audio/sfx/*.tres`, qui piochent
+  dans le dossier du même nom (`shoot/`, `pop/`, `step/`…). Les sons sont découpés et calés sur leur
+  attaque : ils partent pile au moment de l'action.
+- Canard (nœuds `*Sound` de `player.tscn`, entendus sur tous les ordinateurs, en 3D) : tir, **pas calés sur
+  l'animation** (instants où un pied se pose : `Player.FOOTSTEPS`), dash, saut, touché (canard en
+  caoutchouc), mort (coin-coin), réapparition. Bulle : éclatement (`PopSound` de `bubble_projectile.tscn`).
+- Menus : autoload `UiSounds` (clic en naviguant, « plop » en validant), branché sur tous les boutons.
+- Musique : autoload `Music` (`play(Music.MENU)` / `stop()` dans le `_ready()` de chaque écran, en fondu).
+  « Happy Clappy Loop » (`music/happy_clappy_loop.wav`, OwlishMedia, OpenGameArt, CC0) boucle sans coupure
+  sur tous les menus, sans se relancer d'un écran à l'autre ; elle s'arrête en combat et reprend ensuite
+  là où elle s'était arrêtée.
+- Volume : `volume_db` de chaque nœud `*Sound` ; variation : `random_pitch` des `.tres`.
+- Sources : `sfx/bubble/` (Pixabay), `sfx/duck/` et `sfx/freesound/` (Freesound, CC0, voir `CREDITS.txt`).
+- **Testeur** : `python tools/sfx_tester/build_sfx_tester.py` puis ouvrir `tools/sfx_tester/sfx_tester.html`
+  pour écouter tous les sons du jeu (et des candidats Freesound) et simuler des tirs.
+
+> **Note sur les boutons :** Godot repère les boutons de manette par leur *position* (noms Xbox) : un même réglage vaut pour toutes les manettes. Bouton du **bas** (`Joypad Button 0`) = B sur Switch Pro, Croix sur PlayStation, A sur Xbox ; bouton de **droite** (`1`) = A / Rond / B ; bouton de **gauche** (`2`) = Y / Carré / X ; gâchettes = axes 4 et 5.
 
 > **Manettes qui envoient de fausses valeurs** (vu avec une Switch Pro sous macOS : stick gauche annoncé
-> poussé et ZR enfoncée alors que personne n'y touche) : les sticks d'une manette ne sont pris en compte
-> qu'une fois vus au repos, et une gâchette qu'une fois vue relâchée. Sinon le canard avancerait tout seul.
+> poussé et ZR enfoncée alors que personne n'y touche) : `InputManager` ne prend en compte un axe d'une
+> manette (stick ou gâchette) qu'une fois vu au repos. Sinon le canard avancerait ou tirerait tout seul.
 > Les boutons de cette manette marchent toujours ; la débrancher / rebrancher relance la vérification.
 
 ## Architecture
@@ -117,12 +163,12 @@ Un joueur qui tombe de la plateforme meurt.
 ├── addons/godot_ai_mcp/     # Plugin éditeur MCP (pilotage de l'éditeur par une IA)
 ├── assets/                  # Ressources brutes, importées par Godot
 │   ├── themes/ui_theme.tres # Thème commun à tous les écrans (taille de police…)
-│   ├── audio/{music,sfx}/
+│   ├── audio/{music,sfx}/   # sfx/*.tres : sons tirés au hasard dans sfx/<nom>/ (cf. Sons)
 │   ├── fonts/
 │   ├── icons/               # icon.svg (icône du projet)
-│   ├── materials/
-│   ├── models/              # bain-de-coin-coin.blend : l'arène (importée via Blender)
-│   └── textures/
+│   ├── materials/           # duck_*.tres : matériaux texturés du canard (corps, pistolet, réservoir bleu/rouge)
+│   ├── models/              # bain-de-coin-coin.blend : l'arène (importée via Blender) ; duck_v3.glb : le canard
+│   └── textures/            # Textures du canard (diffuse / normal / roughness)
 ├── scenes/                  # Scènes (.tscn), un sous-dossier par domaine
 │   ├── ui/                  # Un fichier par écran, modifiable indépendamment
 │   │   ├── loading_screen.tscn  # Écran de chargement (scène de départ)
@@ -143,13 +189,15 @@ Un joueur qui tombe de la plateforme meurt.
 │   ├── game/bubble_projectile.tscn  # Bulle tirée (vitesse, portée, dégâts)
 │   ├── levels/arena.tscn    # Salle de bain (.blend) + lumières + barrière invisible devant
 │   └── player/
-│       ├── player.tscn          # Scène de base : canard (assets/models/duck_v0.glb, animations idle/walk/run) + caméra + synchro réseau
+│       ├── player.tscn          # Scène de base : canard (assets/models/duck_v3.glb) + AnimationTree + caméra + synchro réseau
 │       ├── player_1.tscn … player_4.tscn  # Une scène héritée par joueur (id → couleur, équipe)
 │       └── player_camera.tscn   # Caméra 3e personne (SpringArm3D)
 └── scripts/                 # Scripts GDScript, même découpage que scenes/
-    ├── autoload/input_manager.gd    # Actions d'entrée (clavier + toutes les manettes)
+    ├── autoload/input_manager.gd    # Liste des actions ; filtre les axes des manettes défaillantes
     ├── autoload/network_manager.gd  # Héberger/rejoindre, joueurs, lancement, pause, fin de combat
     ├── autoload/lan_discovery.gd    # Annonce/détection de l'hôte sur le réseau local (UDP 7778)
+    ├── autoload/ui_sounds.gd        # Sons des menus (clic, validation), branchés sur tous les boutons
+    ├── autoload/music.gd            # Musique de fond (boucle des menus), en fondu d'un écran à l'autre
     ├── ui/screens.gd                # Chemins de tous les écrans (Screens.*)
     ├── ui/<écran>.gd                # Un script par scène de scenes/ui/
     ├── levels/bathroom_import.gd    # Import du .blend : échelle, couleurs, collisions
@@ -191,8 +239,9 @@ Un joueur qui tombe de la plateforme meurt.
 
 - Fichiers et dossiers en `snake_case`, nœuds en `PascalCase`.
 - Un script dans `scripts/<domaine>/` pour une scène dans `scenes/<domaine>/`.
-- Les actions d'entrée (`move_*`, `look_*`, `jump`, `dash`, `shoot`, `pause`, `menu_*`…) sont créées par l'autoload
-  `InputManager` ; elles acceptent le clavier et toutes les manettes.
+- Les actions d'entrée sont définies dans Projet › Paramètres du projet › Contrôles (section `[input]` de
+  `project.godot`) ; le code n'utilise que celles-ci (liste en tête de `scripts/autoload/input_manager.gd`).
+  Pas de touche ni de bouton écrits en dur dans le code.
 - Changer d'écran : `get_tree().change_scene_to_file(Screens.XXX)` (sauf les transitions
   réseau, faites par `NetworkManager` pour que tous les ordinateurs suivent).
 - Calques physiques : 1 = `world`, 2 = `players`.
@@ -213,6 +262,22 @@ Un joueur qui tombe de la plateforme meurt.
   (côte à côte, à mi-rayon) ; un joueur qui tombe réapparaît à son emplacement. Pour les déplacer :
   bouger les zones dans la vue 3D (la position des nœuds `Player1..4` est ignorée).
 - Rendu 3D à 75 % + FSR (`rendering/scaling_3d`) : ~105-135 images/s sur un MacBook M3.
+
+### Le canard et ses animations
+
+- Modèle `assets/models/duck_v3.glb` (exporté de Blender avec son armature `Duck_Rig`) ; textures
+  appliquées par `player.gd` avec les matériaux `assets/materials/duck_*.tres` (réservoir, tuyau et
+  ceinture en `duck_container_blue` / `duck_container_red` selon l'équipe).
+- `idle`, `walk` et `run` sont mises en boucle dans les options d'import du `.glb` (double-clic sur le
+  fichier › onglet Animation › Loop Mode). `dash_loop` devient `dash` à l'import (le suffixe `_loop`
+  la met en boucle).
+- Le nœud `AnimationTree` de `player.tscn` est une machine à états : sélectionner le nœud pour
+  l'ouvrir dans le panneau du bas. Les transitions (fondus, priorités) se règlent en cliquant sur les
+  flèches. `player.gd` ne fait que renseigner les conditions : `idle` / `walk` / `run` selon la
+  vitesse (`MOVING_SPEED`, `RUN_SPEED`), `dashing` pendant le dash puis `dash_over`.
+- Dash : `dash_start` est jouée en 0,2 s (timeline personnalisée de son nœud, la moitié de
+  `dash_duration`), puis `dash` en boucle jusqu'à la fin du dash, puis `dash_end` avant de revenir à
+  la marche. Le début du dash est envoyé aux autres ordinateurs (RPC `_play_dash`).
 
 ### Régler les zones
 

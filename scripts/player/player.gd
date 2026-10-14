@@ -1,8 +1,8 @@
 @tool
 class_name Player
 extends CharacterBody3D
-## Joueur (canard, modèle assets/models/duck_v0.glb). L'équipe (et donc la
-## couleur du réservoir d'eau sur le dos) dépend de `player_id` :
+## Joueur (canard, modèle assets/models/duck_v3.glb, textures dans assets/materials).
+## L'équipe (et donc la couleur du réservoir d'eau sur le dos) dépend de `player_id` :
 ## joueurs 1-2 = équipe bleue, joueurs 3-4 = équipe rouge.
 ##
 ## En réseau, l'ordinateur qui a l'autorité sur ce nœud simule le cube et
@@ -13,13 +13,23 @@ extends CharacterBody3D
 ## take_damage() (depuis n'importe quel ordinateur) ; sans dégâts pendant
 ## `regen_delay` s, la vie remonte de `regen_rate` PV/s. À 0 PV, le cube
 ## disparaît `respawn_delay` s puis réapparaît à son point de départ.
+##
+## Sons (nœuds *Sound, joués sur tous les ordinateurs) : tir, pas calés sur
+## l'animation (cf. FOOTSTEPS), dash, saut, touché, mort et réapparition.
+##
+## Capture : l'action capture (clic molette) tire une grosse bulle (toutes les
+## `capture_cooldown` s). Un adversaire touché est piégé (capture()) : enfermé dans une
+## bulle à la couleur de l'équipe qui l'a eu, il lévite `capture_lift` m au-dessus du
+## sol et ne peut ni bouger, ni sauter, ni dasher, ni tirer pendant la durée de la
+## bulle (2 s). Il peut toujours prendre des dégâts.
 
 ## Émis sur tous les ordinateurs quand la vie change / à la mort / à la réapparition.
 signal health_changed(health: float)
 signal died
 signal respawned
-## Émis sur tous les ordinateurs quand ce joueur tire (Game crée la bulle).
-signal shot(origin: Vector3, direction: Vector3)
+## Émis sur tous les ordinateurs quand ce joueur tire (Game crée la bulle ;
+## `capture` : bulle de capture).
+signal shot(origin: Vector3, direction: Vector3, capture: bool)
 
 ## Couleur de chaque équipe (index 0 = équipe 1).
 const TEAM_COLORS: Array[Color] = [
@@ -36,12 +46,16 @@ const SPAWN_LAYERS: Array[int] = [4, 8]
 ## Vitesse de rattrapage des cubes distants (plus élevé = plus réactif, moins lisse).
 const REMOTE_SMOOTHING := 25.0
 ## Au-delà de cet écart, un cube distant est téléporté (ex. réapparition).
-## Animations du canard : idle à l'arrêt, walk en dessous de RUN_SPEED (m/s), run au-delà.
+## Animations du canard (machine à états du nœud AnimationTree, transitions et fondus
+## réglables dans l'éditeur). Le script ne fait que renseigner ses conditions :
+## idle à l'arrêt, walk en dessous de RUN_SPEED (m/s), run au-delà ; dashing pendant
+## le dash (dash_start → dash), dash_over ensuite (dash → dash_end).
 const MOVING_SPEED := 0.3
 const RUN_SPEED := 4.0
-const ANIMATION_BLEND := 0.15
 ## Vitesse à laquelle le canard se tourne vers sa direction de déplacement.
 const TURN_SPEED := 14.0
+## Posture de combat : vitesse à laquelle il se tourne vers sa visée (demi-tour en ~0,1 s).
+const AIM_TURN_SPEED := 30.0
 ## Courbe du dash (fractions de dash_duration) : fin de la montée en vitesse,
 ## début du ralentissement.
 const DASH_RAMP := 0.15
@@ -50,9 +64,31 @@ const DASH_SLOWDOWN_START := 0.3
 const AIM_DISTANCE := 80.0
 ## Mesh du pistolet dans le modèle (les bulles partent du bout de son canon).
 const GUN_MESH := "Gun"
-## Mesh teint à la couleur de l'équipe (dans le modèle du canard).
-const TEAM_COLORED_MESH := "Water_Container"
+## Matériaux texturés des meshes du modèle. Le réservoir, le tuyau et la ceinture
+## partagent la texture « container », à la couleur de l'équipe (index 0 = équipe 1).
+const MESH_MATERIALS := {
+	&"Duck_body": preload("res://assets/materials/duck_body.tres"),
+	&"Gun": preload("res://assets/materials/duck_gun.tres"),
+}
+const TEAM_COLORED_MESHES: Array[StringName] = [&"Water_Container", &"Tube", &"Belt"]
+const TEAM_MATERIALS: Array[Material] = [
+	preload("res://assets/materials/duck_container_blue.tres"),
+	preload("res://assets/materials/duck_container_red.tres"),
+]
 const REMOTE_SNAP_DISTANCE := 3.0
+## Montée des marches : en dessous de cette hauteur (m), la capsule passe d'elle-même.
+const STEP_MIN_HEIGHT := 0.01
+## Vitesse à laquelle le modèle et la caméra rattrapent une marche montée d'un coup.
+const STEP_SMOOTHING := 18.0
+## Bruits de pas : instants (fractions de l'animation) où un pied se pose, relevés sur
+## les pistes foot_ik_L / foot_ik_R de walk et run (assets/models/duck_v3.glb).
+const FOOTSTEPS := {
+	&"walk": [0.49, 0.98],
+	&"run": [0.47, 0.95],
+}
+## Capture : vitesse de montée vers la hauteur de lévitation, vitesse du flottement.
+const CAPTURE_RISE_SPEED := 10.0
+const CAPTURE_BOB_SPEED := 4.0
 
 @export_range(1, 4) var player_id := 1:
 	set(value):
@@ -65,21 +101,36 @@ const REMOTE_SNAP_DISTANCE := 3.0
 @export var jump_velocity := 8.5
 ## Multiplicateur de la gravité du projet (plus élevé = saut moins flottant).
 @export var gravity_scale := 1.8
+## Hauteur maximale d'un relief (marche, rebord…) que le canard monte en marchant, sans sauter (m).
+@export var max_step_height := 0.55
 ## Vitesse de montée aux échelles (m/s). Une échelle = Area3D du groupe "echelles",
 ## son axe -Z local pointe vers le mur : avancer dans ce sens fait monter.
 @export var climb_speed := 3.0
 @export_group("Dash")
 ## Vitesse de pointe du dash (m/s).
-@export var dash_speed := 22.0
+@export var dash_speed := 25.0
 ## Durée du dash (s). Courbe de vitesse : montée douce jusqu'à dash_speed
 ## (DASH_RAMP), plateau, puis ralentissement doux jusqu'à move_speed.
-## Distance ≈ 4 m avec les valeurs par défaut.
-@export var dash_duration := 0.3
+## Distance ≈ 6,8 m avec les valeurs par défaut. Si on la change, ajuster aussi la durée
+## de dash_start dans l'AnimationTree (timeline de son nœud, la moitié de dash_duration).
+@export var dash_duration := 0.4
 ## Temps minimum entre deux dashs (s).
 @export var dash_cooldown := 2.0
 @export_group("Tir")
-## Temps minimum entre deux tirs (s).
-@export var fire_cooldown := 0.25
+## Temps minimum entre deux appuis sur la touche de tir (s).
+@export var fire_cooldown := 0.15
+## Touche de tir maintenue : une bulle toutes les `auto_fire_interval` s.
+@export var auto_fire_interval := 0.2
+## Posture de combat : pendant la visée (action aim) et cette durée (s) après le
+## dernier tir, le canard reste tourné vers sa visée, même s'il recule.
+@export var combat_stance_duration := 0.6
+@export_group("Capture")
+## Temps minimum entre deux bulles de capture (s).
+@export var capture_cooldown := 5.0
+## Hauteur à laquelle lévite un joueur capturé, au-dessus du sol (m).
+@export var capture_lift := 0.25
+## Amplitude du flottement d'un joueur capturé (m).
+@export var capture_bob := 0.05
 @export_group("Vie")
 @export var max_health := 100.0
 ## Vie regagnée par seconde (PV/s) quand le joueur ne prend pas de dégâts.
@@ -101,6 +152,7 @@ var sync_position: Vector3
 ## Points de vie (0 = mort). Diffusé par le nœud Sync quand il change.
 var health := 100.0:
 	set(value):
+		var previous := health
 		var was_alive := health > 0.0
 		health = value
 		health_changed.emit(health)
@@ -108,9 +160,18 @@ var health := 100.0:
 			_on_died()
 		elif not was_alive and health > 0.0:
 			_on_respawned()
+		elif health < previous and _hit_sound:
+			_hit_sound.play() # Touché (sur tous les ordinateurs : la vie est diffusée).
+## Posture de combat : direction horizontale (x, z) que regarde le canard pendant qu'il
+## vise ou tire ; Vector2.ZERO sinon (il regarde alors là où il va). Diffusée par le nœud Sync.
+var sync_facing := Vector2.ZERO
+## Vrai pendant qu'il est piégé dans une bulle de capture (sur tous les ordinateurs).
+var captured := false
 
 var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var _spawn_position: Vector3
+## Temps restant de la posture de combat (s).
+var _combat_left := 0.0
 ## Temps restant du dash en cours (s), 0 si pas de dash.
 var _dash_time := 0.0
 ## Temps restant avant de pouvoir dasher à nouveau (s).
@@ -118,21 +179,57 @@ var _dash_cooldown_left := 0.0
 var _dash_direction: Vector3
 ## Vitesse horizontale au moment du dash (point de départ de la courbe).
 var _dash_start_speed := 0.0
+## Temps restant du dash pour ses animations (condition « dashing »), décompté sur
+## tous les ordinateurs (cf. _play_dash).
+var _dash_animation_left := 0.0
 ## Bout du canon (Marker3D créé dans _ready sur le mesh du pistolet) : départ des bulles.
 var _muzzle: Marker3D
-## Temps restant avant de pouvoir tirer à nouveau (s).
-var _fire_cooldown_left := 0.0
+## Temps écoulé depuis le dernier tir (s).
+var _since_last_shot := INF
 ## Temps restant avant que la vie remonte (s).
 var _regen_cooldown_left := 0.0
 ## Temps restant avant la réapparition, quand le joueur est mort (s).
 var _respawn_left := 0.0
+## Décalage vertical du modèle et de la caméra après une marche montée d'un coup,
+## ramené en douceur à 0 (cf. _step_up).
+var _step_offset := 0.0
+var _model_base_y: float
+var _camera_base_y: float
+## Animation et position (fraction) à l'image précédente, pour les bruits de pas.
+var _footstep_animation: StringName
+var _footstep_phase := 0.0
+## Temps restant avant de pouvoir tirer une bulle de capture (s).
+var _capture_cooldown_left := 0.0
+## Capture en cours (ordinateur qui a l'autorité) : temps restant (s), hauteur de
+## lévitation visée, temps écoulé (flottement).
+var _captured_left := 0.0
+var _capture_height := 0.0
+var _capture_time := 0.0
+var _capture_tween: Tween
 
 ## Caméra du joueur : les déplacements sont relatifs à son orientation.
 @onready var camera: PlayerCamera = $PlayerCamera
+## Aide à la visée (déplace le viseur vers un adversaire proche du centre de l'écran).
+@onready var aim_assist: AimAssist = $AimAssist
 @onready var _model: Node3D = $Model
-@onready var _animation: AnimationPlayer = $Model/AnimationPlayer
+@onready var _animation_tree: AnimationTree = $AnimationTree
+@onready var _animation_playback: AnimationNodeStateMachinePlayback = _animation_tree.get(&"parameters/playback")
 @onready var _collision_shape: CollisionShape3D = $CollisionShape
 @onready var _sync: MultiplayerSynchronizer = $Sync
+## Son du tir : un son de bulle au hasard (assets/audio/sfx/bubble_shoot.tres).
+@onready var _shoot_sound: AudioStreamPlayer3D = $ShootSound
+## Autres sons du canard, chacun tiré au hasard dans assets/audio/sfx/duck_*.tres.
+@onready var _step_sound: AudioStreamPlayer3D = $StepSound
+@onready var _dash_sound: AudioStreamPlayer3D = $DashSound
+@onready var _jump_sound: AudioStreamPlayer3D = $JumpSound
+@onready var _hit_sound: AudioStreamPlayer3D = $HitSound
+@onready var _death_sound: AudioStreamPlayer3D = $DeathSound
+@onready var _respawn_sound: AudioStreamPlayer3D = $RespawnSound
+## Capture : bulle autour du canard piégé et ses sons (tir, piégé, libéré).
+@onready var _capture_bubble: MeshInstance3D = $CaptureBubble
+@onready var _capture_shoot_sound: AudioStreamPlayer3D = $CaptureShootSound
+@onready var _capture_sound: AudioStreamPlayer3D = $CaptureSound
+@onready var _release_sound: AudioStreamPlayer3D = $ReleaseSound
 
 
 ## Équipe (1 ou 2) du joueur `id`.
@@ -152,11 +249,9 @@ static func enemy_spawn_layer(team: int) -> int:
 func _ready() -> void:
 	_apply_color()
 	if not Engine.is_editor_hint():
-		# Les animations du .glb ne sont pas en boucle : on les y met.
-		for animation_name: StringName in [&"idle", &"walk", &"run"]:
-			_animation.get_animation(animation_name).loop_mode = Animation.LOOP_LINEAR
-		_animation.play(&"idle")
 		_create_muzzle()
+	_model_base_y = _model.position.y
+	_camera_base_y = camera.position.y
 	_spawn_position = global_position
 	sync_position = position
 	health = max_health
@@ -182,7 +277,10 @@ func _physics_process(delta: float) -> void:
 	var previous_position := position
 	if is_multiplayer_authority():
 		if is_alive():
-			_simulate(delta)
+			if _captured_left > 0.0:
+				_simulate_captured(delta)
+			else:
+				_simulate(delta)
 			_regenerate(delta)
 		else:
 			_respawn_left -= delta
@@ -222,11 +320,24 @@ func take_damage(amount: float) -> void:
 		_apply_damage.rpc_id(get_multiplayer_authority(), amount)
 
 
+## Piège ce joueur `duration` s dans une bulle de capture de l'équipe `team`.
+## Appelable depuis n'importe quel ordinateur (comme take_damage).
+func capture(duration: float, team: int) -> void:
+	if is_multiplayer_authority():
+		_apply_capture(duration, team)
+	else:
+		_apply_capture.rpc_id(get_multiplayer_authority(), duration, team)
+
+
 ## Réapparition au point de départ, avec toute sa vie.
 func respawn() -> void:
 	global_position = _spawn_position
 	velocity = Vector3.ZERO
 	_dash_time = 0.0
+	_step_offset = 0.0
+	_combat_left = 0.0
+	_capture_cooldown_left = 0.0
+	sync_facing = Vector2.ZERO
 	_regen_cooldown_left = 0.0
 	health = max_health
 	reset_physics_interpolation()
@@ -238,59 +349,103 @@ func _simulate(delta: float) -> void:
 		input = Input.get_vector(&"move_left", &"move_right", &"move_up", &"move_down")
 		if Input.is_action_just_pressed(&"jump") and is_on_floor():
 			velocity.y = jump_velocity
+			_play_jump.rpc()
 	var direction := Vector3(input.x, 0.0, input.y).rotated(Vector3.UP, camera.get_yaw())
 
 	_dash_cooldown_left = maxf(_dash_cooldown_left - delta, 0.0)
+	_capture_cooldown_left = maxf(_capture_cooldown_left - delta, 0.0)
 	if is_local and Input.is_action_just_pressed(&"dash") and is_on_floor() and _dash_cooldown_left == 0.0:
 		_start_dash(direction)
 
-	_fire_cooldown_left = maxf(_fire_cooldown_left - delta, 0.0)
-	if is_local and Input.is_action_just_pressed(&"shoot") and _fire_cooldown_left == 0.0:
-		_fire_cooldown_left = fire_cooldown
-		# Tout droit devant la caméra (à l'horizontale), depuis le centre du cube.
-		var target := aim()
-		# La bulle vise avec sa surface : son centre s'arrête à un rayon de la surface
-		# visée, sinon son bas frôlerait le sol (ou le mur) et elle éclaterait avant.
-		var aim_point: Vector3 = target.point + target.normal * BubbleProjectile.RADIUS
-		_turn_model_towards(aim_point - global_position, 1.0) # D'abord tourner le canard : le canon pointe vers la cible.
-		var origin := _muzzle.global_position if _muzzle else global_position
-		var shot_direction := (aim_point - origin).normalized()
-		# Cible trop proche (derrière le canon) : on tire simplement dans l'axe de la caméra.
-		if shot_direction.dot(camera.get_aim_ray()[1]) < 0.5:
-			shot_direction = camera.get_aim_ray()[1]
-		_shoot.rpc(origin, shot_direction)
+	# Petite marge : sans elle, 12 pas de 1/60 s font 0,19999… < 0,2 s (arrondis) et le tir prend une image de retard.
+	_since_last_shot += delta + 0.0001
+	# Nouvel appui : tir dès fire_cooldown écoulé ; touche maintenue : toutes les auto_fire_interval.
+	var pressed := Input.is_action_just_pressed(&"shoot") and _since_last_shot >= fire_cooldown
+	var held := Input.is_action_pressed(&"shoot") and _since_last_shot >= auto_fire_interval
+	var capture_pressed := Input.is_action_just_pressed(&"capture") and _capture_cooldown_left == 0.0
+	_combat_left = maxf(_combat_left - delta, 0.0)
+	if is_local and (camera.aiming or pressed or held or capture_pressed):
+		_combat_left = combat_stance_duration
+	sync_facing = _aim_facing() if _combat_left > 0.0 else Vector2.ZERO
+	if is_local and (pressed or held):
+		_since_last_shot = 0.0
+		_fire(false)
+	if is_local and capture_pressed:
+		_capture_cooldown_left = capture_cooldown
+		_fire(true)
 
-	var ladder_dir := _ladder_direction()
-	if ladder_dir != Vector3.ZERO and direction.dot(ladder_dir) > 0.3:
-		# Contre une échelle en avançant vers elle : on monte, sans gravité.
-		velocity.y = climb_speed
-	elif not is_on_floor():
-		velocity.y -= _gravity * gravity_scale * delta
-	if _dash_time > 0.0:
-		# Dash : vitesse horizontale selon la courbe (la gravité s'applique si on quitte le sol).
-		_dash_time = maxf(_dash_time - delta, 0.0)
-		var speed := _dash_speed_at(1.0 - _dash_time / dash_duration)
-		velocity.x = _dash_direction.x * speed
-		velocity.z = _dash_direction.z * speed
+	var ladder_up := _ladder_climb_axis(direction)
+	if ladder_up != Vector3.ZERO:
+		# Contre une échelle en avançant vers elle : on monte le long de l'échelle (en suivant
+		# son inclinaison), sans gravité ; sinon on la traverserait sans avoir fini de monter.
+		velocity = ladder_up * climb_speed
 	else:
-		var target := direction * move_speed
-		velocity.x = move_toward(velocity.x, target.x, acceleration * delta)
-		velocity.z = move_toward(velocity.z, target.z, acceleration * delta)
+		if not is_on_floor():
+			velocity.y -= _gravity * gravity_scale * delta
+		if _dash_time > 0.0:
+			# Dash : vitesse horizontale selon la courbe (la gravité s'applique si on quitte le sol).
+			_dash_time = maxf(_dash_time - delta, 0.0)
+			var speed := _dash_speed_at(1.0 - _dash_time / dash_duration)
+			velocity.x = _dash_direction.x * speed
+			velocity.z = _dash_direction.z * speed
+		else:
+			var target := direction * move_speed
+			velocity.x = move_toward(velocity.x, target.x, acceleration * delta)
+			velocity.z = move_toward(velocity.z, target.z, acceleration * delta)
 
-	move_and_slide()
+	if not _step_up(delta):
+		move_and_slide()
 
 	if global_position.y < kill_height:
 		_apply_damage(health)
 
 
-## Direction horizontale « vers le mur » de l'échelle touchée, ou ZERO si aucune.
-func _ladder_direction() -> Vector3:
+## Axe de montée (le long de l'échelle, vers le haut) si le canard touche une échelle en
+## avançant vers son mur (`direction`), ZERO sinon.
+func _ladder_climb_axis(direction: Vector3) -> Vector3:
 	for area: Area3D in get_tree().get_nodes_in_group(&"echelles"):
 		if area.overlaps_body(self):
 			var to_wall := -area.global_basis.z
 			to_wall.y = 0.0
-			return to_wall.normalized()
+			if direction.dot(to_wall.normalized()) > 0.3:
+				return area.global_basis.y.normalized()
 	return Vector3.ZERO
+
+
+## Tire une bulle (de capture si `capture`) vers le point visé, depuis le bout du canon.
+func _fire(capture: bool) -> void:
+	# Tout droit devant la caméra (à l'horizontale), depuis le centre du cube.
+	var target := aim()
+	# La bulle vise avec sa surface : son centre s'arrête à un rayon de la surface
+	# visée, sinon son bas frôlerait le sol (ou le mur) et elle éclaterait avant.
+	var radius := BubbleProjectile.CAPTURE_RADIUS if capture else BubbleProjectile.RADIUS
+	var aim_point: Vector3 = target.point + target.normal * radius
+	# Le canard n'a peut-être pas fini de se tourner vers sa visée : la bulle part
+	# de là où sera le bout du canon une fois tourné.
+	var origin := global_position
+	if _muzzle:
+		var turn := atan2(sync_facing.x, sync_facing.y) - _model.rotation.y
+		origin += (_muzzle.global_position - global_position).rotated(Vector3.UP, turn)
+	var shot_direction := (aim_point - origin).normalized()
+	# Cible trop proche (derrière le canon) : on tire simplement dans l'axe de la caméra.
+	if shot_direction.dot(camera.get_aim_ray()[1]) < 0.5:
+		shot_direction = camera.get_aim_ray()[1]
+	_shoot.rpc(origin, shot_direction, capture)
+
+
+## Piégé dans une bulle de capture : immobile, il monte en douceur à la hauteur de
+## lévitation et y flotte, puis est libéré (la gravité le repose au sol).
+func _simulate_captured(delta: float) -> void:
+	_captured_left -= delta
+	_capture_time += delta
+	velocity = Vector3.ZERO
+	_dash_time = 0.0
+	_combat_left = 0.0
+	sync_facing = Vector2.ZERO
+	var target_y := _capture_height + sin(_capture_time * CAPTURE_BOB_SPEED) * capture_bob
+	global_position.y = lerpf(global_position.y, target_y, 1.0 - exp(-CAPTURE_RISE_SPEED * delta))
+	if _captured_left <= 0.0:
+		_set_captured.rpc(false, 0)
 
 
 func _regenerate(delta: float) -> void:
@@ -301,9 +456,96 @@ func _regenerate(delta: float) -> void:
 
 ## Sur tous les ordinateurs (appelé par celui qui contrôle ce cube).
 @rpc("authority", "call_local", "reliable")
-func _shoot(origin: Vector3, direction: Vector3) -> void:
-	_turn_model_towards(direction, 1.0) # Le canard se tourne d'un coup vers son tir.
-	shot.emit(origin, direction)
+func _shoot(origin: Vector3, direction: Vector3, capture: bool) -> void:
+	var sound := _capture_shoot_sound if capture else _shoot_sound
+	sound.global_position = origin # Le son part du canon, en même temps que la bulle.
+	sound.play()
+	shot.emit(origin, direction, capture)
+
+
+## Ordinateur qui a l'autorité sur ce cube : début de la capture (cf. capture()).
+@rpc("any_peer", "call_remote", "reliable")
+func _apply_capture(duration: float, team: int) -> void:
+	if not is_alive() or captured or duration <= 0.0:
+		return
+	_captured_left = duration
+	_capture_time = 0.0
+	# Hauteur de lévitation : capture_lift au-dessus du sol (sur place s'il n'y a pas de sol dessous).
+	var feet := (_collision_shape.shape as CapsuleShape3D).height / 2.0
+	var query := PhysicsRayQueryParameters3D.create(global_position, global_position + Vector3.DOWN * 3.0,
+			WORLD_LAYER, [get_rid()])
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	_capture_height = (hit.position.y + feet if not hit.is_empty() else global_position.y) + capture_lift
+	_set_captured.rpc(true, team)
+
+
+## Sur tous les ordinateurs : affiche (ou fait éclater) la bulle autour du canard.
+@rpc("authority", "call_local", "reliable")
+func _set_captured(value: bool, team: int) -> void:
+	if value == captured:
+		return
+	captured = value
+	if value:
+		_dash_animation_left = 0.0
+		_capture_bubble.material_override = _capture_material(team)
+		_show_capture_bubble()
+		_capture_sound.play()
+	else:
+		_captured_left = 0.0
+		_hide_capture_bubble(true)
+
+
+## Matériau de la bulle de capture : celui de la scène, teinté à la couleur de l'équipe `team`.
+func _capture_material(team: int) -> Material:
+	var base := _capture_bubble.mesh.surface_get_material(0) as StandardMaterial3D
+	var material := base.duplicate() as StandardMaterial3D
+	material.albedo_color = Color(TEAM_COLORS[team - 1].lerp(Color.WHITE, 0.25), base.albedo_color.a)
+	return material
+
+
+func _show_capture_bubble() -> void:
+	if _capture_tween:
+		_capture_tween.kill()
+	_capture_bubble.visible = true
+	_capture_bubble.transparency = 0.0
+	_capture_bubble.scale = Vector3.ONE * 0.3
+	_capture_tween = create_tween()
+	_capture_tween.tween_property(_capture_bubble, ^"scale", Vector3.ONE, 0.2) \
+			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+## Fait disparaître la bulle de capture : elle éclate (avec un son) si `pop`, sinon tout de suite.
+func _hide_capture_bubble(pop: bool) -> void:
+	if _capture_tween:
+		_capture_tween.kill()
+	if not pop:
+		_capture_bubble.visible = false
+		return
+	_release_sound.play()
+	_capture_tween = create_tween().set_parallel()
+	_capture_tween.tween_property(_capture_bubble, ^"scale", Vector3.ONE * 1.4, 0.15)
+	_capture_tween.tween_property(_capture_bubble, ^"transparency", 1.0, 0.15)
+	_capture_tween.chain().tween_callback(_capture_bubble.hide)
+
+
+## Sur tous les ordinateurs (appelé par celui qui contrôle ce cube) : lance les
+## animations et le son du dash.
+@rpc("authority", "call_local", "reliable")
+func _play_dash() -> void:
+	_dash_animation_left = dash_duration
+	_dash_sound.play()
+
+
+## Sur tous les ordinateurs (appelé par celui qui contrôle ce cube) : son du saut.
+@rpc("authority", "call_local", "reliable")
+func _play_jump() -> void:
+	_jump_sound.play()
+
+
+## Direction horizontale (x, z) du rayon du viseur.
+func _aim_facing() -> Vector2:
+	var direction: Vector3 = camera.get_aim_ray()[1]
+	return Vector2(direction.x, direction.z).normalized()
 
 
 ## Ce que vise le joueur (centre de l'écran) : { point, normal, collider (ou null) }.
@@ -344,16 +586,49 @@ func _create_muzzle() -> void:
 	_muzzle.position = end_a if (gun.to_global(end_a) - gun.to_global(end_b)).dot(forward) > 0.0 else end_b
 
 
-## Animation et orientation du canard selon sa vitesse.
+## Animation et orientation du canard selon sa vitesse, sa visée (posture de combat)
+## et le dash en cours.
 func _update_model(velocity_now: Vector3, delta: float) -> void:
+	_step_offset *= exp(-STEP_SMOOTHING * delta)
+	_model.position.y = _model_base_y + _step_offset
+	camera.position.y = _camera_base_y + _step_offset
 	var horizontal := Vector3(velocity_now.x, 0.0, velocity_now.z)
 	var speed := horizontal.length()
-	var animation_name := &"idle"
-	if speed > MOVING_SPEED and is_alive():
-		animation_name = &"run" if speed > RUN_SPEED else &"walk"
+	var moving := speed > MOVING_SPEED and is_alive()
+	if sync_facing != Vector2.ZERO and is_alive():
+		# Posture de combat : il regarde là où il vise, même en reculant.
+		_turn_model_towards(Vector3(sync_facing.x, 0.0, sync_facing.y), 1.0 - exp(-AIM_TURN_SPEED * delta))
+	elif moving:
 		_turn_model_towards(horizontal, 1.0 - exp(-TURN_SPEED * delta))
-	if _animation.current_animation != animation_name:
-		_animation.play(animation_name, ANIMATION_BLEND)
+	_dash_animation_left = maxf(_dash_animation_left - delta, 0.0)
+	var dashing := _dash_animation_left > 0.0
+	_animation_tree.set(&"parameters/conditions/dashing", dashing)
+	_animation_tree.set(&"parameters/conditions/dash_over", not dashing)
+	_animation_tree.set(&"parameters/conditions/idle", not moving)
+	_animation_tree.set(&"parameters/conditions/walk", moving and speed <= RUN_SPEED)
+	_animation_tree.set(&"parameters/conditions/run", moving and speed > RUN_SPEED)
+	# Au sol : les canards des autres ordinateurs n'ont pas is_on_floor(), on regarde leur vitesse verticale.
+	var grounded := is_on_floor() if is_multiplayer_authority() else absf(velocity_now.y) < 1.0
+	_play_footsteps(active and moving and grounded)
+
+
+## Bruit de pas quand l'animation walk / run passe sur un instant de FOOTSTEPS
+## (un pied se pose). Calé sur l'animation : marche et course gardent leur rythme.
+func _play_footsteps(enabled: bool) -> void:
+	var animation := _animation_playback.get_current_node()
+	var length := _animation_playback.get_current_length()
+	if not enabled or not FOOTSTEPS.has(animation) or length <= 0.0:
+		_footstep_animation = &""
+		return
+	var phase := fmod(_animation_playback.get_current_play_position() / length, 1.0)
+	if animation == _footstep_animation:
+		for contact: float in FOOTSTEPS[animation]:
+			var crossed := (_footstep_phase < contact and contact <= phase) if phase >= _footstep_phase \
+					else (contact > _footstep_phase or contact <= phase) # L'animation a bouclé.
+			if crossed:
+				_step_sound.play()
+	_footstep_animation = animation
+	_footstep_phase = phase
 
 
 ## Le modèle regarde vers +Z : on l'aligne sur `direction` (weight = 1 : d'un coup).
@@ -374,12 +649,20 @@ func _apply_damage(amount: float) -> void:
 ## Sur tous les ordinateurs : le cube mort disparaît et ne bloque plus personne.
 func _on_died() -> void:
 	_respawn_left = respawn_delay
+	_death_sound.play()
+	if captured: # Mort dans la bulle : elle disparaît avec lui.
+		captured = false
+		_captured_left = 0.0
+		_hide_capture_bubble(false)
 	_model.visible = false
 	_collision_shape.set_deferred(&"disabled", true)
 	died.emit()
 
 
 func _on_respawned() -> void:
+	_dash_animation_left = 0.0
+	_animation_playback.start(&"idle") # Repart de l'arrêt, pas de l'animation au moment de la mort.
+	_respawn_sound.play()
 	_model.visible = true
 	_collision_shape.set_deferred(&"disabled", false)
 	respawned.emit()
@@ -399,6 +682,49 @@ func _start_dash(direction: Vector3) -> void:
 	_dash_start_speed = Vector2(velocity.x, velocity.z).length()
 	_dash_time = dash_duration
 	_dash_cooldown_left = dash_cooldown
+	_play_dash.rpc()
+
+
+## Monte sur un relief d'au plus max_step_height (marche, rebord…) qui bloque le canard
+## au sol : on rejoue le déplacement prévu max_step_height plus haut, puis on redescend
+## dessus. Vrai si le canard a été posé sur la marche (move_and_slide est alors inutile).
+## Les pentes praticables (≤ floor_max_angle) restent gérées par move_and_slide.
+func _step_up(delta: float) -> bool:
+	var motion := Vector3(velocity.x, 0.0, velocity.z) * delta
+	if not is_on_floor() or velocity.y > 0.0 or motion.is_zero_approx():
+		return false
+	var blocked := KinematicCollision3D.new()
+	if not test_move(global_transform, motion, blocked) \
+			or blocked.get_normal().angle_to(Vector3.UP) <= floor_max_angle \
+			or blocked.get_collider() is CharacterBody3D:
+		return false # Rien devant, une pente praticable ou un autre canard.
+	var lift := Vector3.UP * max_step_height
+	var raised := global_transform.translated(lift)
+	if test_move(global_transform, lift) or test_move(raised, motion):
+		return false # Plafond au-dessus, ou obstacle plus haut qu'une marche.
+	var drop := KinematicCollision3D.new()
+	var above := raised.translated(motion)
+	if not test_move(above, -lift, drop) or drop.get_collider() is CharacterBody3D:
+		return false
+	var landing := above.origin + drop.get_travel()
+	var height := landing.y - global_position.y
+	if height < STEP_MIN_HEIGHT or height > max_step_height:
+		return false
+	# Le dessus de la marche (juste après le point de contact) doit être praticable.
+	var probe := drop.get_position() + motion.normalized() * 0.1 + Vector3.UP * 0.1
+	var hit := get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(
+			probe, probe + Vector3.DOWN * 0.3, collision_mask & ~PLAYERS_LAYER, [get_rid()]))
+	if hit.is_empty() or hit.normal.angle_to(Vector3.UP) > floor_max_angle:
+		return false
+	# Hauteur réelle de la marche sous les pieds : le bas arrondi de la capsule, posé
+	# sur l'arête, dépasse sinon max_step_height (et monterait de proche en proche).
+	var feet := global_position.y - (_collision_shape.shape as CapsuleShape3D).height / 2.0
+	if hit.position.y - feet > max_step_height:
+		return false
+	global_position = landing
+	_step_offset -= height # Le modèle et la caméra rattrapent la hauteur en douceur.
+	apply_floor_snap()
+	return true
 
 
 func _follow_network(delta: float) -> void:
@@ -413,10 +739,8 @@ func _apply_color() -> void:
 	collision_mask = WORLD_LAYER | PLAYERS_LAYER | enemy_spawn_layer(team_of(player_id))
 	if _model == null: # Setter appelé avant que le nœud soit prêt.
 		return
-	var mesh := _model.find_child(TEAM_COLORED_MESH, true, false) as MeshInstance3D
-	if mesh == null:
-		return
-	var material := StandardMaterial3D.new()
-	material.albedo_color = color_of(player_id)
-	material.roughness = 0.4
-	mesh.material_override = material
+	for mesh: MeshInstance3D in _model.find_children("*", "MeshInstance3D", true, false):
+		if mesh.name in TEAM_COLORED_MESHES:
+			mesh.material_override = TEAM_MATERIALS[team_of(player_id) - 1]
+		else:
+			mesh.material_override = MESH_MATERIALS.get(mesh.name)

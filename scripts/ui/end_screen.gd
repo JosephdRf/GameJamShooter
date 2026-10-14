@@ -14,6 +14,7 @@ extends Control
 
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	Music.play(Music.MENU)
 	_replay_button.pressed.connect(_replay)
 	_quit_button.pressed.connect(get_tree().quit)
 	_show_scores(NetworkManager.final_scores)

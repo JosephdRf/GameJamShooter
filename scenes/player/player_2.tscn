@@ -4,5 +4,3 @@
 
 [node name="Player2" unique_id=1854970652 instance=ExtResource("1_base")]
 player_id = 2
-dash_speed = 24.0
-dash_duration = 0.18

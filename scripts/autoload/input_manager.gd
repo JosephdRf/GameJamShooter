@@ -1,216 +1,96 @@
 extends Node
-## Crée les actions d'entrée au démarrage.
-##
-## Chaque ordinateur contrôle UN seul cube (celui choisi dans le lobby), avec
-## le clavier/trackpad OU n'importe quelle manette branchée :
-##   move_left/right/up/down : Z/Q/S/D (ou flèches) / joystick gauche
-##   look_left/right/up/down : joystick droit (la souris est gérée par PlayerCamera)
-##   jump                    : Espace / bouton du bas (B sur Switch Pro)
-##   dash                    : K / bouton de gauche (Y sur Switch Pro, Carré sur PlayStation)
-##   shoot                   : T / gâchettes (ZL et ZR sur Switch Pro, L2 et R2 sur PlayStation)
-##   start                   : bouton Start (+ sur Switch Pro)
-##   pause (en jeu, hôte)    : P / bouton Start (+ sur Switch Pro)
-##   ui_accept (menus)       : Entrée / Espace / A sur Switch Pro (bouton de droite)
-##   menu_back (menus)       : Retour arrière / B sur Switch Pro (bouton du bas)
-##   menu_left/menu_right    : comme move_left/right, mais avec une zone morte
-##                             plus large pour naviguer dans les menus
+## Les actions d'entrée sont définies dans Projet › Paramètres du projet › Contrôles
+## (clavier et manettes, à modifier là-bas). Le code n'utilise que celles-ci :
+##   move_left/right/up/down : se déplacer (Z/Q/S/D ou flèches / stick gauche)
+##   look_left/right/up/down : tourner la caméra (stick droit ; la souris est gérée par PlayerCamera)
+##   jump                    : sauter (Espace / bouton du bas)
+##   dash                    : dash (Maj / bouton de gauche)
+##   shoot                   : tirer, maintenu = en continu (clic droit / gâchette droite)
+##   aim                     : viser, maintenu = zoom sans aide à la visée (clic gauche / gâchette gauche)
+##   pause                   : menu pause en jeu, hôte (P / Start)
+##   start                   : lancer depuis l'accueil et le choix des équipes (Start)
+##   menu_left/menu_right    : choisir son joueur (Q/D ou flèches / croix, stick gauche)
+##   menu_back               : annuler son choix (Retour arrière / bouton du bas)
+##   ui_accept (de Godot)    : valider (Entrée, Espace / bouton de droite)
+##   ui_cancel (de Godot)    : quitter le jeu (Échap)
+##   debug_damage            : version de développement, 10 dégâts à son canard (H)
+##   debug_mode              : afficher / masquer le debug mode : PV, rectangle de l'aide à la visée (Ctrl + D)
 ##
 ## Les touches sont *physiques* : Z/Q/S/D en AZERTY = W/A/S/D en QWERTY.
+## Les boutons de manette sont repérés par leur *position* (noms Xbox dans Godot) :
+##   bouton du bas    (Joypad Button 0) = B sur Switch Pro, Croix sur PlayStation
+##   bouton de droite (Joypad Button 1) = A sur Switch Pro, Rond sur PlayStation
+##   bouton de gauche (Joypad Button 2) = Y sur Switch Pro, Carré sur PlayStation
+##   gâchettes (axes 4 et 5)            = ZL / ZR sur Switch Pro, L2 / R2 sur PlayStation
+##   Start (Joypad Button 6)            = + sur Switch Pro, Options sur PlayStation
 ##
-## Manettes qui envoient de fausses valeurs (vu avec une Switch Pro sous macOS :
-## stick gauche annoncé poussé et ZR enfoncée sans que personne n'y touche) :
-##   - les sticks d'une manette ne comptent qu'une fois vus au repos (centrés) ;
-##   - une gâchette ne compte qu'une fois vue relâchée.
-## Sinon le cube avancerait tout seul. Les boutons, eux, marchent toujours.
+## Ce script ne crée aucune action : il filtre les axes (sticks et gâchettes) des
+## manettes qui envoient de fausses valeurs (vu avec une Switch Pro sous macOS : stick
+## gauche annoncé poussé et ZR enfoncée sans que personne n'y touche). Un axe d'une
+## manette ne compte qu'une fois vu au repos, sinon le canard avancerait ou tirerait
+## tout seul. Les boutons, eux, marchent toujours.
 
-const STICK_DEADZONE := 0.15
-## Sticks considérés « au repos » sous cette valeur, sur chaque axe.
-const STICK_CENTERED := 0.2
-const STICK_AXES: Array[JoyAxis] = [JOY_AXIS_LEFT_X, JOY_AXIS_LEFT_Y, JOY_AXIS_RIGHT_X, JOY_AXIS_RIGHT_Y]
-const MENU_DEADZONE := 0.5
+## Axe considéré « au repos » sous cette valeur (stick centré, gâchette relâchée).
+const AXIS_REST := 0.2
+## Délai après la connexion d'une manette avant de regarder ses axes (ms) : le temps
+## que leurs vraies valeurs arrivent.
+const AXIS_CHECK_DELAY := 500
 
-## Godot utilise une disposition *positionnelle* (style Xbox) pour les boutons :
-## JOY_BUTTON_A = bouton du BAS, soit le bouton "B" d'une manette Switch Pro
-## (et A sur Xbox, Croix sur PlayStation). Cf. doc de JoyButton.
-const JUMP_BUTTON := JOY_BUTTON_A
-## Bouton de GAUCHE : Y sur Switch Pro, Carré sur PlayStation, X sur Xbox.
-const DASH_BUTTON := JOY_BUTTON_X
-## Bouton "A" d'une manette Switch Pro (bouton de DROITE) pour valider dans les menus.
-const CONFIRM_BUTTON := JOY_BUTTON_B
-## Bouton "B" d'une manette Switch Pro (bouton du BAS) pour revenir en arrière.
-const BACK_BUTTON := JOY_BUTTON_A
-## Gâchettes (axes de 0 à 1) qui déclenchent `shoot` ; seuils d'appui / de relâchement.
-const SHOOT_TRIGGERS: Array[JoyAxis] = [JOY_AXIS_TRIGGER_LEFT, JOY_AXIS_TRIGGER_RIGHT]
-const TRIGGER_PRESSED := 0.6
-const TRIGGER_RELEASED := 0.3
-
-## (manette, gâchette) -> enfoncée ? Absente tant que la gâchette n'a jamais été vue
-## relâchée : une gâchette coincée (ou mal lue, vu sur une Switch Pro sous macOS)
-## est ignorée au lieu de bloquer le tir.
-var _trigger_down := {}
-## Associations [action, axe, sens] des sticks, ajoutées à l'InputMap manette par
-## manette (dans _trust_sticks) une fois ses sticks vus au repos.
-var _stick_bindings: Array[Array] = []
-## Manettes dont les sticks sont pris en compte.
-var _trusted_sticks := {}
-## Manette -> instant de connexion (ms). Ses sticks ne sont vérifiés qu'après
-## STICK_CHECK_DELAY, le temps que les vraies valeurs des axes arrivent.
+## Axes de manette des actions (tous appareils), retirés de l'InputMap au démarrage :
+## [action, InputEventJoypadMotion]. Remis manette par manette (dans _trust_axis).
+var _axis_bindings: Array[Array] = []
+## Axes utilisés par au moins une action.
+var _axes: Array[JoyAxis] = []
+## Manette -> { axe: true } pour ses axes déjà pris en compte.
+var _trusted_axes := {}
+## Manette -> instant de connexion (ms).
 var _connected_at := {}
-const STICK_CHECK_DELAY := 500
 
 
 func _ready() -> void:
-	var axes := {
-		&"move_left": [JOY_AXIS_LEFT_X, -1.0, [KEY_A, KEY_LEFT]],
-		&"move_right": [JOY_AXIS_LEFT_X, 1.0, [KEY_D, KEY_RIGHT]],
-		&"move_up": [JOY_AXIS_LEFT_Y, -1.0, [KEY_W, KEY_UP]],
-		&"move_down": [JOY_AXIS_LEFT_Y, 1.0, [KEY_S, KEY_DOWN]],
-		&"look_left": [JOY_AXIS_RIGHT_X, -1.0, []],
-		&"look_right": [JOY_AXIS_RIGHT_X, 1.0, []],
-		&"look_up": [JOY_AXIS_RIGHT_Y, -1.0, []],
-		&"look_down": [JOY_AXIS_RIGHT_Y, 1.0, []],
-	}
-	for action_name: StringName in axes:
-		_add_action(action_name, STICK_DEADZONE)
-		_add_joy_axis(action_name, axes[action_name][0], axes[action_name][1])
-		for keycode: Key in axes[action_name][2]:
-			_add_key(action_name, keycode)
-
-	_add_action(&"menu_left", MENU_DEADZONE)
-	_add_joy_axis(&"menu_left", JOY_AXIS_LEFT_X, -1.0)
-	_add_joy_button(&"menu_left", JOY_BUTTON_DPAD_LEFT)
-	_add_key(&"menu_left", KEY_A)
-	_add_key(&"menu_left", KEY_LEFT)
-
-	_add_action(&"menu_right", MENU_DEADZONE)
-	_add_joy_axis(&"menu_right", JOY_AXIS_LEFT_X, 1.0)
-	_add_joy_button(&"menu_right", JOY_BUTTON_DPAD_RIGHT)
-	_add_key(&"menu_right", KEY_D)
-	_add_key(&"menu_right", KEY_RIGHT)
-
-	_add_action(&"jump")
-	_add_joy_button(&"jump", JUMP_BUTTON)
-	_add_key(&"jump", KEY_SPACE)
-
-	_add_action(&"dash")
-	_add_joy_button(&"dash", DASH_BUTTON)
-	_add_key(&"dash", KEY_K)
-
-	# Gâchettes : gérées à part dans _input() (voir _trigger_down), pas dans l'InputMap.
-	_add_action(&"shoot")
-	_add_key(&"shoot", KEY_T)
-
-	_add_action(&"start")
-	_add_joy_button(&"start", JOY_BUTTON_START)
-
-	_add_action(&"pause")
-	_add_joy_button(&"pause", JOY_BUTTON_START)
-	_add_key(&"pause", KEY_P)
-
-	# ui_accept existe déjà (Entrée, Espace) : on y ajoute le A de la manette.
-	_add_joy_button(&"ui_accept", CONFIRM_BUTTON)
-
-	_add_action(&"menu_back")
-	_add_joy_button(&"menu_back", BACK_BUTTON)
-	_add_key(&"menu_back", KEY_BACKSPACE)
-
-	# Actions de menu intégrées à Godot (ui_left…) : leurs sticks passent aussi par le filtre.
-	for action_name: StringName in [&"ui_left", &"ui_right", &"ui_up", &"ui_down"]:
+	for action_name in InputMap.get_actions():
 		for event in InputMap.action_get_events(action_name):
-			if event is InputEventJoypadMotion:
-				InputMap.action_erase_event(action_name, event)
-				_add_joy_axis(action_name, event.axis, event.axis_value)
-
-	process_mode = Node.PROCESS_MODE_ALWAYS # Vérifie les sticks même en pause.
+			var motion := event as InputEventJoypadMotion
+			if motion and motion.device == -1:
+				InputMap.action_erase_event(action_name, motion)
+				_axis_bindings.append([action_name, motion])
+				if motion.axis not in _axes:
+					_axes.append(motion.axis)
+	process_mode = Node.PROCESS_MODE_ALWAYS # Vérifie les axes même en pause.
 	for device in Input.get_connected_joypads():
 		_connected_at[device] = Time.get_ticks_msec()
 	# Émis aussi au démarrage pour les manettes déjà branchées.
 	Input.joy_connection_changed.connect(_on_joy_connection_changed)
 
 
-## Chaque appui sur une gâchette = un tir (« shoot » appuyé puis relâché aussitôt).
-func _input(event: InputEvent) -> void:
-	var motion := event as InputEventJoypadMotion
-	if motion == null or not SHOOT_TRIGGERS.has(motion.axis):
-		return
-	var trigger := Vector2i(motion.device, motion.axis)
-	if motion.axis_value < TRIGGER_RELEASED:
-		_trigger_down[trigger] = false
-	elif motion.axis_value > TRIGGER_PRESSED and _trigger_down.get(trigger) == false:
-		_trigger_down[trigger] = true
-		_tap(&"shoot")
-
-
-func _tap(action_name: StringName) -> void:
-	var event := InputEventAction.new()
-	event.action = action_name
-	event.pressed = true
-	Input.parse_input_event(event)
-	# Relâché après deux images physiques : le joueur (qui lit l'entrée en physique) voit l'appui.
-	await get_tree().physics_frame
-	await get_tree().physics_frame
-	event = event.duplicate()
-	event.pressed = false
-	Input.parse_input_event(event)
-
-
-func _add_action(action_name: StringName, deadzone := 0.5) -> void:
-	if InputMap.has_action(action_name):
-		InputMap.erase_action(action_name)
-	InputMap.add_action(action_name, deadzone)
-
-
-func _add_key(action_name: StringName, keycode: Key) -> void:
-	var event := InputEventKey.new()
-	event.physical_keycode = keycode
-	event.device = -1 # Tous les claviers.
-	InputMap.action_add_event(action_name, event)
-
-
-## Stick : pas ajouté tout de suite à l'InputMap (voir _trust_sticks).
-func _add_joy_axis(action_name: StringName, axis: JoyAxis, value: float) -> void:
-	_stick_bindings.append([action_name, axis, value])
-
-
 func _process(_delta: float) -> void:
 	for device: int in _connected_at:
-		if not _trusted_sticks.has(device) and Time.get_ticks_msec() - _connected_at[device] > STICK_CHECK_DELAY \
-				and _sticks_centered(device):
-			_trust_sticks(device)
+		if Time.get_ticks_msec() - _connected_at[device] < AXIS_CHECK_DELAY:
+			continue
+		var trusted: Dictionary = _trusted_axes.get_or_add(device, {})
+		for axis in _axes:
+			if not trusted.has(axis) and absf(Input.get_joy_axis(device, axis)) < AXIS_REST:
+				_trust_axis(device, axis)
 
 
-func _sticks_centered(device: int) -> bool:
-	for axis in STICK_AXES:
-		if absf(Input.get_joy_axis(device, axis)) > STICK_CENTERED:
-			return false
-	return true
+## L'axe `axis` de la manette `device` pilote désormais ses actions.
+func _trust_axis(device: int, axis: JoyAxis) -> void:
+	_trusted_axes[device][axis] = true
+	for binding in _axis_bindings:
+		var motion: InputEventJoypadMotion = binding[1]
+		if motion.axis == axis:
+			var event := motion.duplicate() as InputEventJoypadMotion
+			event.device = device
+			InputMap.action_add_event(binding[0], event)
 
 
-## Les sticks de `device` pilotent désormais les actions.
-func _trust_sticks(device: int) -> void:
-	_trusted_sticks[device] = true
-	for binding in _stick_bindings:
-		var event := InputEventJoypadMotion.new()
-		event.device = device
-		event.axis = binding[1]
-		event.axis_value = binding[2]
-		InputMap.action_add_event(binding[0], event)
-
-
-func _forget_sticks(device: int) -> void:
-	_trusted_sticks.erase(device)
-	for binding in _stick_bindings:
+func _forget_axes(device: int) -> void:
+	_trusted_axes.erase(device)
+	for binding in _axis_bindings:
 		for event in InputMap.action_get_events(binding[0]):
 			if event is InputEventJoypadMotion and event.device == device:
 				InputMap.action_erase_event(binding[0], event)
-		Input.action_release(binding[0])
-
-
-func _add_joy_button(action_name: StringName, button: JoyButton) -> void:
-	var event := InputEventJoypadButton.new()
-	event.device = -1 # Toutes les manettes.
-	event.button_index = button
-	InputMap.action_add_event(action_name, event)
+		Input.action_release(binding[0]) # Ex. gâchette tenue au moment de la déconnexion.
 
 
 func _on_joy_connection_changed(device: int, connected: bool) -> void:
@@ -220,7 +100,4 @@ func _on_joy_connection_changed(device: int, connected: bool) -> void:
 	else:
 		print("Manette %d déconnectée" % device)
 		_connected_at.erase(device)
-		_forget_sticks(device)
-		for trigger: Vector2i in _trigger_down.keys():
-			if trigger.x == device:
-				_trigger_down.erase(trigger)
+		_forget_axes(device)

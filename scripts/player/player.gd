@@ -319,6 +319,12 @@ func _ready() -> void:
 	_apply_color()
 	if not Engine.is_editor_hint():
 		_create_muzzle()
+	# L'éditeur enregistre parfois les triangles du mélange des marches avant ses points :
+	# ils sont alors ignorés au chargement et la marche reste figée. On les recalcule.
+	var walk_space := (_animation_tree.tree_root as AnimationNodeStateMachine).get_node(&"walk") as AnimationNodeBlendSpace2D
+	if walk_space and walk_space.get_triangle_count() == 0:
+		walk_space.auto_triangles = false
+		walk_space.auto_triangles = true
 	_model_base_y = _model.position.y
 	_floor_snap_default = floor_snap_length
 	_camera_base_y = camera.position.y

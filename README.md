@@ -64,8 +64,9 @@ par commande, avec sa touche clavier et son bouton de manette. Le code n'utilise
 | Se déplacer | `move_left/right/up/down` | Z/Q/S/D (W/A/S/D en QWERTY) ou flèches | Stick gauche | Stick gauche |
 | Tourner la caméra | `look_left/right/up/down` | Souris / trackpad | Stick droit | Stick droit |
 | Sauter | `jump` | Espace | B | Croix |
-| Dash (au sol, toutes les 2 s) | `dash` | K | Y | Carré |
-| Tirer une bulle (maintenir = en continu) | `shoot` | T | ZL / ZR | L2 / R2 |
+| Dash (au sol, toutes les 2 s) | `dash` | Maj | Y | Carré |
+| Tirer une bulle (maintenir = en continu) | `shoot` | Clic droit | ZR | R2 |
+| Viser (maintenir) : la caméra zoome, sans aide à la visée | `aim` | Clic gauche | ZL | L2 |
 | **Menus** : naviguer / choisir son joueur | `menu_left/right` (+ `ui_*` de Godot) | Flèches (Q/D) | Stick gauche / croix | Stick gauche / croix |
 | **Menus** : valider | `ui_accept` | Entrée / Espace | A | Rond |
 | **Accueil** : démarrer ; **Sélection** : lancer la partie (hôte) | `start` | Entrée sur le bouton | + | Options |
@@ -73,6 +74,7 @@ par commande, avec sa touche clavier et son bouton de manette. Le code n'utilise
 | **En jeu** : pause (hôte uniquement) | `pause` | P | + | Options |
 | **Pause** : reprendre (hôte) | `pause` / `menu_back` / `ui_cancel` | P / Retour arrière / Échap | + / B | Options / Croix |
 | **En jeu** : test, s'infliger 10 dégâts (version de développement) | `debug_damage` | H | — | — |
+| **En jeu** : debug mode (PV, rectangle de l'aide à la visée), désactivé au lancement | `debug_mode` | Ctrl + D | — | — |
 | Retour à l'écran précédent (menus) / quitter le jeu | `ui_cancel` | Échap | — | — |
 
 La souris est capturée au lancement (curseur invisible) pour piloter la caméra.
@@ -85,8 +87,10 @@ Un joueur qui tombe de la plateforme meurt.
 - **Viseur** au centre de l'écran (`scenes/ui/crosshair.tscn`) : il se resserre et passe au rouge sur un
   adversaire. La caméra est placée façon Splatoon : derrière et au-dessus du canard, presque horizontale.
 - **Aide à la visée** (`scripts/player/aim_assist.gd`, nœud `AimAssist` du joueur) : si un adversaire visible
-  entre dans un rectangle de 200 × 150 px autour du centre de l'écran (affiché pour l'instant, `show_box`),
+  entre dans un rectangle de 200 × 150 px autour du centre de l'écran (affiché en debug mode, Ctrl + D),
   le viseur glisse vers lui sans bouger la caméra, et les bulles partent vers le viseur.
+- **Visée** (action `aim` maintenue) : la caméra avance le long de son bras et resserre son champ
+  (`aim_fov`, `aim_arm_length` sur `PlayerCamera`) ; l'aide à la visée est coupée, le viseur reste au centre.
 - Chaque appui tire une bulle vers le point visé (aussi vers le haut ou le bas), avec au moins 0,15 s entre
   deux appuis ; touche maintenue, une bulle toutes les 0,2 s. Elle sort
   du bout du canon du canard, petite, et atteint sa taille en 0,12 s.

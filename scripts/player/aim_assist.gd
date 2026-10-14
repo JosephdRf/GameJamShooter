@@ -4,6 +4,7 @@ extends Node
 ## entre dans le rectangle `box_size` autour du centre de l'écran, le viseur glisse
 ## vers lui sans bouger la caméra (PlayerCamera.aim_offset), en restant dans le
 ## rectangle ; les bulles partent vers le viseur. Sans cible, il revient au centre.
+## Coupée pendant la visée (PlayerCamera.aiming) : le viseur revient au centre.
 
 @export var enabled := true
 ## Taille du rectangle autour du centre de l'écran (px, à 1080 px de haut).
@@ -11,9 +12,8 @@ extends Node
 ## Vitesse à laquelle le viseur rejoint la cible (plus élevé = plus rapide).
 @export var follow_speed := 12.0
 ## Au-delà de cette distance (m), un adversaire n'attire pas le viseur.
+## Le rectangle s'affiche en debug mode (Ctrl + D, cf. Game).
 @export var max_distance := 30.0
-## DEBUG : affiche le rectangle autour du viseur (à désactiver ensuite).
-@export var show_box := true
 
 @onready var _player: Player = get_parent()
 
@@ -22,8 +22,13 @@ func _process(delta: float) -> void:
 	if Engine.is_editor_hint() or not _player.is_local:
 		return
 	var camera := _player.camera
-	var target := _find_target_offset() if enabled and _player.is_alive() else Vector2.ZERO
+	var target := _find_target_offset() if is_active() and _player.is_alive() else Vector2.ZERO
 	camera.aim_offset = camera.aim_offset.lerp(target, 1.0 - exp(-follow_speed * delta))
+
+
+## Vrai si l'aide agit : activée, et le joueur ne vise pas.
+func is_active() -> bool:
+	return enabled and not _player.camera.aiming
 
 
 ## Décalage à l'écran (px, à 1080 px de haut) de l'adversaire visible le plus proche

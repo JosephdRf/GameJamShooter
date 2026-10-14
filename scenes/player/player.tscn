@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://bpbpwppaq4fmw" path="res://scripts/player/player.gd" id="1_player"]
 [ext_resource type="PackedScene" path="res://scenes/player/player_camera.tscn" id="2_camera"]
 [ext_resource type="PackedScene" uid="uid://dbbvnlau4bc6d" path="res://assets/models/duck_v3.glb" id="3_duck"]
-[ext_resource type="Script" path="res://scripts/player/aim_assist.gd" id="4_aim_assist"]
+[ext_resource type="Script" uid="uid://dpjjqetgj67d1" path="res://scripts/player/aim_assist.gd" id="4_aim_assist"]
 
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_gmlin"]
 animation = &"dash"
@@ -135,6 +135,9 @@ properties/0/replication_mode = 1
 properties/1/path = NodePath(".:health")
 properties/1/spawn = true
 properties/1/replication_mode = 2
+properties/2/path = NodePath(".:sync_facing")
+properties/2/spawn = true
+properties/2/replication_mode = 1
 
 [node name="Player" type="CharacterBody3D" unique_id=867554235]
 collision_layer = 2
@@ -164,5 +167,5 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.15, 0)
 replication_config = SubResource("SceneReplicationConfig_sync")
 public_visibility = false
 
-[node name="AimAssist" type="Node" parent="."]
+[node name="AimAssist" type="Node" parent="." unique_id=1508507568]
 script = ExtResource("4_aim_assist")

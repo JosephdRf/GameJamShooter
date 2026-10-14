@@ -4,8 +4,9 @@ extends Node
 ##   move_left/right/up/down : se déplacer (Z/Q/S/D ou flèches / stick gauche)
 ##   look_left/right/up/down : tourner la caméra (stick droit ; la souris est gérée par PlayerCamera)
 ##   jump                    : sauter (Espace / bouton du bas)
-##   dash                    : dash (K / bouton de gauche)
-##   shoot                   : tirer, maintenu = en continu (T / gâchettes gauche et droite)
+##   dash                    : dash (Maj / bouton de gauche)
+##   shoot                   : tirer, maintenu = en continu (clic droit / gâchette droite)
+##   aim                     : viser, maintenu = zoom sans aide à la visée (clic gauche / gâchette gauche)
 ##   pause                   : menu pause en jeu, hôte (P / Start)
 ##   start                   : lancer depuis l'accueil et le choix des équipes (Start)
 ##   menu_left/menu_right    : choisir son joueur (Q/D ou flèches / croix, stick gauche)
@@ -13,6 +14,7 @@ extends Node
 ##   ui_accept (de Godot)    : valider (Entrée, Espace / bouton de droite)
 ##   ui_cancel (de Godot)    : quitter le jeu (Échap)
 ##   debug_damage            : version de développement, 10 dégâts à son canard (H)
+##   debug_mode              : afficher / masquer le debug mode : PV, rectangle de l'aide à la visée (Ctrl + D)
 ##
 ## Les touches sont *physiques* : Z/Q/S/D en AZERTY = W/A/S/D en QWERTY.
 ## Les boutons de manette sont repérés par leur *position* (noms Xbox dans Godot) :

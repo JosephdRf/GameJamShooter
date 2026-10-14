@@ -13,14 +13,14 @@ extends CanvasLayer
 @export var tick_distance := 40.0
 @export var tick_distance_on_target := 26.0
 @export var tick_length := 18.0
-## DEBUG : couleur du rectangle de l'aide à la visée.
+## Debug mode : couleur du rectangle de l'aide à la visée.
 @export var assist_box_color := Color(1, 1, 1, 0.35)
 
 var _on_target := false
 var _spread := 1.0 # 1 = au repos, 0 = sur une cible.
 ## Décalage du viseur depuis le centre de l'écran (px, à 1080 px de haut).
 var _offset := Vector2.ZERO
-## DEBUG : rectangle de l'aide à la visée (px, à 1080 px de haut ; zéro = caché).
+## Debug mode : rectangle de l'aide à la visée (px, à 1080 px de haut ; zéro = caché).
 var _assist_box := Vector2.ZERO
 
 @onready var _canvas: Control = $Canvas
@@ -51,7 +51,7 @@ func _process(delta: float) -> void:
 
 func _draw_crosshair() -> void:
 	var ui_scale := _canvas.size.y / 1080.0
-	if _assist_box != Vector2.ZERO: # DEBUG
+	if _assist_box != Vector2.ZERO: # Debug mode.
 		var box := _assist_box * ui_scale
 		_canvas.draw_rect(Rect2(_canvas.size / 2.0 - box / 2.0, box), assist_box_color, false, 2.0 * ui_scale)
 	var center := _canvas.size / 2.0 + _offset * ui_scale

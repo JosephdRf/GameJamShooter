@@ -44,6 +44,8 @@ const MOVING_SPEED := 0.3
 const RUN_SPEED := 4.0
 ## Vitesse à laquelle le canard se tourne vers sa direction de déplacement.
 const TURN_SPEED := 14.0
+## Posture de combat : vitesse à laquelle il se tourne vers sa visée (demi-tour en ~0,1 s).
+const AIM_TURN_SPEED := 30.0
 ## Courbe du dash (fractions de dash_duration) : fin de la montée en vitesse,
 ## début du ralentissement.
 const DASH_RAMP := 0.15
@@ -97,6 +99,9 @@ const STEP_SMOOTHING := 18.0
 @export var fire_cooldown := 0.15
 ## Touche de tir maintenue : une bulle toutes les `auto_fire_interval` s.
 @export var auto_fire_interval := 0.2
+## Posture de combat : pendant la visée (action aim) et cette durée (s) après le
+## dernier tir, le canard reste tourné vers sa visée, même s'il recule.
+@export var combat_stance_duration := 0.6
 @export_group("Vie")
 @export var max_health := 100.0
 ## Vie regagnée par seconde (PV/s) quand le joueur ne prend pas de dégâts.
@@ -125,9 +130,14 @@ var health := 100.0:
 			_on_died()
 		elif not was_alive and health > 0.0:
 			_on_respawned()
+## Posture de combat : direction horizontale (x, z) que regarde le canard pendant qu'il
+## vise ou tire ; Vector2.ZERO sinon (il regarde alors là où il va). Diffusée par le nœud Sync.
+var sync_facing := Vector2.ZERO
 
 var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var _spawn_position: Vector3
+## Temps restant de la posture de combat (s).
+var _combat_left := 0.0
 ## Temps restant du dash en cours (s), 0 si pas de dash.
 var _dash_time := 0.0
 ## Temps restant avant de pouvoir dasher à nouveau (s).
@@ -254,6 +264,8 @@ func respawn() -> void:
 	velocity = Vector3.ZERO
 	_dash_time = 0.0
 	_step_offset = 0.0
+	_combat_left = 0.0
+	sync_facing = Vector2.ZERO
 	_regen_cooldown_left = 0.0
 	health = max_health
 	reset_physics_interpolation()
@@ -276,6 +288,10 @@ func _simulate(delta: float) -> void:
 	# Nouvel appui : tir dès fire_cooldown écoulé ; touche maintenue : toutes les auto_fire_interval.
 	var pressed := Input.is_action_just_pressed(&"shoot") and _since_last_shot >= fire_cooldown
 	var held := Input.is_action_pressed(&"shoot") and _since_last_shot >= auto_fire_interval
+	_combat_left = maxf(_combat_left - delta, 0.0)
+	if is_local and (camera.aiming or pressed or held):
+		_combat_left = combat_stance_duration
+	sync_facing = _aim_facing() if _combat_left > 0.0 else Vector2.ZERO
 	if is_local and (pressed or held):
 		_since_last_shot = 0.0
 		# Tout droit devant la caméra (à l'horizontale), depuis le centre du cube.
@@ -283,8 +299,12 @@ func _simulate(delta: float) -> void:
 		# La bulle vise avec sa surface : son centre s'arrête à un rayon de la surface
 		# visée, sinon son bas frôlerait le sol (ou le mur) et elle éclaterait avant.
 		var aim_point: Vector3 = target.point + target.normal * BubbleProjectile.RADIUS
-		_turn_model_towards(aim_point - global_position, 1.0) # D'abord tourner le canard : le canon pointe vers la cible.
-		var origin := _muzzle.global_position if _muzzle else global_position
+		# Le canard n'a peut-être pas fini de se tourner vers sa visée : la bulle part
+		# de là où sera le bout du canon une fois tourné.
+		var origin := global_position
+		if _muzzle:
+			var turn := atan2(sync_facing.x, sync_facing.y) - _model.rotation.y
+			origin += (_muzzle.global_position - global_position).rotated(Vector3.UP, turn)
 		var shot_direction := (aim_point - origin).normalized()
 		# Cible trop proche (derrière le canon) : on tire simplement dans l'axe de la caméra.
 		if shot_direction.dot(camera.get_aim_ray()[1]) < 0.5:
@@ -320,7 +340,6 @@ func _regenerate(delta: float) -> void:
 ## Sur tous les ordinateurs (appelé par celui qui contrôle ce cube).
 @rpc("authority", "call_local", "reliable")
 func _shoot(origin: Vector3, direction: Vector3) -> void:
-	_turn_model_towards(direction, 1.0) # Le canard se tourne d'un coup vers son tir.
 	shot.emit(origin, direction)
 
 
@@ -329,6 +348,12 @@ func _shoot(origin: Vector3, direction: Vector3) -> void:
 @rpc("authority", "call_local", "reliable")
 func _play_dash() -> void:
 	_dash_animation_left = dash_duration
+
+
+## Direction horizontale (x, z) du rayon du viseur.
+func _aim_facing() -> Vector2:
+	var direction: Vector3 = camera.get_aim_ray()[1]
+	return Vector2(direction.x, direction.z).normalized()
 
 
 ## Ce que vise le joueur (centre de l'écran) : { point, normal, collider (ou null) }.
@@ -369,7 +394,8 @@ func _create_muzzle() -> void:
 	_muzzle.position = end_a if (gun.to_global(end_a) - gun.to_global(end_b)).dot(forward) > 0.0 else end_b
 
 
-## Animation et orientation du canard selon sa vitesse (et le dash en cours).
+## Animation et orientation du canard selon sa vitesse, sa visée (posture de combat)
+## et le dash en cours.
 func _update_model(velocity_now: Vector3, delta: float) -> void:
 	_step_offset *= exp(-STEP_SMOOTHING * delta)
 	_model.position.y = _model_base_y + _step_offset
@@ -377,7 +403,10 @@ func _update_model(velocity_now: Vector3, delta: float) -> void:
 	var horizontal := Vector3(velocity_now.x, 0.0, velocity_now.z)
 	var speed := horizontal.length()
 	var moving := speed > MOVING_SPEED and is_alive()
-	if moving:
+	if sync_facing != Vector2.ZERO and is_alive():
+		# Posture de combat : il regarde là où il vise, même en reculant.
+		_turn_model_towards(Vector3(sync_facing.x, 0.0, sync_facing.y), 1.0 - exp(-AIM_TURN_SPEED * delta))
+	elif moving:
 		_turn_model_towards(horizontal, 1.0 - exp(-TURN_SPEED * delta))
 	_dash_animation_left = maxf(_dash_animation_left - delta, 0.0)
 	var dashing := _dash_animation_left > 0.0

@@ -12,14 +12,23 @@ extends Node3D
 ## Au repos, le viseur vise donc au loin à hauteur de tête : les bulles portent
 ## (incliné vers le bas, il viserait le sol et les bulles s'y écraseraient).
 ## Le SpringArm rapproche la caméra si un mur se trouve entre elle et le joueur.
+## Visée (action aim maintenue : L2 / ZL, clic gauche) : la caméra avance le long
+## de son bras et resserre son champ ; le viseur reste au centre de l'écran (aide
+## à la visée coupée, cf. AimAssist) et vise le même point qu'avant le zoom.
 
 ## Vitesse de rotation en radians par seconde (stick poussé à fond).
 @export var look_sensitivity := 4.0
 ## Radians par pixel de déplacement de la souris / du trackpad.
 @export var mouse_sensitivity := 0.004
-@export_range(-89.0, 0.0) var min_pitch_degrees := -70.0
-@export_range(0.0, 89.0) var max_pitch_degrees := 45.0
+## Inclinaison verticale de la caméra (°) : limite basse (vers le sol) et haute (vers le plafond).
+@export_range(-89.0, 0.0) var min_pitch_degrees := -45.0
+@export_range(0.0, 89.0) var max_pitch_degrees := 60.0
 @export var invert_y := false
+## Visée : champ de vision (°) et longueur du bras (m), au lieu de ceux de la scène.
+@export var aim_fov := 55.0
+@export var aim_arm_length := 2.0
+## Vitesse du zoom (plus élevé = plus rapide).
+@export var aim_zoom_speed := 14.0
 
 ## Hauteur d'écran de référence des décalages en pixels (comme le viseur).
 const REFERENCE_HEIGHT := 1080.0
@@ -27,6 +36,12 @@ const REFERENCE_HEIGHT := 1080.0
 ## Décalage du viseur par rapport au centre de l'écran (px, à 1080 px de haut),
 ## réglé par AimAssist. La caméra, elle, ne bouge pas.
 var aim_offset := Vector2.ZERO
+## Vrai tant que le joueur local (vivant, en jeu) maintient l'action aim.
+var aiming := false
+
+var _zoom := 0.0 # 0 = normal, 1 = visée.
+var _base_fov: float
+var _base_arm_length: float
 
 @onready var _player: Player = get_parent()
 @onready var _pitch: Node3D = $Pitch
@@ -36,6 +51,21 @@ var aim_offset := Vector2.ZERO
 
 func _ready() -> void:
 	_spring_arm.add_excluded_object(_player.get_rid())
+	_base_fov = _camera.fov
+	_base_arm_length = _spring_arm.spring_length
+
+
+func _process(delta: float) -> void:
+	aiming = _player.is_local and _player.active and _player.is_alive() and Input.is_action_pressed(&"aim")
+	var target_zoom := 1.0 if aiming else 0.0
+	if _zoom == target_zoom:
+		return
+	_zoom = lerpf(_zoom, target_zoom, 1.0 - exp(-aim_zoom_speed * delta))
+	if absf(_zoom - target_zoom) < 0.001:
+		_zoom = target_zoom
+	# La caméra avance dans l'axe de son bras : le centre de l'écran vise toujours le même point.
+	_camera.fov = lerpf(_base_fov, aim_fov, _zoom)
+	_spring_arm.spring_length = lerpf(_base_arm_length, aim_arm_length, _zoom)
 
 
 func _physics_process(delta: float) -> void:

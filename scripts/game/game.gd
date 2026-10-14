@@ -7,8 +7,8 @@ extends Node3D
 ## Tirs : chaque bulle tirée (signal Player.shot) est créée sous Projectiles et
 ## se supprime d'elle-même en éclatant.
 ## Test (version de développement) : l'action debug_damage (H) inflige 10 dégâts à son propre cube.
-## DEBUG : DebugHealth affiche les PV du joueur local (à supprimer : le nœud et
-## les lignes marquées « DEBUG »).
+## Debug mode (action debug_mode : Ctrl + D), désactivé au lancement : affiche les
+## PV du joueur local (DebugHealth) et le rectangle de l'aide à la visée.
 ## DEBUG : pour tester l'aide à la visée, l'hôte place un adversaire non choisi
 ## (immobile) sur le repère DebugEnemySpot ; il y réapparaît et ne compte pas pour
 ## les zones (à supprimer : le nœud et les lignes marquées « DEBUG »).
@@ -48,6 +48,7 @@ var time_left := 0.0
 var _running := false
 var _ended := false
 var _time_sync_cooldown := 0.0
+var _debug_mode := false
 var _debug_enemy: Player # DEBUG
 
 @onready var _arena: Node3D = $Arena
@@ -60,7 +61,8 @@ var _debug_enemy: Player # DEBUG
 @onready var _death_screen: CanvasLayer = $DeathScreen
 @onready var _announcer: CanvasLayer = $Announcer
 @onready var _crosshair: CanvasLayer = $Crosshair
-@onready var _debug_health: Label = $DebugHealth/Label # DEBUG
+@onready var _debug_layer: CanvasLayer = $DebugHealth
+@onready var _debug_health: Label = $DebugHealth/Label
 @onready var _debug_enemy_spot: Marker3D = get_node_or_null(^"DebugEnemySpot") # DEBUG
 
 
@@ -76,6 +78,7 @@ func _ready() -> void:
 		player.shot.connect(_on_player_shot.bind(player))
 	_apply_slots()
 	_place_debug_enemy() # DEBUG
+	_debug_layer.visible = _debug_mode
 	time_left = match_duration
 	_hud.set_time_left(time_left if match_duration > 0.0 else -1.0)
 	_hud.set_scores(0, 0)
@@ -107,6 +110,9 @@ func _process(delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed(&"ui_cancel"):
 		get_tree().quit()
+	elif event.is_action_pressed(&"debug_mode"):
+		_debug_mode = not _debug_mode
+		_debug_layer.visible = _debug_mode
 	elif OS.is_debug_build() and event.is_action_pressed(&"debug_damage"):
 		for player: Player in _players.get_children():
 			if player.is_local and player.active:
@@ -116,7 +122,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func _on_player_health_changed(health: float, player: Player) -> void:
 	if player.is_local:
 		_damage_overlay.set_health_ratio(health / player.max_health)
-		_debug_health.text = "PV : %d" % ceili(health) # DEBUG
+		_debug_health.text = "PV : %d" % ceili(health)
 
 
 ## Sur tous les ordinateurs ; seule la bulle de l'ordinateur du tireur inflige des dégâts.
@@ -206,7 +212,7 @@ func _update_crosshair() -> void:
 			_crosshair.visible = player.is_alive() and not _ended
 			_crosshair.set_on_target(_crosshair.visible and player.is_aiming_at_enemy())
 			_crosshair.set_aim(player.camera.aim_offset,
-					player.aim_assist.box_size if player.aim_assist.show_box and player.aim_assist.enabled else Vector2.ZERO)
+					player.aim_assist.box_size if _debug_mode and player.aim_assist.is_active() else Vector2.ZERO)
 			return
 	_crosshair.visible = false
 

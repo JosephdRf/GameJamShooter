@@ -45,7 +45,8 @@ const HOT_AIR_SHADER := preload("res://assets/shaders/hot_air.gdshader")
 ## Durée (s) d'une oscillation de la puissance.
 @export var power_period := 3.0
 @export_group("Air chaud")
-@export var air_color := Color(1.0, 0.62, 0.32)
+## Blanc neutre : l'air ne doit pas ressembler à une zone à défendre (colonnes colorées).
+@export var air_color := Color(0.96, 0.98, 1.0)
 ## Nombre de filets d'air visibles en même temps (environ).
 @export var streaks := 70
 @export var hum_volume_db := -14.0

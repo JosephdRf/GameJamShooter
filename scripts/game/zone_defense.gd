@@ -16,6 +16,8 @@ extends Node3D
 ## Réseau : l'hôte décide (présence, progression, capture) et envoie l'état aux
 ## autres ordinateurs ; entre deux envois, ceux-ci font avancer la barre seuls.
 ##
+## Colonne de lumière (Beacon) haute de beacon_height, à la couleur de la zone : on
+## repère la zone active de loin, au-dessus des murs et des plateformes.
 ## Position, forme (rayon ou taille), points et durées se règlent sur chaque
 ## instance, dans la scène de jeu (la zone est visible dans l'éditeur, masquée en jeu).
 ## Le centre de la zone se place au niveau du sol.
@@ -26,6 +28,12 @@ signal finished(team: int)
 ## Intervalle (s) entre deux envois de l'état par l'hôte.
 const SYNC_INTERVAL := 0.1
 const IDLE_COLOR := Color(1, 0.95, 0.7) # Jaune pâle : visible sur le sol clair.
+## Vitesse de montée des vagues de la colonne de lumière (m/s) : au repos, en capture.
+const WAVE_SPEED := 3.0
+const WAVE_SPEED_CAPTURING := 7.0
+## Couleur de la colonne de lumière quand personne ne capture : jaune doré, franc pour
+## ressortir sur les murs clairs.
+const BEACON_IDLE_COLOR := Color(1.0, 0.76, 0.05)
 ## Largeur du liseré au bord de la zone (m).
 const RING_WIDTH := 0.2
 
@@ -51,6 +59,11 @@ enum Shape { CIRCLE, RECTANGLE }
 	set(value):
 		wall_height = value
 		_update_shape()
+## Hauteur de la colonne de lumière (m), pour voir la zone de loin.
+@export var beacon_height := 30.0:
+	set(value):
+		beacon_height = value
+		_update_shape()
 ## Points gagnés par l'équipe qui capture la zone.
 @export var points := 2
 ## Durée de vie de la zone une fois activée (s), en pause pendant une capture.
@@ -69,9 +82,12 @@ var progress := 0.0
 var time_left := 0.0
 
 var _sync_cooldown := 0.0
+## Position des vagues de la colonne de lumière (m), avancée chaque image.
+var _wave_offset := 0.0
 
 @onready var _disk: MeshInstance3D = $Disk
 @onready var _wall: MeshInstance3D = $Wall
+@onready var _beacon: MeshInstance3D = $Beacon
 @onready var _ring: MeshInstance3D = $Ring
 @onready var _light: OmniLight3D = $Light
 
@@ -159,6 +175,9 @@ func contains(point: Vector3, margin := 0.0) -> bool:
 func _process(delta: float) -> void:
 	if Engine.is_editor_hint():
 		return
+	if active:
+		_wave_offset += (WAVE_SPEED_CAPTURING if capturing_team != 0 else WAVE_SPEED) * delta
+		(_beacon.material_override as ShaderMaterial).set_shader_parameter(&"scroll_offset", fmod(_wave_offset, 900.0)) # 900 = 200 écarts de vagues : pas de saut.
 	# Autres ordinateurs : la barre et le décompte avancent entre deux envois de l'hôte.
 	if not active or multiplayer.is_server():
 		return
@@ -196,14 +215,17 @@ func _update_visuals() -> void:
 	var color := IDLE_COLOR if capturing_team == 0 else Player.TEAM_COLORS[capturing_team - 1]
 	var lit := capturing_team != 0
 	var disk_material := _disk.material_override as StandardMaterial3D
-	disk_material.albedo_color = Color(color, 0.4 if lit else 0.3)
+	disk_material.albedo_color = Color(color, 0.32 if lit else 0.3)
 	disk_material.emission = color
 	disk_material.emission_energy_multiplier = 0.7 if lit else 0.3
 	var wall_material := _wall.material_override as ShaderMaterial
 	wall_material.set_shader_parameter(&"color", Color(color, 0.38 if lit else 0.3))
 	(_ring.material_override as StandardMaterial3D).albedo_color = color
+	var beacon_material := _beacon.material_override as ShaderMaterial
+	beacon_material.set_shader_parameter(&"color", color if lit else BEACON_IDLE_COLOR)
+	beacon_material.set_shader_parameter(&"intensity", 0.6)
 	_light.light_color = color
-	_light.light_energy = 1.5 if lit else 0.0
+	_light.light_energy = 0.6 if lit else 0.0
 
 
 func _update_shape() -> void:
@@ -219,10 +241,14 @@ func _update_shape() -> void:
 		wall.size = Vector3(size.x, wall_height, size.y)
 		_wall.mesh = wall
 		_ring.mesh = _rectangle_ring()
+		var beacon := BoxMesh.new()
+		beacon.size = Vector3(size.x, beacon_height, size.y)
+		_beacon.mesh = beacon
 		light_range = size.length() / 2.0
 	else:
 		_disk.mesh = _cylinder(radius, 0.04, true)
 		_wall.mesh = _cylinder(radius, wall_height, false)
+		_beacon.mesh = _cylinder(radius, beacon_height, false)
 		var ring := TorusMesh.new()
 		ring.outer_radius = radius
 		ring.inner_radius = radius - RING_WIDTH
@@ -230,6 +256,13 @@ func _update_shape() -> void:
 		ring.ring_segments = 8
 		_ring.mesh = ring
 	_wall.position.y = wall_height / 2.0
+	# Forme de la zone pour les shaders (transparents quand la caméra est dedans).
+	for material: ShaderMaterial in [_wall.material_override, _beacon.material_override]:
+		material.set_shader_parameter(&"zone_rect", shape == Shape.RECTANGLE)
+		material.set_shader_parameter(&"zone_radius", radius)
+		material.set_shader_parameter(&"zone_half_size", size / 2.0)
+	_beacon.position.y = beacon_height / 2.0
+	(_beacon.material_override as ShaderMaterial).set_shader_parameter(&"height", beacon_height)
 	(_wall.material_override as ShaderMaterial).set_shader_parameter(&"height", wall_height)
 	_light.omni_range = light_range * 2.0
 

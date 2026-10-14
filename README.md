@@ -42,13 +42,17 @@ Les chemins sont regroupés dans `scripts/ui/screens.gd` (`Screens.TITLE`, `Scre
    ou que sa barre reparte à 0 (l'équipe est sortie). L'hôte fait foi : il envoie le temps restant
    aux autres toutes les 0,5 s. Durée réglable avec `match_duration` sur le nœud `Game`
    (0 = pas de limite, chrono masqué).
-8. **Défense de zone** : une seule zone (ronde, ou rectangulaire pour l'îlot central) est active à la fois (tirée au hasard, jamais la
+8. **Défense de zone** : aucune zone au début ; la première apparaît **5 s** après « C'est parti ! »
+   (`first_zone_delay` sur `ZoneDefenseMode`), avec « Une nouvelle zone est apparue ! ». Ensuite, une
+   seule zone (ronde, ou rectangulaire pour l'îlot central) est toujours active (tirée au hasard, jamais la
    même deux fois de suite). Une équipe qui y reste **seule 10 s** la capture et gagne **2 points** ;
    la zone prend la couleur de l'équipe présente et une barre de progression s'affiche sous le
-   score. Un canard compte comme dedans tant que son corps touche la zone (même centré un peu
+   score. Une colonne de lumière de 30 m, parcourue de vagues qui montent (plus vite pendant une
+   capture), dorée puis à la couleur de l'équipe qui capture (
+   `beacon_height`) montre la zone active de loin. Un canard compte comme dedans tant que son corps touche la zone (même centré un peu
    hors du bord). Si l'équipe sort, la barre repart à 0 ; si les deux équipes sont dedans, elle est en
    pause. Une zone non capturée disparaît au bout de **20 s** (décompte en pause tant qu'une
-   équipe la capture). Scores : bleu à gauche du chrono, rouge à droite. À chaque prise :
+   équipe la capture) ; une autre apparaît alors, annoncée par « Une nouvelle zone est apparue ! ». Scores : bleu à gauche du chrono, rouge à droite. À chaque prise :
    « Ton équipe a pris la zone clé ! » ou « L'adversaire a pris la zone clé ! ».
 9. Fin du combat : écran des scores de chaque équipe, **Rejouer** (retour à la sélection
    d'équipe) ou **Quitter** (ferme le jeu). Avant l'écran de fin, « Terminé ! » s'affiche 1,5 s,
@@ -161,11 +165,12 @@ Un joueur qui tombe de la plateforme meurt.
 
 ### Sèche-cheveux (prototype)
 
-- Au centre d'`arena4` (au pied de la rampe de l'îlot central) : un sèche-cheveux allumé, debout au milieu d'un socle rond (liseré orange).
+- Au centre d'`arena4` (au pied de la rampe de l'îlot central) : un sèche-cheveux allumé, debout au milieu d'un socle rond (liseré métal).
   Le jet est toujours actif : tout canard en l'air dans la colonne d'air chaud est porté vers le haut et
   flotte vers 13 m (en montant et descendant un peu : la puissance du souffle oscille) tant qu'il y reste ; il retombe en en sortant par le côté. Sauter
   depuis le socle lance l'envol (au lieu d'un saut de 2 m).
 - Air chaud visible (jet, colonne qui fait onduler l'arrière-plan, filets d'air, lueur de la buse) et audible.
+  L'air est blanc neutre (`air_color`) pour ne pas être confondu avec les zones à défendre, colorées.
 - Scène `scenes/game/hair_dryer.tscn` (à poser n'importe où), script `scripts/game/hair_dryer.gd` : `zone_radius`,
   `launch_speed`, `updraft_speed`, `lift_acceleration`, `lift_gravity`, `column_height`, `hover_height`, `power_variation`, `power_period`, `air_color`. Shader : `assets/shaders/hot_air.gdshader`.
 

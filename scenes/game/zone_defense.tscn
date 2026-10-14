@@ -2,6 +2,12 @@
 
 [ext_resource type="Script" path="res://scripts/game/zone_defense.gd" id="1_zone"]
 [ext_resource type="Shader" path="res://assets/shaders/zone_wall.gdshader" id="2_wall"]
+[ext_resource type="Shader" path="res://assets/shaders/zone_beacon.gdshader" id="3_beacon"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_beacon"]
+resource_local_to_scene = true
+render_priority = 0
+shader = ExtResource("3_beacon")
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_disk"]
 resource_local_to_scene = true
@@ -62,6 +68,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
 cast_shadow = 0
 material_override = SubResource("ShaderMaterial_wall")
 mesh = SubResource("CylinderMesh_wall")
+
+[node name="Beacon" type="MeshInstance3D" parent="."]
+cast_shadow = 0
+material_override = SubResource("ShaderMaterial_beacon")
 
 [node name="Ring" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 0.3, 0, 0, 0, 1, 0, 0.04, 0)

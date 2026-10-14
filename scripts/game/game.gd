@@ -24,7 +24,9 @@ extends Node3D
 ## Messages (Announcer) : au lancement « Attention… » (joueurs figés) pendant
 ## ready_duration, puis « C'est parti ! » : les joueurs bougent, le chrono et
 ## les zones démarrent. À chaque prise de zone : « Ton équipe / L'adversaire a
-## pris la zone clé ! ». À la fin : « Terminé ! » pendant finish_duration,
+## pris la zone clé ! ». Quand une zone apparaît sans avoir été gagnée (la première, 5 s
+## après le début, ou celle qui remplace une zone expirée) : « Une nouvelle zone est apparue ! ».
+## À la fin : « Terminé ! » pendant finish_duration,
 ## joueurs et bulles figés, puis écran de fin.
 
 ## Intervalle (s) entre deux envois du temps restant par l'hôte.
@@ -41,6 +43,8 @@ const DEBUG_DAMAGE := 10.0
 @export var go_duration := 2.0
 ## Durée de « Ton équipe / L'adversaire a pris la zone clé ! » (s).
 @export var capture_message_duration := 2.5
+## Durée de « Une nouvelle zone est apparue ! » (s).
+@export var new_zone_message_duration := 2.5
 ## Durée de « Terminé ! » avant l'écran de fin (s).
 @export var finish_duration := 1.5
 ## Durée de « Prolongation ! » (s).
@@ -90,6 +94,7 @@ func _ready() -> void:
 	_hud.set_scores(0, 0)
 	_mode.scores_changed.connect(func() -> void: _hud.set_scores(_mode.scores[1], _mode.scores[2]))
 	_mode.zone_captured.connect(_on_zone_captured)
+	_mode.new_zone_appeared.connect(func() -> void: if not _ended: _announcer.show_new_zone(new_zone_message_duration))
 	NetworkManager.slots_changed.connect(_apply_slots)
 	NetworkManager.match_started.connect(_on_match_started)
 	NetworkManager.notify_game_ready()

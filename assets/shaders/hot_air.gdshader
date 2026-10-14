@@ -1,12 +1,12 @@
 // Air chaud (HairDryer) : paroi de cylindre / cône qui fait onduler ce qu'il y a derrière
-// (texture de l'écran déformée par un bruit qui monte), légèrement teintée, avec des
+// (texture de l'écran déformée par un bruit qui monte), légèrement blanchie, avec des
 // filets plus clairs. S'efface en bas, en haut et sur les bords vus de face.
 shader_type spatial;
 render_mode unshaded, cull_disabled, depth_draw_never, shadows_disabled, blend_mix;
 
 uniform sampler2D screen_tex : hint_screen_texture, filter_linear_mipmap;
 uniform sampler2D noise_tex : repeat_enable, filter_linear;
-uniform vec4 tint : source_color = vec4(1.0, 0.62, 0.32, 1.0);
+uniform vec4 tint : source_color = vec4(0.96, 0.98, 1.0, 1.0);
 uniform float tint_strength = 0.1;
 // Déformation de l'image derrière (fraction de l'écran).
 uniform float distortion = 0.015;

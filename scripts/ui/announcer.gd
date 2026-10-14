@@ -1,6 +1,7 @@
 extends CanvasLayer
 ## Messages de match en gros en haut de l'écran (instancié dans scenes/game/game.tscn) :
-## « Attention… », « C'est parti ! », prise de zone, « Prolongation ! », « Terminé ! ».
+## « Attention… », « C'est parti ! », prise de zone, nouvelle zone, « Prolongation ! »,
+## « Terminé ! ».
 ## Game décide quand ils s'affichent et combien de temps ; ce script ne fait qu'afficher.
 ## Textes, couleurs et effet d'apparition / disparition : dans l'inspecteur.
 ##
@@ -25,12 +26,20 @@ enum Effect {
 @export var enemy_capture_text := "L'adversaire a pris la zone !"
 @export var finish_text := "Terminé !"
 @export var overtime_text := "Prolongation !"
+@export var new_zone_text := "Une nouvelle zone est apparue !"
 ## Couleur de l'ombre pour les messages neutres (début, fin).
 @export var neutral_color := Color("1f9d8b")
+## Couleur de l'ombre de « Une nouvelle zone est apparue ! » : le doré de la colonne de
+## lumière d'une zone libre.
+@export var new_zone_color := Color(1.0, 0.76, 0.05)
 ## Couleur de l'ombre de « Prolongation ! ».
 @export var overtime_color := Color("e8892b")
 ## Taille du texte des messages longs (prise de zone).
 @export var long_message_font_size := 140
+
+## Part maximale de la largeur de l'image du texte qu'un message peut occuper : au-delà,
+## la taille du texte est réduite pour qu'il tienne (ombre comprise).
+const MAX_WIDTH_RATIO := 0.9
 
 var _tween: Tween
 var _default_font_size := 0
@@ -63,6 +72,10 @@ func show_capture(ally: bool, team_color: Color, duration: float) -> void:
 	play(ally_capture_text if ally else enemy_capture_text, duration, team_color, long_message_font_size)
 
 
+func show_new_zone(duration: float) -> void:
+	play(new_zone_text, duration, new_zone_color, long_message_font_size)
+
+
 func show_overtime(duration: float) -> void:
 	play(overtime_text, duration, overtime_color)
 
@@ -77,7 +90,7 @@ func play(text: String, duration: float, color: Color, font_size := 0, with_effe
 	if _tween:
 		_tween.kill()
 	_message.text = text
-	_message.add_theme_font_size_override(&"font_size", font_size if font_size > 0 else _default_font_size)
+	_message.add_theme_font_size_override(&"font_size", _fitting_font_size(text, font_size if font_size > 0 else _default_font_size))
 	_message.add_theme_color_override(&"font_shadow_color", color)
 	_message.add_theme_color_override(&"font_outline_color", color.darkened(0.45))
 	_reset()
@@ -88,6 +101,14 @@ func play(text: String, duration: float, color: Color, font_size := 0, with_effe
 	_tween.chain().tween_interval(maxf(duration - enter_time - exit_time, 0.0))
 	_exit(chosen)
 	_tween.chain().tween_callback(_display.hide)
+
+
+## Taille de texte <= `wanted` pour que `text` tienne dans la largeur de l'image du texte.
+func _fitting_font_size(text: String, wanted: int) -> int:
+	var font := _message.get_theme_font(&"font")
+	var width := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, wanted).x
+	var limit := _viewport.size.x * MAX_WIDTH_RATIO
+	return wanted if width <= limit else floori(wanted * limit / width)
 
 
 func _reset() -> void:

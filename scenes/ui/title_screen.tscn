@@ -1,6 +1,7 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/title_screen.gd" id="1_title"]
+[ext_resource type="Script" path="res://scripts/ui/tiled_background.gd" id="bg_tiles"]
 
 [node name="TitleScreen" type="Control"]
 layout_mode = 3
@@ -11,14 +12,15 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_title")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="Control" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.08, 0.09, 0.12, 1)
+mouse_filter = 2
+script = ExtResource("bg_tiles")
 
 [node name="Center" type="CenterContainer" parent="."]
 layout_mode = 1
@@ -33,9 +35,11 @@ layout_mode = 2
 theme_override_constants/separation = 64
 
 [node name="Title" type="Label" parent="Center/Layout"]
+theme_override_colors/font_outline_color = Color(0.07, 0.25, 0.45, 1)
+theme_override_constants/outline_size = 14
 layout_mode = 2
 theme_override_font_sizes/font_size = 96
-text = "Bubble Shooter"
+text = "Duck my Life"
 horizontal_alignment = 1
 
 [node name="StartButton" type="Button" parent="Center/Layout"]

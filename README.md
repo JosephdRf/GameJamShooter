@@ -1,4 +1,4 @@
-# Bubble Shooter
+# Duck my Life
 
 Jeu Godot **4.7** **2v2 en réseau local** : 4 ordinateurs, chacun contrôle un canard,
 caméra à la 3e personne. Un des joueurs héberge la partie (« listen server »).
@@ -172,7 +172,7 @@ Un joueur qui tombe de la plateforme meurt.
 ├── scenes/                  # Scènes (.tscn), un sous-dossier par domaine
 │   ├── ui/                  # Un fichier par écran, modifiable indépendamment
 │   │   ├── loading_screen.tscn  # Écran de chargement (scène de départ)
-│   │   ├── title_screen.tscn    # Écran d'accueil : « Bubble Shooter » + Démarrer
+│   │   ├── title_screen.tscn    # Écran d'accueil : « Duck my Life » + Démarrer
 │   │   ├── connect_screen.tscn  # Écran hôte/IP : Héberger / Rejoindre
 │   │   ├── team_select.tscn     # Sélection d'équipe (choix des joueurs)
 │   │   ├── match_hud.tscn       # HUD en jeu : compte à rebours (instancié dans game.tscn)

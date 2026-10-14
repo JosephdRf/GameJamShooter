@@ -10,3 +10,6 @@ build/
 .DS_Store
 .vscode/
 .idea/
+
+# Fichiers à supprimer (gardés en local)
+_to_delete/

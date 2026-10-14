@@ -142,7 +142,7 @@ Un joueur qui tombe de la plateforme meurt.
 ### Flaques (prototype)
 
 - Une bulle qui éclate sur le sol (ou le dessus d'un meuble) laisse une **flaque d'eau** (rayon 2 m,
-  3,6 m pour la maxi-bulle : `puddle_radius`), de forme irrégulière. Deux flaques proches se rejoignent
+  7,2 m pour la maxi-bulle : `puddle_radius`), de forme irrégulière. Deux flaques proches se rejoignent
   en une seule ; tirer plusieurs fois au même endroit l'agrandit.
 - **Évaporation** : l'eau disparaît **30 s** après son dernier arrosage, en pâlissant pendant les 10 dernières
   secondes ; réarroser une flaque la rafraîchit (groupe « Évaporation » du nœud `Puddles`).

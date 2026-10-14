@@ -36,6 +36,88 @@ emission_energy_multiplier = 0.3
 material = SubResource("StandardMaterial3D_dbi1a")
 size = Vector3(0.86, 0.76, 0.01)
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_q70t4"]
+albedo_color = Color(0.62, 0.63, 0.66, 1)
+roughness = 0.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_dj4vv"]
+size = Vector3(0.007, 0.18302631, 0.007)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_juhtu"]
+top_radius = 0.0035
+bottom_radius = 0.0035
+height = 0.05
+radial_segments = 10
+rings = 1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_q70t4"]
+size = Vector3(0.1, 0.21302631, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_702kj"]
+size = Vector3(0.007, 0.18292151, 0.007)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_smo6e"]
+top_radius = 0.0035
+bottom_radius = 0.0035
+height = 0.05
+radial_segments = 10
+rings = 1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ogg5m"]
+size = Vector3(0.1, 0.21292152, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_1nmha"]
+size = Vector3(0.007, 0.1663535, 0.007)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_pxvwb"]
+top_radius = 0.0035
+bottom_radius = 0.0035
+height = 0.045
+radial_segments = 10
+rings = 1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_r1gk4"]
+size = Vector3(0.095, 0.1963535, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_akmat"]
+size = Vector3(0.007, 0.16635348, 0.007)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_2o1dc"]
+top_radius = 0.0035
+bottom_radius = 0.0035
+height = 0.045
+radial_segments = 10
+rings = 1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_7bl04"]
+size = Vector3(0.095, 0.19635348, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_yryk3"]
+size = Vector3(0.007, 0.16003378, 0.007)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_3ntvi"]
+top_radius = 0.0035
+bottom_radius = 0.0035
+height = 0.05
+radial_segments = 10
+rings = 1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_gfv22"]
+size = Vector3(0.1, 0.19003378, 0.12)
+
+[sub_resource type="BoxMesh" id="BoxMesh_f8rj3"]
+size = Vector3(0.007, 0.15436576, 0.007)
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_imx3p"]
+top_radius = 0.0035
+bottom_radius = 0.0035
+height = 0.04
+radial_segments = 10
+rings = 1
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1nq25"]
+size = Vector3(0.09, 0.18436576, 0.12)
+
 [node name="Arena2" type="Node3D" unique_id=1642305965]
 
 [node name="Sprite3D" type="Sprite3D" parent="." unique_id=1175920662]
@@ -302,9 +384,6 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.42, 0.14, 1.451)
 [node name="Fenetre_2" parent="Etageres" unique_id=881543409 instance=ExtResource("7_rm3jc")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.42, 0.42, 1.451)
 
-[node name="Fenetre_3_haut" parent="Etageres" unique_id=1261126372 instance=ExtResource("7_rm3jc")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.88, 0.56, 1.451)
-
 [node name="Fenetre_1b_jonction" parent="Etageres" unique_id=492697790 instance=ExtResource("7_rm3jc")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.78, 0.28, 1.451)
 
@@ -312,7 +391,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.78, 0.28, 1.451)
 transform = Transform3D(0.8, 0, 0, 0, 1, 0, 0, 0, 1, -1.21, 0.14, 1.103)
 
 [node name="Angle_1" parent="Etageres" unique_id=949043063 instance=ExtResource("7_rm3jc")]
-transform = Transform3D(-3.1909313e-08, 0, -1, 0, 1, 0, 0.73, 0, -4.371139e-08, -1.093, 0.28, 1.22)
+transform = Transform3D(-3.1909313e-08, 0, -1, 0, 1, 0, 0.73, 0, -4.371139e-08, -1.093, 0.18976828, 1.22)
 
 [node name="Obstacles" type="Node3D" parent="." unique_id=2084297212]
 
@@ -335,4 +414,283 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.086265266)
 transform = Transform3D(-0.9396926, 0, 0.3420202, 0, 1, 0, -0.3420202, 0, -0.9396926, -0.1046592, 0, 0)
 
 [node name="CorbeilleLinge" type="Node3D" parent="Obstacles" unique_id=1328315256 instance=ExtResource("14_dj4vv")]
-transform = Transform3D(0.74238354, 0, -0.10661443, 0, 0.75, 0, 0.10661443, 0, 0.74238354, 0.5448872, 0, 0.47)
+transform = Transform3D(0.74996126, 0, -0.007617563, 0, 0.75, 0, 0.007617563, 0, 0.74996126, 0.4841336, 0, 0.6628094)
+
+[node name="Echelles" type="Node3D" parent="." unique_id=986938342]
+
+[node name="Echelle_sol_toilettes" type="Node3D" parent="Echelles" unique_id=1297279433]
+transform = Transform3D(-1, 0, 0, 0, 0.9647638, 0.26311716, 0, 0.26311713, -0.96476394, -1.12, 0, 0.938)
+
+[node name="Montant_G" type="MeshInstance3D" parent="Echelles/Echelle_sol_toilettes" unique_id=1147737489]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.025, 0.09151316, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("BoxMesh_dj4vv")
+
+[node name="Montant_D" type="MeshInstance3D" parent="Echelles/Echelle_sol_toilettes" unique_id=1919047385]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.025, 0.09151316, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("BoxMesh_dj4vv")
+
+[node name="Barreau_0" type="MeshInstance3D" parent="Echelles/Echelle_sol_toilettes" unique_id=1165761711]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.02, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_juhtu")
+
+[node name="Barreau_1" type="MeshInstance3D" parent="Echelles/Echelle_sol_toilettes" unique_id=957504752]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.05875658, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_juhtu")
+
+[node name="Barreau_2" type="MeshInstance3D" parent="Echelles/Echelle_sol_toilettes" unique_id=707355307]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.09751316, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_juhtu")
+
+[node name="Barreau_3" type="MeshInstance3D" parent="Echelles/Echelle_sol_toilettes" unique_id=480517732]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.13626973, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_juhtu")
+
+[node name="Barreau_4" type="MeshInstance3D" parent="Echelles/Echelle_sol_toilettes" unique_id=612314956]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.17502631, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_juhtu")
+
+[node name="Zone" type="Area3D" parent="Echelles/Echelle_sol_toilettes" unique_id=259902764 groups=["echelles"]]
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="Forme" type="CollisionShape3D" parent="Echelles/Echelle_sol_toilettes/Zone" unique_id=1063439513]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.09151316, 0.05)
+shape = SubResource("BoxShape3D_q70t4")
+
+[node name="Echelle_sol_fenetre1" type="Node3D" parent="Echelles" unique_id=1514665282]
+transform = Transform3D(-1, 0, 0, 0, 0.9653554, 0.26093856, 0, 0.26093853, -0.96535546, -0.42, 0, 1.2864)
+
+[node name="Montant_G" type="MeshInstance3D" parent="Echelles/Echelle_sol_fenetre1" unique_id=1382179306]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.025, 0.09146076, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("BoxMesh_702kj")
+
+[node name="Montant_D" type="MeshInstance3D" parent="Echelles/Echelle_sol_fenetre1" unique_id=810460046]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.025, 0.09146076, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("BoxMesh_702kj")
+
+[node name="Barreau_0" type="MeshInstance3D" parent="Echelles/Echelle_sol_fenetre1" unique_id=1422856131]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.02, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_smo6e")
+
+[node name="Barreau_1" type="MeshInstance3D" parent="Echelles/Echelle_sol_fenetre1" unique_id=1554990936]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.05873038, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_smo6e")
+
+[node name="Barreau_2" type="MeshInstance3D" parent="Echelles/Echelle_sol_fenetre1" unique_id=1937920216]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.09746076, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_smo6e")
+
+[node name="Barreau_3" type="MeshInstance3D" parent="Echelles/Echelle_sol_fenetre1" unique_id=1516191644]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.13619114, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_smo6e")
+
+[node name="Barreau_4" type="MeshInstance3D" parent="Echelles/Echelle_sol_fenetre1" unique_id=818526263]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.17492151, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_smo6e")
+
+[node name="Zone" type="Area3D" parent="Echelles/Echelle_sol_fenetre1" unique_id=1125464622 groups=["echelles"]]
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="Forme" type="CollisionShape3D" parent="Echelles/Echelle_sol_fenetre1/Zone" unique_id=811960280]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.09146076, 0.05)
+shape = SubResource("BoxShape3D_ogg5m")
+
+[node name="Echelle_fenetre1_jonction" type="Node3D" parent="Echelles" unique_id=52712803]
+transform = Transform3D(0, -0.42111126, 0.907009, 0, 0.90700895, 0.4211113, -1, 0, 0, -0.565, 0.165, 1.355)
+
+[node name="Montant_G" type="MeshInstance3D" parent="Echelles/Echelle_fenetre1_jonction" unique_id=1779099321]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0225, 0.08317675, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("BoxMesh_1nmha")
+
+[node name="Montant_D" type="MeshInstance3D" parent="Echelles/Echelle_fenetre1_jonction" unique_id=426199168]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0225, 0.08317675, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("BoxMesh_1nmha")
+
+[node name="Barreau_0" type="MeshInstance3D" parent="Echelles/Echelle_fenetre1_jonction" unique_id=509474734]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.02, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_pxvwb")
+
+[node name="Barreau_1" type="MeshInstance3D" parent="Echelles/Echelle_fenetre1_jonction" unique_id=1745756883]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.054588374, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_pxvwb")
+
+[node name="Barreau_2" type="MeshInstance3D" parent="Echelles/Echelle_fenetre1_jonction" unique_id=1487925475]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.08917675, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_pxvwb")
+
+[node name="Barreau_3" type="MeshInstance3D" parent="Echelles/Echelle_fenetre1_jonction" unique_id=1729905447]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.123765126, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_pxvwb")
+
+[node name="Barreau_4" type="MeshInstance3D" parent="Echelles/Echelle_fenetre1_jonction" unique_id=919312810]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.1583535, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_pxvwb")
+
+[node name="Zone" type="Area3D" parent="Echelles/Echelle_fenetre1_jonction" unique_id=1494901514 groups=["echelles"]]
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="Forme" type="CollisionShape3D" parent="Echelles/Echelle_fenetre1_jonction/Zone" unique_id=1866904147]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08317675, 0.05)
+shape = SubResource("BoxShape3D_r1gk4")
+
+[node name="Echelle_jonction_fenetre2" type="Node3D" parent="Echelles" unique_id=1544382518]
+transform = Transform3D(0, 0.42111132, -0.907009, 0, 0.9070089, 0.42111138, 1, 0, 0, -0.635, 0.305, 1.407)
+
+[node name="Montant_G" type="MeshInstance3D" parent="Echelles/Echelle_jonction_fenetre2" unique_id=1197944906]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0225, 0.08317674, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("BoxMesh_akmat")
+
+[node name="Montant_D" type="MeshInstance3D" parent="Echelles/Echelle_jonction_fenetre2" unique_id=326215646]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.0225, 0.08317674, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("BoxMesh_akmat")
+
+[node name="Barreau_0" type="MeshInstance3D" parent="Echelles/Echelle_jonction_fenetre2" unique_id=1000549220]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.02, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_2o1dc")
+
+[node name="Barreau_1" type="MeshInstance3D" parent="Echelles/Echelle_jonction_fenetre2" unique_id=2109451487]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.05458837, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_2o1dc")
+
+[node name="Barreau_2" type="MeshInstance3D" parent="Echelles/Echelle_jonction_fenetre2" unique_id=1173106067]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.089176744, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_2o1dc")
+
+[node name="Barreau_3" type="MeshInstance3D" parent="Echelles/Echelle_jonction_fenetre2" unique_id=124417303]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.12376511, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_2o1dc")
+
+[node name="Barreau_4" type="MeshInstance3D" parent="Echelles/Echelle_jonction_fenetre2" unique_id=1840809453]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.15835348, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_2o1dc")
+
+[node name="Zone" type="Area3D" parent="Echelles/Echelle_jonction_fenetre2" unique_id=660376479 groups=["echelles"]]
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="Forme" type="CollisionShape3D" parent="Echelles/Echelle_jonction_fenetre2/Zone" unique_id=231984482]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08317674, 0.05)
+shape = SubResource("BoxShape3D_7bl04")
+
+[node name="Echelle_fenetre1_rebord" type="Node3D" parent="Echelles" unique_id=61213450]
+transform = Transform3D(0, 0.43908894, -0.89844364, 0, 0.8984436, 0.43908897, 1, 0, 0, -0.335, 0.165, 1.36)
+
+[node name="Montant_G" type="MeshInstance3D" parent="Echelles/Echelle_fenetre1_rebord" unique_id=2105641252]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.025, 0.08001689, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("BoxMesh_yryk3")
+
+[node name="Montant_D" type="MeshInstance3D" parent="Echelles/Echelle_fenetre1_rebord" unique_id=18624483]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.025, 0.08001689, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("BoxMesh_yryk3")
+
+[node name="Barreau_0" type="MeshInstance3D" parent="Echelles/Echelle_fenetre1_rebord" unique_id=1148274987]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.02, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_3ntvi")
+
+[node name="Barreau_1" type="MeshInstance3D" parent="Echelles/Echelle_fenetre1_rebord" unique_id=660039545]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.053008445, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_3ntvi")
+
+[node name="Barreau_2" type="MeshInstance3D" parent="Echelles/Echelle_fenetre1_rebord" unique_id=579902794]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.08601689, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_3ntvi")
+
+[node name="Barreau_3" type="MeshInstance3D" parent="Echelles/Echelle_fenetre1_rebord" unique_id=99319381]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.119025335, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_3ntvi")
+
+[node name="Barreau_4" type="MeshInstance3D" parent="Echelles/Echelle_fenetre1_rebord" unique_id=1307869684]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.15203378, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_3ntvi")
+
+[node name="Zone" type="Area3D" parent="Echelles/Echelle_fenetre1_rebord" unique_id=1569156738 groups=["echelles"]]
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="Forme" type="CollisionShape3D" parent="Echelles/Echelle_fenetre1_rebord/Zone" unique_id=519415393]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08001689, 0.05)
+shape = SubResource("BoxShape3D_gfv22")
+
+[node name="Echelle_angle_jonction" type="Node3D" parent="Echelles" unique_id=1530264502]
+transform = Transform3D(-0.70710707, 0.5478846, -0.44701472, 0, 0.6321745, 0.7748261, 0.70710653, 0.547885, -0.44701505, -0.99, 0.215, 1.313)
+
+[node name="Montant_G" type="MeshInstance3D" parent="Echelles/Echelle_angle_jonction" unique_id=1153795552]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.02, 0.07718288, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("BoxMesh_f8rj3")
+
+[node name="Montant_D" type="MeshInstance3D" parent="Echelles/Echelle_angle_jonction" unique_id=395676953]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.02, 0.07718288, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("BoxMesh_f8rj3")
+
+[node name="Barreau_0" type="MeshInstance3D" parent="Echelles/Echelle_angle_jonction" unique_id=487106298]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.02, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_imx3p")
+
+[node name="Barreau_1" type="MeshInstance3D" parent="Echelles/Echelle_angle_jonction" unique_id=778167807]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.062121924, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_imx3p")
+
+[node name="Barreau_2" type="MeshInstance3D" parent="Echelles/Echelle_angle_jonction" unique_id=818899005]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.104243845, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_imx3p")
+
+[node name="Barreau_3" type="MeshInstance3D" parent="Echelles/Echelle_angle_jonction" unique_id=651216857]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 0.14636576, 0)
+material_override = SubResource("StandardMaterial3D_q70t4")
+mesh = SubResource("CylinderMesh_imx3p")
+
+[node name="Zone" type="Area3D" parent="Echelles/Echelle_angle_jonction" unique_id=1567401566 groups=["echelles"]]
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="Forme" type="CollisionShape3D" parent="Echelles/Echelle_angle_jonction/Zone" unique_id=1321041149]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.07718288, 0.05)
+shape = SubResource("BoxShape3D_1nq25")

@@ -65,6 +65,9 @@ const REMOTE_SNAP_DISTANCE := 3.0
 @export var jump_velocity := 8.5
 ## Multiplicateur de la gravité du projet (plus élevé = saut moins flottant).
 @export var gravity_scale := 1.8
+## Vitesse de montée aux échelles (m/s). Une échelle = Area3D du groupe "echelles",
+## son axe -Z local pointe vers le mur : avancer dans ce sens fait monter.
+@export var climb_speed := 3.0
 @export_group("Dash")
 ## Vitesse de pointe du dash (m/s).
 @export var dash_speed := 22.0
@@ -257,7 +260,11 @@ func _simulate(delta: float) -> void:
 			shot_direction = camera.get_aim_ray()[1]
 		_shoot.rpc(origin, shot_direction)
 
-	if not is_on_floor():
+	var ladder_dir := _ladder_direction()
+	if ladder_dir != Vector3.ZERO and direction.dot(ladder_dir) > 0.3:
+		# Contre une échelle en avançant vers elle : on monte, sans gravité.
+		velocity.y = climb_speed
+	elif not is_on_floor():
 		velocity.y -= _gravity * gravity_scale * delta
 	if _dash_time > 0.0:
 		# Dash : vitesse horizontale selon la courbe (la gravité s'applique si on quitte le sol).
@@ -274,6 +281,16 @@ func _simulate(delta: float) -> void:
 
 	if global_position.y < kill_height:
 		_apply_damage(health)
+
+
+## Direction horizontale « vers le mur » de l'échelle touchée, ou ZERO si aucune.
+func _ladder_direction() -> Vector3:
+	for area: Area3D in get_tree().get_nodes_in_group(&"echelles"):
+		if area.overlaps_body(self):
+			var to_wall := -area.global_basis.z
+			to_wall.y = 0.0
+			return to_wall.normalized()
+	return Vector3.ZERO
 
 
 func _regenerate(delta: float) -> void:

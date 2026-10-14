@@ -9,9 +9,6 @@ extends Node3D
 ## Test (version de développement) : l'action debug_damage (H) inflige 10 dégâts à son propre cube.
 ## Debug mode (action debug_mode : Ctrl + D), désactivé au lancement : affiche les
 ## PV du joueur local (DebugHealth) et le rectangle de l'aide à la visée.
-## DEBUG : pour tester l'aide à la visée, l'hôte place un adversaire non choisi
-## (immobile) sur le repère DebugEnemySpot ; il y réapparaît et ne compte pas pour
-## les zones (à supprimer : le nœud et les lignes marquées « DEBUG »).
 ## Chaque ordinateur affiche la caméra du joueur qu'il a choisi dans le salon.
 ## Les joueurs non choisis restent sur place (contrôlés par personne).
 ## Échap (ui_cancel) quitte le jeu ; P / + (hôte) ouvre le menu pause.
@@ -50,7 +47,6 @@ var _running := false
 var _ended := false
 var _time_sync_cooldown := 0.0
 var _debug_mode := false
-var _debug_enemy: Player # DEBUG
 
 @onready var _arena: Node3D = $Arena
 @onready var _players: Node3D = $Players
@@ -64,7 +60,6 @@ var _debug_enemy: Player # DEBUG
 @onready var _crosshair: CanvasLayer = $Crosshair
 @onready var _debug_layer: CanvasLayer = $DebugHealth
 @onready var _debug_health: Label = $DebugHealth/Label
-@onready var _debug_enemy_spot: Marker3D = get_node_or_null(^"DebugEnemySpot") # DEBUG
 
 
 func _ready() -> void:
@@ -79,7 +74,6 @@ func _ready() -> void:
 		player.respawned.connect(_on_player_respawned.bind(player))
 		player.shot.connect(_on_player_shot.bind(player))
 	_apply_slots()
-	_place_debug_enemy() # DEBUG
 	_debug_layer.visible = _debug_mode
 	time_left = match_duration
 	_hud.set_time_left(time_left if match_duration > 0.0 else -1.0)
@@ -153,26 +147,6 @@ func _place_players_on_spawn_zones() -> void:
 			team_players[i].set_spawn_position(zone.get_spawn_position(i, team_players.size()))
 
 
-## DEBUG : hôte uniquement. Place sur DebugEnemySpot le premier adversaire du joueur
-## local que personne n'a choisi.
-func _place_debug_enemy() -> void:
-	if _debug_enemy_spot == null or not multiplayer.is_server():
-		return
-	var me: Player = null
-	for player: Player in _players.get_children():
-		if player.is_local:
-			me = player
-	if me == null:
-		return
-	for player: Player in _players.get_children():
-		if Player.team_of(player.player_id) != Player.team_of(me.player_id) \
-				and NetworkManager.get_slot_owner(player.player_id) == 0:
-			_debug_enemy = player
-			player.set_spawn_position(_debug_enemy_spot.global_position)
-			player.face(me.global_position)
-			return
-
-
 ## Donne à chaque ordinateur l'autorité sur le cube qu'il a choisi (l'hôte garde les autres).
 func _apply_slots() -> void:
 	if not is_inside_tree(): # Scène en cours de remplacement (retour au salon, fin du combat).
@@ -196,7 +170,7 @@ func _on_match_started() -> void:
 		player.activate()
 	_running = match_duration > 0.0
 	var players: Array[Player] = []
-	players.assign(_players.get_children().filter(func(player: Player) -> bool: return player != _debug_enemy)) # DEBUG
+	players.assign(_players.get_children())
 	_mode.start(players)
 
 

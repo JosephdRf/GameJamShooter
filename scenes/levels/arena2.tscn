@@ -22,6 +22,13 @@ roughness = 0.45
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_juhtu"]
 albedo_color = Color(0.46, 0.49, 0.54, 1)
 roughness = 0.6
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dj4vv"]
+albedo_color = Color(0.58, 0.61, 0.65, 1)
+roughness = 0.45
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_juhtu"]
+albedo_color = Color(0.46, 0.49, 0.54, 1)
+roughness = 0.6
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dbi1a"]
 transparency = 1
@@ -50,6 +57,7 @@ roughness = 0.8
 
 [sub_resource type="BoxMesh" id="BoxMesh_dj4vv"]
 size = Vector3(0.21, 5.4907894, 0.21)
+size = Vector3(0.21, 5.4907894, 0.21)
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_juhtu"]
 top_radius = 0.105
@@ -65,6 +73,7 @@ size = Vector3(1.7, 5.8907895, 0.5)
 size = Vector3(1.5, 5.4907894, 0.2)
 
 [sub_resource type="BoxMesh" id="BoxMesh_702kj"]
+size = Vector3(0.21, 5.487645, 0.21)
 size = Vector3(0.21, 5.487645, 0.21)
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_smo6e"]
@@ -114,6 +123,7 @@ size = Vector3(1.35, 4.9906044, 0.2)
 
 [sub_resource type="BoxMesh" id="BoxMesh_yryk3"]
 size = Vector3(0.21, 4.8010135, 0.21)
+size = Vector3(0.21, 4.8010135, 0.21)
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_3ntvi"]
 top_radius = 0.105
@@ -129,6 +139,7 @@ size = Vector3(1.7, 5.2010136, 0.5)
 size = Vector3(1.5, 4.8010135, 0.2)
 
 [sub_resource type="BoxMesh" id="BoxMesh_f8rj3"]
+size = Vector3(0.21, 4.630973, 0.21)
 size = Vector3(0.21, 4.630973, 0.21)
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_imx3p"]
@@ -358,6 +369,7 @@ sides = 48
 
 [node name="Mur_tuyau" type="CSGCylinder3D" parent="Structure" unique_id=2056627631]
 transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 16.725, 2.382202, -39.13726)
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 16.725, 2.382202, -39.13726)
 radius = 2.3999999
 height = 25.35
 sides = 48
@@ -372,12 +384,14 @@ material = SubResource("StandardMaterial3D_dj4vv")
 
 [node name="Manchon_2" type="CSGCylinder3D" parent="Structure" unique_id=901585300]
 transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 21.6, 2.382202, -39.09)
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 21.6, 2.382202, -39.09)
 radius = 2.61
 height = 0.9
 sides = 48
 material = SubResource("StandardMaterial3D_dj4vv")
 
 [node name="Manchon_1" type="CSGCylinder3D" parent="Structure" unique_id=1990895473]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 12.6, 2.382202, -39.09)
 transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 12.6, 2.382202, -39.09)
 radius = 2.61
 height = 0.9
@@ -393,12 +407,14 @@ material = SubResource("StandardMaterial3D_dj4vv")
 
 [node name="Coude_douche_ext" type="CSGSphere3D" parent="Structure" unique_id=956046691]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.4, 2.382202, -39.09)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.4, 2.382202, -39.09)
 radius = 2.4
 radial_segments = 48
 rings = 24
 material = SubResource("StandardMaterial3D_dj4vv")
 
 [node name="Tuyau_trou" type="CSGCylinder3D" parent="Structure" unique_id=1366967562]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 17.945587, 2.2915654, -39.093018)
 transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 17.945587, 2.2915654, -39.093018)
 operation = 2
 radius = 2.1
@@ -408,6 +424,7 @@ material = SubResource("StandardMaterial3D_juhtu")
 
 [node name="Tuyau_trou_2" type="CSGCylinder3D" parent="Structure" unique_id=868010963]
 transform = Transform3D(1.9106853e-15, 4.3711385e-08, 1, 0.99999994, -4.3711385e-08, 0, 4.3711385e-08, 0.99999994, -4.371139e-08, 6.4911747, 2.2915654, -36.495)
+transform = Transform3D(1.9106853e-15, 4.3711385e-08, 1, 0.99999994, -4.3711385e-08, 0, 4.3711385e-08, 0.99999994, -4.371139e-08, 6.4911747, 2.2915654, -36.495)
 operation = 2
 radius = 2.1
 height = 5.19
@@ -416,6 +433,7 @@ material = SubResource("StandardMaterial3D_juhtu")
 
 [node name="Coude_entree_int" type="CSGSphere3D" parent="Structure" unique_id=1500290353]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.4911747, 2.2915654, -39.09)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.4911747, 2.2915654, -39.09)
 operation = 2
 radius = 2.1
 radial_segments = 48
@@ -423,6 +441,7 @@ rings = 24
 material = SubResource("StandardMaterial3D_juhtu")
 
 [node name="Coude_douche_int" type="CSGSphere3D" parent="Structure" unique_id=1845296231]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.4, 2.2915654, -39.09)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.4, 2.2915654, -39.09)
 operation = 2
 radius = 2.1
@@ -511,6 +530,7 @@ transform = Transform3D(24, 0, 0, 0, 30, 0, 0, 0, 30, -36.300003, 4.2, 33.090004
 
 [node name="Angle_1" parent="Etageres" unique_id=949043063 instance=ExtResource("7_rm3jc")]
 transform = Transform3D(-9.572794e-07, 0, -30, 0, 30, 0, 21.9, 0, -1.3113417e-06, -32.79, 5.6930485, 36.6)
+transform = Transform3D(-9.572794e-07, 0, -30, 0, 30, 0, 21.9, 0, -1.3113417e-06, -32.79, 5.6930485, 36.6)
 
 [node name="Obstacles" type="Node3D" parent="." unique_id=2084297212]
 
@@ -531,7 +551,10 @@ transform = Transform3D(30, 0, 0, 0, 30, 0, 0, 0, 30, 0, 0, -2.587958)
 
 [node name="BoiteMouchoirs" parent="Obstacles" unique_id=948495229 instance=ExtResource("13_dj4vv")]
 transform = Transform3D(-28.190779, 0, 10.260606, 0, 30, 0, -10.260606, 0, -28.190779, -3.139776, 0, 0)
+transform = Transform3D(-28.190779, 0, 10.260606, 0, 30, 0, -10.260606, 0, -28.190779, -3.139776, 0, 0)
 
+[node name="CorbeilleLinge" parent="Obstacles" unique_id=1328315256 instance=ExtResource("14_dj4vv")]
+transform = Transform3D(22.498838, 0, -0.22852689, 0, 22.5, 0, 0.22852689, 0, 22.498838, 14.524008, 0, 19.884281)
 [node name="CorbeilleLinge" parent="Obstacles" unique_id=1328315256 instance=ExtResource("14_dj4vv")]
 transform = Transform3D(22.498838, 0, -0.22852689, 0, 22.5, 0, 0.22852689, 0, 22.498838, 14.524008, 0, 19.884281)
 
@@ -542,10 +565,12 @@ transform = Transform3D(-1, 0, 0, 0, 0.9647638, 0.26311716, 0, 0.26311713, -0.96
 
 [node name="Montant_G" type="MeshInstance3D" parent="Echelles/Echelle_sol_toilettes" unique_id=1147737489]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 2.7453947, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.75, 2.7453947, 0)
 material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("BoxMesh_dj4vv")
 
 [node name="Montant_D" type="MeshInstance3D" parent="Echelles/Echelle_sol_toilettes" unique_id=1919047385]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 2.7453947, 0)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.75, 2.7453947, 0)
 material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("BoxMesh_dj4vv")
@@ -557,6 +582,7 @@ mesh = SubResource("CylinderMesh_juhtu")
 
 [node name="Barreau_1" type="MeshInstance3D" parent="Echelles/Echelle_sol_toilettes" unique_id=957504752]
 transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 1.7626975, 0)
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 1.7626975, 0)
 material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("CylinderMesh_juhtu")
 
@@ -567,10 +593,12 @@ mesh = SubResource("CylinderMesh_juhtu")
 
 [node name="Barreau_3" type="MeshInstance3D" parent="Echelles/Echelle_sol_toilettes" unique_id=480517732]
 transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 4.088092, 0)
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 4.088092, 0)
 material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("CylinderMesh_juhtu")
 
 [node name="Barreau_4" type="MeshInstance3D" parent="Echelles/Echelle_sol_toilettes" unique_id=612314956]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 5.250789, 0)
 transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 5.250789, 0)
 material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("CylinderMesh_juhtu")
@@ -616,15 +644,18 @@ mesh = SubResource("CylinderMesh_smo6e")
 
 [node name="Barreau_2" type="MeshInstance3D" parent="Echelles/Echelle_sol_fenetre1" unique_id=1937920216]
 transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 2.9238229, 0)
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 2.9238229, 0)
 material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("CylinderMesh_smo6e")
 
 [node name="Barreau_3" type="MeshInstance3D" parent="Echelles/Echelle_sol_fenetre1" unique_id=1516191644]
 transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 4.0857344, 0)
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 4.0857344, 0)
 material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("CylinderMesh_smo6e")
 
 [node name="Barreau_4" type="MeshInstance3D" parent="Echelles/Echelle_sol_fenetre1" unique_id=818526263]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 5.2476454, 0)
 transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 5.2476454, 0)
 material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("CylinderMesh_smo6e")
@@ -650,10 +681,12 @@ transform = Transform3D(0, -0.42111126, 0.907009, 0, 0.90700895, 0.4211113, -1, 
 
 [node name="Montant_G" type="MeshInstance3D" parent="Echelles/Echelle_fenetre1_jonction" unique_id=1779099321]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.675, 2.4953024, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.675, 2.4953024, 0)
 material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("BoxMesh_1nmha")
 
 [node name="Montant_D" type="MeshInstance3D" parent="Echelles/Echelle_fenetre1_jonction" unique_id=426199168]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.675, 2.4953024, 0)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.675, 2.4953024, 0)
 material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("BoxMesh_1nmha")
@@ -734,6 +767,7 @@ mesh = SubResource("CylinderMesh_2o1dc")
 
 [node name="Barreau_4" type="MeshInstance3D" parent="Echelles/Echelle_jonction_fenetre2" unique_id=1840809453]
 transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 4.7506046, 0)
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 4.7506046, 0)
 material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("CylinderMesh_2o1dc")
 
@@ -778,15 +812,18 @@ mesh = SubResource("CylinderMesh_3ntvi")
 
 [node name="Barreau_2" type="MeshInstance3D" parent="Echelles/Echelle_fenetre1_rebord" unique_id=579902794]
 transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 2.5805068, 0)
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 2.5805068, 0)
 material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("CylinderMesh_3ntvi")
 
 [node name="Barreau_3" type="MeshInstance3D" parent="Echelles/Echelle_fenetre1_rebord" unique_id=99319381]
 transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 3.57076, 0)
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 3.57076, 0)
 material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("CylinderMesh_3ntvi")
 
 [node name="Barreau_4" type="MeshInstance3D" parent="Echelles/Echelle_fenetre1_rebord" unique_id=1307869684]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 4.561013, 0)
 transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 4.561013, 0)
 material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("CylinderMesh_3ntvi")
@@ -836,6 +873,7 @@ material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("CylinderMesh_imx3p")
 
 [node name="Barreau_3" type="MeshInstance3D" parent="Echelles/Echelle_angle_jonction" unique_id=651216857]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 4.3909726, 0)
 transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0, 4.3909726, 0)
 material_override = SubResource("StandardMaterial3D_q70t4")
 mesh = SubResource("CylinderMesh_imx3p")

@@ -97,7 +97,7 @@ Un joueur qui tombe de la plateforme meurt.
 - Chaque appui tire une bulle vers le point visé (aussi vers le haut ou le bas), avec au moins 0,15 s entre
   deux appuis ; touche maintenue, une bulle toutes les 0,2 s. Elle sort
   du bout du canon du canard, petite, et atteint sa taille en 0,12 s.
-- La bulle éclate au premier contact : obstacle (sol, mur, objet…), joueur (**40 dégâts** à un adversaire,
+- La bulle éclate au premier contact : obstacle (sol, mur, objet…), joueur (**30 dégâts** à un adversaire,
   rien à un coéquipier), mur de la zone d'apparition adverse, ou au bout de **25 m**. Le nœud est alors supprimé.
 - **Zones d'apparition** : un mur invisible (calques 3 « spawn_blue » / 4 « spawn_red ») empêche les joueurs
   et les bulles de l'équipe adverse d'y entrer.
@@ -106,7 +106,7 @@ Un joueur qui tombe de la plateforme meurt.
 
 ### Capture
 
-- **Clic molette** (action `capture`) : tire une grosse bulle, plus lente (18 m/s, portée 20 m), au plus
+- **Clic molette** (action `capture`) : tire une grosse bulle, plus lente (18 m/s, **portée illimitée** : elle vole jusqu'à toucher quelque chose), au plus
   une toutes les **5 s**.
 - Un adversaire touché est **piégé 2 s** dans une bulle à la couleur de l'équipe qui l'a eu : il lévite à
   25 cm du sol en flottant et ne peut plus bouger, sauter, dasher ni tirer (il peut toujours tourner la

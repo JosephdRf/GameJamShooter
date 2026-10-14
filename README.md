@@ -79,7 +79,9 @@ par commande, avec sa touche clavier et son bouton de manette. Le code n'utilise
 
 La souris est capturée au lancement (curseur invisible) pour piloter la caméra.
 Chaque ordinateur contrôle son canard au clavier/trackpad **ou** avec n'importe quelle manette branchée. Les déplacements sont relatifs à la caméra.
-Un canard monte en marchant sur les reliefs de 50 cm au plus (`max_step_height`), sans sauter.
+Un canard monte en marchant sur les reliefs de 55 cm au plus (`max_step_height`), sans sauter (les marches
+du toboggan font 50 cm). Échelles (groupe `echelles` : une `Area3D` par échelle) : en avançant vers une échelle,
+le canard monte le long de celle-ci à `climb_speed`.
 Un joueur qui tombe de la plateforme meurt.
 
 ### Tir

@@ -92,7 +92,10 @@ const FOOTSTEPS := {
 ## Multiplicateur de la gravité du projet (plus élevé = saut moins flottant).
 @export var gravity_scale := 1.8
 ## Hauteur maximale d'un relief (marche, rebord…) que le canard monte en marchant, sans sauter (m).
-@export var max_step_height := 0.5
+@export var max_step_height := 0.55
+## Vitesse de montée aux échelles (m/s). Une échelle = Area3D du groupe "echelles",
+## son axe -Z local pointe vers le mur : avancer dans ce sens fait monter.
+@export var climb_speed := 3.0
 @export_group("Dash")
 ## Vitesse de pointe du dash (m/s).
 @export var dash_speed := 25.0
@@ -336,24 +339,42 @@ func _simulate(delta: float) -> void:
 			shot_direction = camera.get_aim_ray()[1]
 		_shoot.rpc(origin, shot_direction)
 
-	if not is_on_floor():
-		velocity.y -= _gravity * gravity_scale * delta
-	if _dash_time > 0.0:
-		# Dash : vitesse horizontale selon la courbe (la gravité s'applique si on quitte le sol).
-		_dash_time = maxf(_dash_time - delta, 0.0)
-		var speed := _dash_speed_at(1.0 - _dash_time / dash_duration)
-		velocity.x = _dash_direction.x * speed
-		velocity.z = _dash_direction.z * speed
+	var ladder_up := _ladder_climb_axis(direction)
+	if ladder_up != Vector3.ZERO:
+		# Contre une échelle en avançant vers elle : on monte le long de l'échelle (en suivant
+		# son inclinaison), sans gravité ; sinon on la traverserait sans avoir fini de monter.
+		velocity = ladder_up * climb_speed
 	else:
-		var target := direction * move_speed
-		velocity.x = move_toward(velocity.x, target.x, acceleration * delta)
-		velocity.z = move_toward(velocity.z, target.z, acceleration * delta)
+		if not is_on_floor():
+			velocity.y -= _gravity * gravity_scale * delta
+		if _dash_time > 0.0:
+			# Dash : vitesse horizontale selon la courbe (la gravité s'applique si on quitte le sol).
+			_dash_time = maxf(_dash_time - delta, 0.0)
+			var speed := _dash_speed_at(1.0 - _dash_time / dash_duration)
+			velocity.x = _dash_direction.x * speed
+			velocity.z = _dash_direction.z * speed
+		else:
+			var target := direction * move_speed
+			velocity.x = move_toward(velocity.x, target.x, acceleration * delta)
+			velocity.z = move_toward(velocity.z, target.z, acceleration * delta)
 
 	if not _step_up(delta):
 		move_and_slide()
 
 	if global_position.y < kill_height:
 		_apply_damage(health)
+
+
+## Axe de montée (le long de l'échelle, vers le haut) si le canard touche une échelle en
+## avançant vers son mur (`direction`), ZERO sinon.
+func _ladder_climb_axis(direction: Vector3) -> Vector3:
+	for area: Area3D in get_tree().get_nodes_in_group(&"echelles"):
+		if area.overlaps_body(self):
+			var to_wall := -area.global_basis.z
+			to_wall.y = 0.0
+			if direction.dot(to_wall.normalized()) > 0.3:
+				return area.global_basis.y.normalized()
+	return Vector3.ZERO
 
 
 func _regenerate(delta: float) -> void:

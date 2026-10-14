@@ -110,6 +110,24 @@ sides = 32
 material = SubResource("StandardMaterial3D_2ddwb")
 
 [node name="Papier_deroule" type="CSGBox3D" parent="." unique_id=830225641]
-transform = Transform3D(0.9945219, 0, 0.104528464, 0, 1, 0, -0.104528464, 0, 0.9945219, 0.53, 0.002, 0.02)
-size = Vector3(0.4, 0.004, 0.1)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 0.001, 0.02)
+size = Vector3(0.4, 0.002, 0.07)
 material = SubResource("StandardMaterial3D_wn8dq")
+
+[node name="Raccord_feuille" type="CSGCylinder3D" parent="." unique_id=1534417349]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0.3, 0.055, 0.02)
+radius = 0.0565
+height = 0.07
+sides = 32
+material = SubResource("StandardMaterial3D_wn8dq")
+
+[node name="Decoupe" type="CSGBox3D" parent="Raccord_feuille" unique_id=1423186618]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0605, 0, 0.022)
+operation = 2
+size = Vector3(0.121, 0.09, 0.121)
+
+[node name="Interieur" type="CSGCylinder3D" parent="Raccord_feuille" unique_id=860515648]
+operation = 2
+radius = 0.054
+height = 0.09
+sides = 32

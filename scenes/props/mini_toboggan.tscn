@@ -8,9 +8,6 @@ roughness = 0.6
 albedo_color = Color(0.7254902, 0.7529412, 0.7921569, 1)
 roughness = 0.6
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_usfc6"]
-size = Vector3(0.37619662, 0.01, 0.13)
-
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bf6s2"]
 albedo_color = Color(0.43529412, 0.46666667, 0.5137255, 1)
 roughness = 0.6
@@ -21,63 +18,58 @@ roughness = 0.6
 
 [node name="Toboggan" type="Node3D" unique_id=960735442]
 
-[node name="Marches_visuelles" type="CSGCombiner3D" parent="." unique_id=1136667412]
+[node name="Marches" type="CSGCombiner3D" parent="." unique_id=1136667412]
+use_collision = true
 
-[node name="Marche_1" type="CSGBox3D" parent="Marches_visuelles" unique_id=1348350066]
+[node name="Marche_1" type="CSGBox3D" parent="Marches" unique_id=1348350066]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.38, 0.0105, 0)
 size = Vector3(0.3, 0.021, 0.13)
 material = SubResource("StandardMaterial3D_btpcq")
 
-[node name="Marche_2" type="CSGBox3D" parent="Marches_visuelles" unique_id=674910552]
+[node name="Marche_2" type="CSGBox3D" parent="Marches" unique_id=674910552]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.365, 0.021, 0)
 size = Vector3(0.27, 0.042, 0.13)
 material = SubResource("StandardMaterial3D_635t1")
 
-[node name="Marche_3" type="CSGBox3D" parent="Marches_visuelles" unique_id=115690431]
+[node name="Marche_3" type="CSGBox3D" parent="Marches" unique_id=115690431]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.35, 0.0315, 0)
 size = Vector3(0.24, 0.063, 0.13)
 material = SubResource("StandardMaterial3D_btpcq")
 
-[node name="Marche_4" type="CSGBox3D" parent="Marches_visuelles" unique_id=1479887439]
+[node name="Marche_4" type="CSGBox3D" parent="Marches" unique_id=1479887439]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.335, 0.042, 0)
 size = Vector3(0.21, 0.084, 0.13)
 material = SubResource("StandardMaterial3D_635t1")
 
-[node name="Marche_5" type="CSGBox3D" parent="Marches_visuelles" unique_id=255043168]
+[node name="Marche_5" type="CSGBox3D" parent="Marches" unique_id=255043168]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.32, 0.0525, 0)
 size = Vector3(0.18, 0.105, 0.13)
 material = SubResource("StandardMaterial3D_btpcq")
 
-[node name="Marche_6" type="CSGBox3D" parent="Marches_visuelles" unique_id=1632917454]
+[node name="Marche_6" type="CSGBox3D" parent="Marches" unique_id=1632917454]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.305, 0.063, 0)
 size = Vector3(0.15, 0.126, 0.13)
 material = SubResource("StandardMaterial3D_635t1")
 
-[node name="Marche_7" type="CSGBox3D" parent="Marches_visuelles" unique_id=778977157]
+[node name="Marche_7" type="CSGBox3D" parent="Marches" unique_id=778977157]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.29, 0.0735, 0)
 size = Vector3(0.12, 0.147, 0.13)
 material = SubResource("StandardMaterial3D_btpcq")
 
-[node name="Marche_8" type="CSGBox3D" parent="Marches_visuelles" unique_id=884684223]
+[node name="Marche_8" type="CSGBox3D" parent="Marches" unique_id=884684223]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.275, 0.084, 0)
 size = Vector3(0.09, 0.168, 0.13)
 material = SubResource("StandardMaterial3D_635t1")
 
-[node name="Marche_9" type="CSGBox3D" parent="Marches_visuelles" unique_id=246582401]
+[node name="Marche_9" type="CSGBox3D" parent="Marches" unique_id=246582401]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.26, 0.0945, 0)
 size = Vector3(0.06, 0.189, 0.13)
 material = SubResource("StandardMaterial3D_btpcq")
 
-[node name="Marche_10" type="CSGBox3D" parent="Marches_visuelles" unique_id=503248111]
+[node name="Marche_10" type="CSGBox3D" parent="Marches" unique_id=503248111]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.245, 0.105, 0)
 size = Vector3(0.03, 0.21, 0.13)
 material = SubResource("StandardMaterial3D_635t1")
-
-[node name="Rampe_escalier" type="StaticBody3D" parent="." unique_id=1868100538]
-
-[node name="Pente" type="CollisionShape3D" parent="Rampe_escalier" unique_id=590551236]
-transform = Transform3D(0.8192319, -0.57346237, 0, 0.57346237, 0.8192319, 0, 0, 0, 1, -0.37713268, 0.10090384, 0)
-shape = SubResource("BoxShape3D_usfc6")
 
 [node name="Structure" type="CSGCombiner3D" parent="." unique_id=628445417]
 use_collision = true

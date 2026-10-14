@@ -11,8 +11,17 @@
 [ext_resource type="PackedScene" uid="uid://bky74exs260n2" path="res://scenes/props/rouleaux_papier.tscn" id="9_bsj62"]
 [ext_resource type="PackedScene" uid="uid://dcq5tklgkc1bl" path="res://scenes/props/pese_personne.tscn" id="10_6xc1t"]
 [ext_resource type="PackedScene" uid="uid://cvmpvxxgcn0vk" path="res://scenes/props/mini_toboggan.tscn" id="11_dj4vv"]
-[ext_resource type="PackedScene" uid="uid://rgduqwwaena5" path="res://scenes/props/bateau_pirate.tscn" id="12_bsj62"]
 [ext_resource type="PackedScene" uid="uid://bdi7sb0cuk0h0" path="res://scenes/props/produits_salle_de_bain.tscn" id="13_6xc1t"]
+[ext_resource type="PackedScene" uid="uid://dj8m655pwshoe" path="res://scenes/props/boite_mouchoirs.tscn" id="13_dj4vv"]
+[ext_resource type="PackedScene" uid="uid://rh54uh3s3i2h" path="res://scenes/props/corbeille_linge.tscn" id="14_dj4vv"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dj4vv"]
+albedo_color = Color(0.58, 0.61, 0.65, 1)
+roughness = 0.45
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_juhtu"]
+albedo_color = Color(0.46, 0.49, 0.54, 1)
+roughness = 0.6
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_dbi1a"]
 transparency = 1
@@ -156,44 +165,86 @@ height = 0.1
 sides = 48
 
 [node name="Mur_tuyau" type="CSGCylinder3D" parent="Structure" unique_id=2056627631]
-transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0.57956696, 0.07940673, -1.3045754)
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0.5575, 0.07940673, -1.3045754)
 radius = 0.08
-height = 0.8886719
+height = 0.845
 sides = 48
+material = SubResource("StandardMaterial3D_dj4vv")
 
 [node name="Mur_tuyau2" type="CSGCylinder3D" parent="Structure" unique_id=314103297]
 transform = Transform3D(1.9106855e-15, 4.371139e-08, 1, 1, -4.371139e-08, 0, 4.371139e-08, 1, -4.371139e-08, 0.21678807, 0.05535888, -1.2940774)
 radius = 0.092285156
 height = 0.25708008
 sides = 48
+material = SubResource("StandardMaterial3D_dj4vv")
+
+[node name="Manchon_2" type="CSGCylinder3D" parent="Structure" unique_id=901585300]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0.72, 0.07940673, -1.303)
+radius = 0.087
+height = 0.03
+sides = 48
+material = SubResource("StandardMaterial3D_dj4vv")
+
+[node name="Manchon_1" type="CSGCylinder3D" parent="Structure" unique_id=1990895473]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0.42, 0.07940673, -1.303)
+radius = 0.087
+height = 0.03
+sides = 48
+material = SubResource("StandardMaterial3D_dj4vv")
+
+[node name="Tuyau_sortie" type="CSGCylinder3D" parent="Structure" unique_id=1941677098]
+transform = Transform3D(0.57357645, 0.81915206, 0, -0.81915206, 0.57357645, 0, 0, 0, 1, 1.0488088, 0.12758715, -1.303)
+radius = 0.08
+height = 0.168
+sides = 48
+material = SubResource("StandardMaterial3D_dj4vv")
+
+[node name="Coude_douche_ext" type="CSGSphere3D" parent="Structure" unique_id=956046691]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.98, 0.07940673, -1.303)
+radius = 0.08
+radial_segments = 48
+rings = 24
+material = SubResource("StandardMaterial3D_dj4vv")
 
 [node name="Tuyau_trou" type="CSGCylinder3D" parent="Structure" unique_id=1366967562]
-transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0.60082245, 0.07638551, -1.3031006)
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 0.59818625, 0.07638551, -1.3031006)
 operation = 2
 radius = 0.07
-height = 0.84698486
+height = 0.7636275
 sides = 48
-
-[node name="Douche_trou_1" type="CSGCylinder3D" parent="Structure" unique_id=532308612]
-transform = Transform3D(-0.5, -0.8660253, 0, 0.8660253, -0.5, 0, 0, 0, 1, 1.0983155, 0.11065066, -1.3031006)
-operation = 2
-radius = 0.05419922
-height = 0.1996582
-sides = 48
-
-[node name="Douche_trou_2" type="CSGCylinder3D" parent="Structure" unique_id=2059756625]
-transform = Transform3D(-0.3420201, -0.93969256, 0, 0.93969256, -0.3420201, 0, 0, 0, 1, 1.0193524, 0.06767712, -1.3031006)
-operation = 2
-radius = 0.056640625
-height = 0.031445313
-sides = 48
+material = SubResource("StandardMaterial3D_juhtu")
 
 [node name="Tuyau_trou_2" type="CSGCylinder3D" parent="Structure" unique_id=868010963]
-transform = Transform3D(1.9106853e-15, 4.3711385e-08, 1, 0.99999994, -4.3711385e-08, 0, 4.3711385e-08, 0.99999994, -4.371139e-08, 0.21637249, 0.07019727, -1.2489868)
+transform = Transform3D(1.9106853e-15, 4.3711385e-08, 1, 0.99999994, -4.3711385e-08, 0, 4.3711385e-08, 0.99999994, -4.371139e-08, 0.21637249, 0.07638551, -1.2165)
 operation = 2
 radius = 0.07
-height = 0.24436036
+height = 0.173
 sides = 48
+material = SubResource("StandardMaterial3D_juhtu")
+
+[node name="Coude_entree_int" type="CSGSphere3D" parent="Structure" unique_id=1500290353]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.21637249, 0.07638551, -1.303)
+operation = 2
+radius = 0.07
+radial_segments = 48
+rings = 24
+material = SubResource("StandardMaterial3D_juhtu")
+
+[node name="Coude_douche_int" type="CSGSphere3D" parent="Structure" unique_id=1845296231]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.98, 0.07638551, -1.303)
+operation = 2
+radius = 0.07
+radial_segments = 48
+rings = 24
+material = SubResource("StandardMaterial3D_juhtu")
+
+[node name="Tuyau_sortie_trou" type="CSGCylinder3D" parent="Structure" unique_id=1079948664]
+transform = Transform3D(0.57357645, 0.81915206, 0, -0.81915206, 0.57357645, 0, 0, 0, 1, 1.0815749, 0.147509, -1.303)
+operation = 2
+radius = 0.07
+height = 0.248
+sides = 48
+material = SubResource("StandardMaterial3D_juhtu")
 
 [node name="Fenêtre" type="CSGCombiner3D" parent="." unique_id=615395294]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.22965416, 0.67229617, 1.4828455)
@@ -277,8 +328,11 @@ transform = Transform3D(-1, 0, -8.742278e-08, 0, 1, 0, 8.742278e-08, 0, -1, -0.8
 [node name="Toboggan" parent="Obstacles" unique_id=960735442 instance=ExtResource("11_dj4vv")]
 transform = Transform3D(0.7336513, 0, -0.31899178, 0, 0.79999995, 0, 0.31899178, 0, 0.7336513, -0.8675569, 0, -0.37639928)
 
-[node name="BateauPirate" parent="Obstacles" unique_id=1386043014 instance=ExtResource("12_bsj62")]
-transform = Transform3D(-0.9220577, 0, 0.38705242, 0, 1, 0, -0.38705242, 0, -0.9220577, 0.1348645, 0, 0.045822322)
-
 [node name="ProduitsSalleDeBain" parent="Obstacles" unique_id=155777768 instance=ExtResource("13_6xc1t")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.086265266)
+
+[node name="BoiteMouchoirs" parent="Obstacles" unique_id=948495229 instance=ExtResource("13_dj4vv")]
+transform = Transform3D(-0.9396926, 0, 0.3420202, 0, 1, 0, -0.3420202, 0, -0.9396926, -0.1046592, 0, 0)
+
+[node name="CorbeilleLinge" type="Node3D" parent="Obstacles" unique_id=1328315256 instance=ExtResource("14_dj4vv")]
+transform = Transform3D(0.74238354, 0, -0.10661443, 0, 0.75, 0, 0.10661443, 0, 0.74238354, 0.5448872, 0, 0.47)

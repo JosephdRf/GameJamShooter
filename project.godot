@@ -21,6 +21,7 @@ config/icon="res://assets/icons/icon.svg"
 InputManager="*res://scripts/autoload/input_manager.gd"
 NetworkManager="*res://scripts/autoload/network_manager.gd"
 LanDiscovery="*res://scripts/autoload/lan_discovery.gd"
+UiSounds="*res://scripts/autoload/ui_sounds.gd"
 
 [display]
 

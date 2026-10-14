@@ -14,6 +14,7 @@ func _ready() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed(&"start"):
 		get_viewport().set_input_as_handled()
+		UiSounds.play_confirm() # Le bouton, lui, a son propre son (UiSounds).
 		_start()
 	elif event.is_action_pressed(&"ui_cancel"):
 		get_viewport().set_input_as_handled()

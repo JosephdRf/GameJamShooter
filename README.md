@@ -113,6 +113,21 @@ Un joueur qui tombe de la plateforme meurt.
 - Pour infliger des dégâts (futures armes) : `player.take_damage(montant)`, depuis n'importe quel ordinateur.
 - Réglages (inspecteur du joueur, groupe « Vie ») : `max_health`, `regen_rate`, `regen_delay`, `respawn_delay`.
 
+### Sons
+
+- Chaque événement tire un son au hasard (jamais le même deux fois de suite), un peu plus aigu ou
+  grave à chaque fois : ressources `AudioStreamRandomizer` de `assets/audio/sfx/*.tres`, qui piochent
+  dans le dossier du même nom (`shoot/`, `pop/`, `step/`…). Les sons sont découpés et calés sur leur
+  attaque : ils partent pile au moment de l'action.
+- Canard (nœuds `*Sound` de `player.tscn`, entendus sur tous les ordinateurs, en 3D) : tir, **pas calés sur
+  l'animation** (instants où un pied se pose : `Player.FOOTSTEPS`), dash, saut, touché (canard en
+  caoutchouc), mort (coin-coin), réapparition. Bulle : éclatement (`PopSound` de `bubble_projectile.tscn`).
+- Menus : autoload `UiSounds` (clic en naviguant, « plop » en validant), branché sur tous les boutons.
+- Volume : `volume_db` de chaque nœud `*Sound` ; variation : `random_pitch` des `.tres`.
+- Sources : `sfx/bubble/` (Pixabay), `sfx/duck/` et `sfx/freesound/` (Freesound, CC0, voir `CREDITS.txt`).
+- **Testeur** : `python tools/sfx_tester/build_sfx_tester.py` puis ouvrir `tools/sfx_tester/sfx_tester.html`
+  pour écouter tous les sons du jeu (et des candidats Freesound) et simuler des tirs.
+
 > **Note sur les boutons :** Godot repère les boutons de manette par leur *position* (noms Xbox) : un même réglage vaut pour toutes les manettes. Bouton du **bas** (`Joypad Button 0`) = B sur Switch Pro, Croix sur PlayStation, A sur Xbox ; bouton de **droite** (`1`) = A / Rond / B ; bouton de **gauche** (`2`) = Y / Carré / X ; gâchettes = axes 4 et 5.
 
 > **Manettes qui envoient de fausses valeurs** (vu avec une Switch Pro sous macOS : stick gauche annoncé
@@ -128,7 +143,7 @@ Un joueur qui tombe de la plateforme meurt.
 ├── addons/godot_ai_mcp/     # Plugin éditeur MCP (pilotage de l'éditeur par une IA)
 ├── assets/                  # Ressources brutes, importées par Godot
 │   ├── themes/ui_theme.tres # Thème commun à tous les écrans (taille de police…)
-│   ├── audio/{music,sfx}/
+│   ├── audio/{music,sfx}/   # sfx/*.tres : sons tirés au hasard dans sfx/<nom>/ (cf. Sons)
 │   ├── fonts/
 │   ├── icons/               # icon.svg (icône du projet)
 │   ├── materials/           # duck_*.tres : matériaux texturés du canard (corps, pistolet, réservoir bleu/rouge)
@@ -161,6 +176,7 @@ Un joueur qui tombe de la plateforme meurt.
     ├── autoload/input_manager.gd    # Liste des actions ; filtre les axes des manettes défaillantes
     ├── autoload/network_manager.gd  # Héberger/rejoindre, joueurs, lancement, pause, fin de combat
     ├── autoload/lan_discovery.gd    # Annonce/détection de l'hôte sur le réseau local (UDP 7778)
+    ├── autoload/ui_sounds.gd        # Sons des menus (clic, validation), branchés sur tous les boutons
     ├── ui/screens.gd                # Chemins de tous les écrans (Screens.*)
     ├── ui/<écran>.gd                # Un script par scène de scenes/ui/
     ├── levels/bathroom_import.gd    # Import du .blend : échelle, couleurs, collisions

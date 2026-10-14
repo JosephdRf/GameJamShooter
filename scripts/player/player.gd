@@ -16,13 +16,20 @@ extends CharacterBody3D
 ##
 ## Sons (nœuds *Sound, joués sur tous les ordinateurs) : tir, pas calés sur
 ## l'animation (cf. FOOTSTEPS), dash, saut, touché, mort et réapparition.
+##
+## Capture : l'action capture (clic molette) tire une grosse bulle (toutes les
+## `capture_cooldown` s). Un adversaire touché est piégé (capture()) : enfermé dans une
+## bulle à la couleur de l'équipe qui l'a eu, il lévite `capture_lift` m au-dessus du
+## sol et ne peut ni bouger, ni sauter, ni dasher, ni tirer pendant la durée de la
+## bulle (2 s). Il peut toujours prendre des dégâts.
 
 ## Émis sur tous les ordinateurs quand la vie change / à la mort / à la réapparition.
 signal health_changed(health: float)
 signal died
 signal respawned
-## Émis sur tous les ordinateurs quand ce joueur tire (Game crée la bulle).
-signal shot(origin: Vector3, direction: Vector3)
+## Émis sur tous les ordinateurs quand ce joueur tire (Game crée la bulle ;
+## `capture` : bulle de capture).
+signal shot(origin: Vector3, direction: Vector3, capture: bool)
 
 ## Couleur de chaque équipe (index 0 = équipe 1).
 const TEAM_COLORS: Array[Color] = [
@@ -79,6 +86,9 @@ const FOOTSTEPS := {
 	&"walk": [0.49, 0.98],
 	&"run": [0.47, 0.95],
 }
+## Capture : vitesse de montée vers la hauteur de lévitation, vitesse du flottement.
+const CAPTURE_RISE_SPEED := 10.0
+const CAPTURE_BOB_SPEED := 4.0
 
 @export_range(1, 4) var player_id := 1:
 	set(value):
@@ -111,6 +121,13 @@ const FOOTSTEPS := {
 ## Posture de combat : pendant la visée (action aim) et cette durée (s) après le
 ## dernier tir, le canard reste tourné vers sa visée, même s'il recule.
 @export var combat_stance_duration := 0.6
+@export_group("Capture")
+## Temps minimum entre deux bulles de capture (s).
+@export var capture_cooldown := 5.0
+## Hauteur à laquelle lévite un joueur capturé, au-dessus du sol (m).
+@export var capture_lift := 0.25
+## Amplitude du flottement d'un joueur capturé (m).
+@export var capture_bob := 0.05
 @export_group("Vie")
 @export var max_health := 100.0
 ## Vie regagnée par seconde (PV/s) quand le joueur ne prend pas de dégâts.
@@ -145,6 +162,8 @@ var health := 100.0:
 ## Posture de combat : direction horizontale (x, z) que regarde le canard pendant qu'il
 ## vise ou tire ; Vector2.ZERO sinon (il regarde alors là où il va). Diffusée par le nœud Sync.
 var sync_facing := Vector2.ZERO
+## Vrai pendant qu'il est piégé dans une bulle de capture (sur tous les ordinateurs).
+var captured := false
 
 var _gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var _spawn_position: Vector3
@@ -176,6 +195,14 @@ var _camera_base_y: float
 ## Animation et position (fraction) à l'image précédente, pour les bruits de pas.
 var _footstep_animation: StringName
 var _footstep_phase := 0.0
+## Temps restant avant de pouvoir tirer une bulle de capture (s).
+var _capture_cooldown_left := 0.0
+## Capture en cours (ordinateur qui a l'autorité) : temps restant (s), hauteur de
+## lévitation visée, temps écoulé (flottement).
+var _captured_left := 0.0
+var _capture_height := 0.0
+var _capture_time := 0.0
+var _capture_tween: Tween
 
 ## Caméra du joueur : les déplacements sont relatifs à son orientation.
 @onready var camera: PlayerCamera = $PlayerCamera
@@ -195,6 +222,11 @@ var _footstep_phase := 0.0
 @onready var _hit_sound: AudioStreamPlayer3D = $HitSound
 @onready var _death_sound: AudioStreamPlayer3D = $DeathSound
 @onready var _respawn_sound: AudioStreamPlayer3D = $RespawnSound
+## Capture : bulle autour du canard piégé et ses sons (tir, piégé, libéré).
+@onready var _capture_bubble: MeshInstance3D = $CaptureBubble
+@onready var _capture_shoot_sound: AudioStreamPlayer3D = $CaptureShootSound
+@onready var _capture_sound: AudioStreamPlayer3D = $CaptureSound
+@onready var _release_sound: AudioStreamPlayer3D = $ReleaseSound
 
 
 ## Équipe (1 ou 2) du joueur `id`.
@@ -242,7 +274,10 @@ func _physics_process(delta: float) -> void:
 	var previous_position := position
 	if is_multiplayer_authority():
 		if is_alive():
-			_simulate(delta)
+			if _captured_left > 0.0:
+				_simulate_captured(delta)
+			else:
+				_simulate(delta)
 			_regenerate(delta)
 		else:
 			_respawn_left -= delta
@@ -282,6 +317,15 @@ func take_damage(amount: float) -> void:
 		_apply_damage.rpc_id(get_multiplayer_authority(), amount)
 
 
+## Piège ce joueur `duration` s dans une bulle de capture de l'équipe `team`.
+## Appelable depuis n'importe quel ordinateur (comme take_damage).
+func capture(duration: float, team: int) -> void:
+	if is_multiplayer_authority():
+		_apply_capture(duration, team)
+	else:
+		_apply_capture.rpc_id(get_multiplayer_authority(), duration, team)
+
+
 ## Réapparition au point de départ, avec toute sa vie.
 func respawn() -> void:
 	global_position = _spawn_position
@@ -289,6 +333,7 @@ func respawn() -> void:
 	_dash_time = 0.0
 	_step_offset = 0.0
 	_combat_left = 0.0
+	_capture_cooldown_left = 0.0
 	sync_facing = Vector2.ZERO
 	_regen_cooldown_left = 0.0
 	health = max_health
@@ -305,6 +350,7 @@ func _simulate(delta: float) -> void:
 	var direction := Vector3(input.x, 0.0, input.y).rotated(Vector3.UP, camera.get_yaw())
 
 	_dash_cooldown_left = maxf(_dash_cooldown_left - delta, 0.0)
+	_capture_cooldown_left = maxf(_capture_cooldown_left - delta, 0.0)
 	if is_local and Input.is_action_just_pressed(&"dash") and is_on_floor() and _dash_cooldown_left == 0.0:
 		_start_dash(direction)
 
@@ -313,28 +359,17 @@ func _simulate(delta: float) -> void:
 	# Nouvel appui : tir dès fire_cooldown écoulé ; touche maintenue : toutes les auto_fire_interval.
 	var pressed := Input.is_action_just_pressed(&"shoot") and _since_last_shot >= fire_cooldown
 	var held := Input.is_action_pressed(&"shoot") and _since_last_shot >= auto_fire_interval
+	var capture_pressed := Input.is_action_just_pressed(&"capture") and _capture_cooldown_left == 0.0
 	_combat_left = maxf(_combat_left - delta, 0.0)
-	if is_local and (camera.aiming or pressed or held):
+	if is_local and (camera.aiming or pressed or held or capture_pressed):
 		_combat_left = combat_stance_duration
 	sync_facing = _aim_facing() if _combat_left > 0.0 else Vector2.ZERO
 	if is_local and (pressed or held):
 		_since_last_shot = 0.0
-		# Tout droit devant la caméra (à l'horizontale), depuis le centre du cube.
-		var target := aim()
-		# La bulle vise avec sa surface : son centre s'arrête à un rayon de la surface
-		# visée, sinon son bas frôlerait le sol (ou le mur) et elle éclaterait avant.
-		var aim_point: Vector3 = target.point + target.normal * BubbleProjectile.RADIUS
-		# Le canard n'a peut-être pas fini de se tourner vers sa visée : la bulle part
-		# de là où sera le bout du canon une fois tourné.
-		var origin := global_position
-		if _muzzle:
-			var turn := atan2(sync_facing.x, sync_facing.y) - _model.rotation.y
-			origin += (_muzzle.global_position - global_position).rotated(Vector3.UP, turn)
-		var shot_direction := (aim_point - origin).normalized()
-		# Cible trop proche (derrière le canon) : on tire simplement dans l'axe de la caméra.
-		if shot_direction.dot(camera.get_aim_ray()[1]) < 0.5:
-			shot_direction = camera.get_aim_ray()[1]
-		_shoot.rpc(origin, shot_direction)
+		_fire(false)
+	if is_local and capture_pressed:
+		_capture_cooldown_left = capture_cooldown
+		_fire(true)
 
 	if not is_on_floor():
 		velocity.y -= _gravity * gravity_scale * delta
@@ -356,6 +391,42 @@ func _simulate(delta: float) -> void:
 		_apply_damage(health)
 
 
+## Tire une bulle (de capture si `capture`) vers le point visé, depuis le bout du canon.
+func _fire(capture: bool) -> void:
+	# Tout droit devant la caméra (à l'horizontale), depuis le centre du cube.
+	var target := aim()
+	# La bulle vise avec sa surface : son centre s'arrête à un rayon de la surface
+	# visée, sinon son bas frôlerait le sol (ou le mur) et elle éclaterait avant.
+	var radius := BubbleProjectile.CAPTURE_RADIUS if capture else BubbleProjectile.RADIUS
+	var aim_point: Vector3 = target.point + target.normal * radius
+	# Le canard n'a peut-être pas fini de se tourner vers sa visée : la bulle part
+	# de là où sera le bout du canon une fois tourné.
+	var origin := global_position
+	if _muzzle:
+		var turn := atan2(sync_facing.x, sync_facing.y) - _model.rotation.y
+		origin += (_muzzle.global_position - global_position).rotated(Vector3.UP, turn)
+	var shot_direction := (aim_point - origin).normalized()
+	# Cible trop proche (derrière le canon) : on tire simplement dans l'axe de la caméra.
+	if shot_direction.dot(camera.get_aim_ray()[1]) < 0.5:
+		shot_direction = camera.get_aim_ray()[1]
+	_shoot.rpc(origin, shot_direction, capture)
+
+
+## Piégé dans une bulle de capture : immobile, il monte en douceur à la hauteur de
+## lévitation et y flotte, puis est libéré (la gravité le repose au sol).
+func _simulate_captured(delta: float) -> void:
+	_captured_left -= delta
+	_capture_time += delta
+	velocity = Vector3.ZERO
+	_dash_time = 0.0
+	_combat_left = 0.0
+	sync_facing = Vector2.ZERO
+	var target_y := _capture_height + sin(_capture_time * CAPTURE_BOB_SPEED) * capture_bob
+	global_position.y = lerpf(global_position.y, target_y, 1.0 - exp(-CAPTURE_RISE_SPEED * delta))
+	if _captured_left <= 0.0:
+		_set_captured.rpc(false, 0)
+
+
 func _regenerate(delta: float) -> void:
 	_regen_cooldown_left = maxf(_regen_cooldown_left - delta, 0.0)
 	if _regen_cooldown_left == 0.0 and health < max_health:
@@ -364,10 +435,76 @@ func _regenerate(delta: float) -> void:
 
 ## Sur tous les ordinateurs (appelé par celui qui contrôle ce cube).
 @rpc("authority", "call_local", "reliable")
-func _shoot(origin: Vector3, direction: Vector3) -> void:
-	_shoot_sound.global_position = origin # Le son part du canon, en même temps que la bulle.
-	_shoot_sound.play()
-	shot.emit(origin, direction)
+func _shoot(origin: Vector3, direction: Vector3, capture: bool) -> void:
+	var sound := _capture_shoot_sound if capture else _shoot_sound
+	sound.global_position = origin # Le son part du canon, en même temps que la bulle.
+	sound.play()
+	shot.emit(origin, direction, capture)
+
+
+## Ordinateur qui a l'autorité sur ce cube : début de la capture (cf. capture()).
+@rpc("any_peer", "call_remote", "reliable")
+func _apply_capture(duration: float, team: int) -> void:
+	if not is_alive() or captured or duration <= 0.0:
+		return
+	_captured_left = duration
+	_capture_time = 0.0
+	# Hauteur de lévitation : capture_lift au-dessus du sol (sur place s'il n'y a pas de sol dessous).
+	var feet := (_collision_shape.shape as CapsuleShape3D).height / 2.0
+	var query := PhysicsRayQueryParameters3D.create(global_position, global_position + Vector3.DOWN * 3.0,
+			WORLD_LAYER, [get_rid()])
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	_capture_height = (hit.position.y + feet if not hit.is_empty() else global_position.y) + capture_lift
+	_set_captured.rpc(true, team)
+
+
+## Sur tous les ordinateurs : affiche (ou fait éclater) la bulle autour du canard.
+@rpc("authority", "call_local", "reliable")
+func _set_captured(value: bool, team: int) -> void:
+	if value == captured:
+		return
+	captured = value
+	if value:
+		_dash_animation_left = 0.0
+		_capture_bubble.material_override = _capture_material(team)
+		_show_capture_bubble()
+		_capture_sound.play()
+	else:
+		_captured_left = 0.0
+		_hide_capture_bubble(true)
+
+
+## Matériau de la bulle de capture : celui de la scène, teinté à la couleur de l'équipe `team`.
+func _capture_material(team: int) -> Material:
+	var base := _capture_bubble.mesh.surface_get_material(0) as StandardMaterial3D
+	var material := base.duplicate() as StandardMaterial3D
+	material.albedo_color = Color(TEAM_COLORS[team - 1].lerp(Color.WHITE, 0.25), base.albedo_color.a)
+	return material
+
+
+func _show_capture_bubble() -> void:
+	if _capture_tween:
+		_capture_tween.kill()
+	_capture_bubble.visible = true
+	_capture_bubble.transparency = 0.0
+	_capture_bubble.scale = Vector3.ONE * 0.3
+	_capture_tween = create_tween()
+	_capture_tween.tween_property(_capture_bubble, ^"scale", Vector3.ONE, 0.2) \
+			.set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+
+
+## Fait disparaître la bulle de capture : elle éclate (avec un son) si `pop`, sinon tout de suite.
+func _hide_capture_bubble(pop: bool) -> void:
+	if _capture_tween:
+		_capture_tween.kill()
+	if not pop:
+		_capture_bubble.visible = false
+		return
+	_release_sound.play()
+	_capture_tween = create_tween().set_parallel()
+	_capture_tween.tween_property(_capture_bubble, ^"scale", Vector3.ONE * 1.4, 0.15)
+	_capture_tween.tween_property(_capture_bubble, ^"transparency", 1.0, 0.15)
+	_capture_tween.chain().tween_callback(_capture_bubble.hide)
 
 
 ## Sur tous les ordinateurs (appelé par celui qui contrôle ce cube) : lance les
@@ -492,6 +629,10 @@ func _apply_damage(amount: float) -> void:
 func _on_died() -> void:
 	_respawn_left = respawn_delay
 	_death_sound.play()
+	if captured: # Mort dans la bulle : elle disparaît avec lui.
+		captured = false
+		_captured_left = 0.0
+		_hide_capture_bubble(false)
 	_model.visible = false
 	_collision_shape.set_deferred(&"disabled", true)
 	died.emit()

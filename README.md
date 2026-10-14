@@ -67,6 +67,7 @@ par commande, avec sa touche clavier et son bouton de manette. Le code n'utilise
 | Dash (au sol, toutes les 2 s) | `dash` | Maj | Y | Carré |
 | Tirer une bulle (maintenir = en continu) | `shoot` | Clic droit | ZR | R2 |
 | Viser (maintenir) : la caméra zoome, sans aide à la visée | `aim` | Clic gauche | ZL | L2 |
+| Bulle de capture (toutes les 5 s) | `capture` | Clic molette | R | R1 |
 | **Menus** : naviguer / choisir son joueur | `menu_left/right` (+ `ui_*` de Godot) | Flèches (Q/D) | Stick gauche / croix | Stick gauche / croix |
 | **Menus** : valider | `ui_accept` | Entrée / Espace | A | Rond |
 | **Accueil** : démarrer ; **Sélection** : lancer la partie (hôte) | `start` | Entrée sur le bouton | + | Options |
@@ -100,6 +101,19 @@ Un joueur qui tombe de la plateforme meurt.
   et les bulles de l'équipe adverse d'y entrer.
 - Réglages : sur `scenes/game/bubble_projectile.tscn` (`speed`, `max_distance`, `damage`, `friendly_fire`,
   taille du mesh = taille de la zone de contact) et sur le joueur (`fire_cooldown`, `auto_fire_interval`, groupe « Tir »).
+
+### Capture
+
+- **Clic molette** (action `capture`) : tire une grosse bulle, plus lente (18 m/s, portée 20 m), au plus
+  une toutes les **5 s**.
+- Un adversaire touché est **piégé 2 s** dans une bulle à la couleur de l'équipe qui l'a eu : il lévite à
+  25 cm du sol en flottant et ne peut plus bouger, sauter, dasher ni tirer (il peut toujours tourner la
+  caméra et prendre des dégâts). Puis la bulle éclate et il retombe au sol. Rien sur un coéquipier ; un
+  joueur déjà piégé ne l'est pas une 2e fois. Mort dans la bulle : elle disparaît.
+- Réglages : `scenes/game/capture_bubble.tscn` (scène héritée de la bulle normale : `speed`,
+  `max_distance`, `radius`, `world_radius` : rayon plus petit contre le décor pour qu'elle frôle le sol
+  sans éclater, `capture_duration`) et sur le joueur, groupe « Capture » (`capture_cooldown`,
+  `capture_lift`, `capture_bob`). Bulle autour du canard : nœud `CaptureBubble` de `player.tscn`.
 
 ### Vie
 

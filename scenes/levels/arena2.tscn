@@ -411,7 +411,7 @@ transform = Transform3D(0.7336513, 0, -0.31899178, 0, 0.79999995, 0, 0.31899178,
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.086265266)
 
 [node name="BoiteMouchoirs" parent="Obstacles" unique_id=948495229 instance=ExtResource("13_dj4vv")]
-transform = Transform3D(-0.9396926, 0, 0.3420202, 0, 1, 0, -0.3420202, 0, -0.9396926, -0.1046592, 0, 0)
+transform = Transform3D(-0.9396926, 0, 0.3420202, 0, 1, 0, -0.3420202, 0, -0.9396926, 0.032692373, 0, -0.20501284)
 
 [node name="CorbeilleLinge" type="Node3D" parent="Obstacles" unique_id=1328315256 instance=ExtResource("14_dj4vv")]
 transform = Transform3D(0.74996126, 0, -0.007617563, 0, 0.75, 0, 0.007617563, 0, 0.74996126, 0.4841336, 0, 0.6628094)

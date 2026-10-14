@@ -121,7 +121,7 @@ Un joueur qui tombe de la plateforme meurt.
 ### Réserve d'eau
 
 - Jauge **EAU** en bas à gauche (`MatchHud`, nœud `Water`). Un tir coûte **5 %**, une grosse bulle **20 %**,
-  le jet **10 % par seconde**. Sans assez d'eau, rien ne part et la jauge clignote en rouge.
+  le jet **20 % par seconde**. Sans assez d'eau, rien ne part et la jauge clignote en rouge.
 - Après **2 s** sans dépenser d'eau, elle se recharge de plus en plus vite (la vitesse double toutes les
   0,6 s) : pleine environ 4,5 s après le dernier tir, même vide. Pleine à la réapparition.
 - Réglages : groupe « Eau » du joueur (`water_per_shot`, `water_per_capture`, `water_per_second`,
@@ -143,7 +143,9 @@ Un joueur qui tombe de la plateforme meurt.
 
 - Une bulle qui éclate sur le sol (ou le dessus d'un meuble) laisse une **flaque d'eau** (rayon 2 m,
   3,6 m pour la maxi-bulle : `puddle_radius`), de forme irrégulière. Deux flaques proches se rejoignent
-  en une seule ; tirer plusieurs fois au même endroit l'agrandit. Les flaques ne sèchent pas.
+  en une seule ; tirer plusieurs fois au même endroit l'agrandit.
+- **Évaporation** : l'eau disparaît **30 s** après son dernier arrosage, en pâlissant pendant les 10 dernières
+  secondes ; réarroser une flaque la rafraîchit (groupe « Évaporation » du nœud `Puddles`).
 - **Dash sur l'eau** : il ne s'use pas. Le canard garde sa vitesse tant qu'il glisse sur une flaque, et
   la distance du dash ne compte que sur le sol sec (`dash_slides_on_water` sur le joueur). Contre un mur,
   le dash se termine normalement.

@@ -21,7 +21,7 @@ extends Node3D
 ## Radians par pixel de déplacement de la souris / du trackpad.
 @export var mouse_sensitivity := 0.004
 ## Inclinaison verticale de la caméra (°) : limite basse (vers le sol) et haute (vers le plafond).
-@export_range(-89.0, 0.0) var min_pitch_degrees := -45.0
+@export_range(-89.0, 0.0) var min_pitch_degrees := -75.0
 @export_range(0.0, 89.0) var max_pitch_degrees := 60.0
 @export var invert_y := false
 ## Visée : champ de vision (°) et longueur du bras (m), au lieu de ceux de la scène.

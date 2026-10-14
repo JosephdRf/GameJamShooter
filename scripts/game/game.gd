@@ -30,6 +30,7 @@ extends Node3D
 ## Intervalle (s) entre deux envois du temps restant par l'hôte.
 const TIME_SYNC_INTERVAL := 0.5
 const PROJECTILE_SCENE := preload("res://scenes/game/bubble_projectile.tscn")
+const CAPTURE_PROJECTILE_SCENE := preload("res://scenes/game/capture_bubble.tscn")
 ## Dégâts infligés par l'action de test debug_damage.
 const DEBUG_DAMAGE := 10.0
 
@@ -127,8 +128,8 @@ func _on_player_health_changed(health: float, player: Player) -> void:
 
 
 ## Sur tous les ordinateurs ; seule la bulle de l'ordinateur du tireur inflige des dégâts.
-func _on_player_shot(origin: Vector3, direction: Vector3, player: Player) -> void:
-	var bubble: BubbleProjectile = PROJECTILE_SCENE.instantiate()
+func _on_player_shot(origin: Vector3, direction: Vector3, capture: bool, player: Player) -> void:
+	var bubble: BubbleProjectile = (CAPTURE_PROJECTILE_SCENE if capture else PROJECTILE_SCENE).instantiate()
 	_projectiles.add_child(bubble)
 	bubble.launch(player, origin, direction, player.is_multiplayer_authority())
 

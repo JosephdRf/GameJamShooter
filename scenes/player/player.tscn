@@ -11,6 +11,7 @@
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/duck_hit.tres" id="9_duck_hit"]
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/duck_death.tres" id="10_duck_death"]
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/duck_respawn.tres" id="11_duck_respawn"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/bubble_pop.tres" id="12_bubble_pop"]
 
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_gmlin"]
 animation = &"dash"
@@ -146,6 +147,20 @@ properties/2/path = NodePath(".:sync_facing")
 properties/2/spawn = true
 properties/2/replication_mode = 1
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_capture"]
+transparency = 1
+cull_mode = 2
+albedo_color = Color(0.82, 0.94, 1, 0.3)
+metallic_specular = 1.0
+roughness = 0.05
+rim_enabled = true
+rim_tint = 0.2
+
+[sub_resource type="SphereMesh" id="SphereMesh_capture"]
+material = SubResource("StandardMaterial3D_capture")
+radius = 0.95
+height = 1.9
+
 [node name="Player" type="CharacterBody3D" unique_id=867554235]
 collision_layer = 2
 collision_mask = 11
@@ -213,3 +228,26 @@ max_distance = 50.0
 stream = ExtResource("11_duck_respawn")
 volume_db = -6.0
 max_distance = 40.0
+
+[node name="CaptureBubble" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
+visible = false
+cast_shadow = 0
+mesh = SubResource("SphereMesh_capture")
+
+[node name="CaptureShootSound" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("5_shoot_sound")
+pitch_scale = 0.6
+max_distance = 40.0
+
+[node name="CaptureSound" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("5_shoot_sound")
+volume_db = 2.0
+pitch_scale = 0.45
+max_distance = 50.0
+
+[node name="ReleaseSound" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("12_bubble_pop")
+volume_db = 2.0
+pitch_scale = 0.55
+max_distance = 50.0

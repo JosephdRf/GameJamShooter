@@ -14,7 +14,7 @@ config/name="Duck my Life"
 config/description="Duck my Life - 2v2 en réseau local, jusqu'à 4 joueurs."
 run/main_scene="res://scenes/ui/loading_screen.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
-config/icon="res://assets/icons/icon.svg"
+config/icon="res://assets/icons/icon.png"
 
 [autoload]
 

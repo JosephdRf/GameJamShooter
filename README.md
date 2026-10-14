@@ -204,7 +204,7 @@ Un joueur qui tombe de la plateforme meurt.
 │   ├── themes/ui_theme.tres # Thème commun à tous les écrans (taille de police…)
 │   ├── audio/{music,sfx}/   # sfx/*.tres : sons tirés au hasard dans sfx/<nom>/ (cf. Sons)
 │   ├── fonts/
-│   ├── icons/               # icon.svg (icône du projet)
+│   ├── icons/               # icon.png (icône du projet : rendu du canard bleu)
 │   ├── materials/           # duck_*.tres : matériaux texturés du canard (corps, pistolet, réservoir bleu/rouge)
 │   ├── models/              # bain-de-coin-coin.blend : l'arène (importée via Blender) ; duck_v4.glb : le canard
 │   └── textures/            # Textures du canard (diffuse / normal / roughness)

@@ -64,12 +64,12 @@ par commande, avec sa touche clavier et son bouton de manette. Le code n'utilise
 | Se déplacer | `move_left/right/up/down` | Z/Q/S/D (W/A/S/D en QWERTY) ou flèches | Stick gauche | Stick gauche |
 | Tourner la caméra | `look_left/right/up/down` | Souris / trackpad | Stick droit | Stick droit |
 | Sauter | `jump` | Espace | B | Croix |
-| Dash (au sol, toutes les 2 s ; gauche / droite l'infléchissent) | `dash` | Maj | Y | Carré |
-| Tirer une bulle (maintenir = en continu) | `shoot` | Clic gauche / T | ZL / ZR | L2 / R2 |
+| Dash (au sol, toutes les 2 s ; gauche / droite l'infléchissent) | `dash` | Maj | ZL / L | L2 / L1 |
+| Tirer une bulle (maintenir = en continu) | `shoot` | Clic gauche / T | ZR | R2 |
 | Viser : la caméra zoome, sans aide à la visée (**désactivé pour l'instant** : aucune touche) | `aim` | — | — | — |
 | Bulle de capture (toutes les 1 s, 20 % d'eau) | `capture` | Clic molette | R | R1 |
-| Canon à eau (maintenir, prototype) | `water_cannon` | Clic droit | L | L1 |
-| **Menus** : naviguer / choisir son joueur | `menu_left/right` (+ `ui_*` de Godot) | Flèches (Q/D) | Stick gauche / croix | Stick gauche / croix |
+| Canon à eau (maintenir, prototype) | `water_cannon` | Clic droit | Y | Carré |
+| **Menus** : naviguer / choisir son joueur (4 directions) | `menu_left/right/up/down` (+ `ui_*` de Godot) | Flèches (Z/Q/S/D) | Stick gauche / croix | Stick gauche / croix |
 | **Menus** : valider | `ui_accept` | Entrée / Espace | A | Rond |
 | **Accueil** : démarrer ; **Sélection** : lancer la partie (hôte) | `start` | Entrée sur le bouton | + | Options |
 | **Sélection** : changer de joueur après validation | `menu_back` | Retour arrière | B | Croix |

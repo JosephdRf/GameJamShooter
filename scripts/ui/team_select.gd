@@ -2,8 +2,11 @@ extends Control
 ## Sélection d'équipe (maquette : assets/ui/team_select/maquette.png) : deux serviettes,
 ## bleue (joueurs 1-2) et rouge (joueurs 3-4), avec un bouton par joueur.
 ##
-## Chaque ordinateur choisit son joueur avec le joystick gauche ou ← →, ou en cliquant
-## sur un joueur libre. Un joueur déjà pris par un autre ordinateur est grisé et sauté.
+## Chaque ordinateur choisit son joueur avec le joystick gauche, la croix ou les flèches
+## (dans les 4 directions : les joueurs sont en grille, 1-2 à gauche et 3-4 à droite, de
+## haut en bas), ou en cliquant sur un joueur libre. Un joueur pris par un autre
+## ordinateur est grisé : on ne peut pas aller dessus.
+## Les aides en bas à gauche montrent les touches de l'appareil utilisé (ButtonPrompt).
 ## A (ou Entrée, ou un clic sur son propre joueur) valide le choix et place le curseur
 ## sur « Lancer » ; B (ou Retour arrière) annule la validation. L'hôte lance la partie
 ## avec Start ou la bulle « Lancer ». Échap / bulle « Quitter » -> écran hôte/IP.
@@ -11,9 +14,17 @@ extends Control
 ## par cet ordinateur reste un peu plus gros.
 ## Nécessite une session réseau (sinon retour à l'écran hôte/IP).
 
-## Échelle d'un bouton survolé, et du joueur choisi par cet ordinateur.
-const HOVER_SCALE := 1.12
-const MINE_SCALE := 1.05
+## Échelle d'un joueur survolé, du joueur choisi par cet ordinateur, et d'une bulle survolée.
+const PLAYER_HOVER_SCALE := 1.06
+const MINE_SCALE := 1.03
+const BUBBLE_HOVER_SCALE := 1.12
+## Actions de déplacement du choix -> direction dans la grille.
+const DIRECTIONS := {
+	&"menu_left": Vector2i.LEFT, &"menu_right": Vector2i.RIGHT,
+	&"menu_up": Vector2i.UP, &"menu_down": Vector2i.DOWN,
+}
+## Place de chaque joueur dans la grille (colonne = équipe, rangée).
+const GRID := {1: Vector2i(0, 0), 2: Vector2i(0, 1), 3: Vector2i(1, 0), 4: Vector2i(1, 1)}
 ## Vitesse de l'animation d'échelle (plus élevé = plus rapide).
 const SCALE_SPEED := 14.0
 ## Teinte d'un joueur pris par un autre ordinateur.
@@ -35,8 +46,6 @@ func _ready() -> void:
 		return
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	Music.play(Music.MENU)
-	%AcceptHint/Label.text = "Sélectionner  (Entrée)"
-	%BackHint/Label.text = "Annuler  (Retour arrière)"
 	for i in _players.size():
 		_players[i].pressed.connect(_on_player_pressed.bind(i + 1))
 	for button: BaseButton in _players + [_start_button, _leave_button]:
@@ -51,12 +60,9 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	if not NetworkManager.is_my_slot_locked():
-		if Input.is_action_just_pressed(&"menu_left"):
-			UiSounds.play_click()
-			NetworkManager.move_my_slot(-1)
-		if Input.is_action_just_pressed(&"menu_right"):
-			UiSounds.play_click()
-			NetworkManager.move_my_slot(1)
+		for action: StringName in DIRECTIONS:
+			if Input.is_action_just_pressed(action):
+				_move_choice(DIRECTIONS[action])
 	if multiplayer.is_server() and Input.is_action_just_pressed(&"start"):
 		UiSounds.play_confirm()
 		NetworkManager.start_match()
@@ -85,6 +91,15 @@ func _on_player_pressed(player_id: int) -> void:
 		NetworkManager.choose_slot(player_id)
 
 
+## Va sur le joueur voisin dans la direction `direction`, s'il existe et qu'il est libre.
+func _move_choice(direction: Vector2i) -> void:
+	var cell: Vector2i = GRID.get(NetworkManager.get_my_slot(), Vector2i.ZERO) + direction
+	var target: int = GRID.find_key(cell) if GRID.values().has(cell) else 0
+	if target != 0 and NetworkManager.get_slot_owner(target) == 0:
+		UiSounds.play_click()
+		NetworkManager.choose_slot(target)
+
+
 func _set_locked(value: bool) -> void:
 	if value:
 		UiSounds.play_confirm()
@@ -106,10 +121,11 @@ func _leave() -> void:
 func _animate_scales(delta: float) -> void:
 	var my_slot := NetworkManager.get_my_slot()
 	for button: BaseButton in _players + [_start_button, _leave_button]:
+		var is_player := button in _players
 		var target := 1.0
 		if _hovered.get(button, false) or button.has_focus():
-			target = HOVER_SCALE
-		elif button in _players and _players.find(button) + 1 == my_slot:
+			target = PLAYER_HOVER_SCALE if is_player else BUBBLE_HOVER_SCALE
+		elif is_player and _players.find(button) + 1 == my_slot:
 			target = MINE_SCALE
 		var weight := 1.0 - exp(-SCALE_SPEED * delta)
 		button.scale = button.scale.lerp(Vector2.ONE * target, weight)

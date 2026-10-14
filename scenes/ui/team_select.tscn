@@ -13,8 +13,7 @@
 [ext_resource type="Texture2D" path="res://assets/ui/team_select/joueur4.png" id="11_j4"]
 [ext_resource type="Texture2D" path="res://assets/ui/team_select/lancer.png" id="12_lancer"]
 [ext_resource type="Texture2D" path="res://assets/ui/team_select/quitter.png" id="13_quitter"]
-[ext_resource type="Texture2D" path="res://assets/ui/team_select/x_button.png" id="14_x"]
-[ext_resource type="Texture2D" path="res://assets/ui/team_select/o_button.png" id="15_o"]
+[ext_resource type="Script" path="res://scripts/ui/button_prompt.gd" id="16_prompt"]
 
 [node name="TeamSelect" type="Control"]
 layout_mode = 3
@@ -247,60 +246,64 @@ theme_override_constants/outline_size = 6
 theme_override_font_sizes/font_size = 16
 horizontal_alignment = 1
 
-[node name="AcceptHint" type="TextureRect" parent="Layout"]
-layout_mode = 0
-offset_left = 36
-offset_top = 575
-offset_right = 80
-offset_bottom = 619
+[node name="AcceptHint" type="HBoxContainer" parent="Layout"]
 unique_name_in_owner = true
+layout_mode = 0
+offset_left = 36.0
+offset_top = 600.0
+offset_right = 336.0
+offset_bottom = 644.0
 mouse_filter = 2
-texture = ExtResource("15_o")
-expand_mode = 1
-stretch_mode = 5
+theme_override_constants/separation = 14
+
+[node name="Prompt" type="Control" parent="Layout/AcceptHint"]
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("16_prompt")
+role = 0
 
 [node name="Label" type="Label" parent="Layout/AcceptHint"]
-layout_mode = 0
-offset_left = 56
-offset_top = 0
-offset_right = 316
-offset_bottom = 44
+layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0.07, 0.25, 0.45, 1)
 theme_override_constants/outline_size = 8
 theme_override_font_sizes/font_size = 22
+text = "Sélectionner"
 vertical_alignment = 1
 
-[node name="BackHint" type="TextureRect" parent="Layout"]
-layout_mode = 0
-offset_left = 36
-offset_top = 630
-offset_right = 80
-offset_bottom = 674
+[node name="BackHint" type="HBoxContainer" parent="Layout"]
 unique_name_in_owner = true
+layout_mode = 0
+offset_left = 36.0
+offset_top = 652.0
+offset_right = 336.0
+offset_bottom = 696.0
 mouse_filter = 2
-texture = ExtResource("14_x")
-expand_mode = 1
-stretch_mode = 5
+theme_override_constants/separation = 14
+
+[node name="Prompt" type="Control" parent="Layout/BackHint"]
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("16_prompt")
+role = 1
 
 [node name="Label" type="Label" parent="Layout/BackHint"]
-layout_mode = 0
-offset_left = 56
-offset_top = 0
-offset_right = 316
-offset_bottom = 44
+layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0.07, 0.25, 0.45, 1)
 theme_override_constants/outline_size = 8
 theme_override_font_sizes/font_size = 22
+text = "Annuler"
 vertical_alignment = 1
 
 [node name="StartButton" type="TextureButton" parent="Layout"]
 layout_mode = 0
 offset_left = 375
-offset_top = 495
+offset_top = 540.0
 offset_right = 815
-offset_bottom = 715
+offset_bottom = 760.0
 unique_name_in_owner = true
 pivot_offset = Vector2(220, 110)
 texture_normal = ExtResource("12_lancer")
@@ -310,9 +313,9 @@ stretch_mode = 5
 [node name="LeaveButton" type="TextureButton" parent="Layout"]
 layout_mode = 0
 offset_left = 820
-offset_top = 505
+offset_top = 535.0
 offset_right = 1200
-offset_bottom = 737
+offset_bottom = 767.0
 unique_name_in_owner = true
 pivot_offset = Vector2(190, 116)
 texture_normal = ExtResource("13_quitter")

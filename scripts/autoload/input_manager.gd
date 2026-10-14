@@ -4,12 +4,13 @@ extends Node
 ##   move_left/right/up/down : se déplacer (Z/Q/S/D ou flèches / stick gauche)
 ##   look_left/right/up/down : tourner la caméra (stick droit ; la souris est gérée par PlayerCamera)
 ##   jump                    : sauter (Espace / bouton du bas)
-##   dash                    : dash (Maj / bouton de gauche)
-##   shoot                   : tirer, maintenu = en continu (clic droit / gâchette droite)
+##   dash                    : dash (Maj / gâchette ou bouton haut gauche)
+##   shoot                   : tirer, maintenu = en continu (clic gauche, T / gâchette droite)
+##   water_cannon            : canon à eau (clic droit / bouton de gauche)
 ##   aim                     : viser, maintenu = zoom sans aide à la visée (clic gauche / gâchette gauche)
 ##   pause                   : menu pause en jeu, hôte (P / Start)
 ##   start                   : lancer depuis l'accueil et le choix des équipes (Start)
-##   menu_left/menu_right    : choisir son joueur (Q/D ou flèches / croix, stick gauche)
+##   menu_left/right/up/down : choisir son joueur (Z/Q/S/D ou flèches / croix, stick gauche)
 ##   menu_back               : annuler son choix (Retour arrière / bouton du bas)
 ##   ui_accept (de Godot)    : valider (Entrée, Espace / bouton de droite)
 ##   ui_cancel (de Godot)    : quitter le jeu (Échap)
@@ -32,6 +33,14 @@ extends Node
 
 ## Axe considéré « au repos » sous cette valeur (stick centré, gâchette relâchée).
 const AXIS_REST := 0.2
+
+## Famille de l'appareil utilisé en dernier, pour afficher les bonnes touches (cf. ButtonPrompt).
+enum DeviceType { KEYBOARD, PLAYSTATION, NINTENDO, XBOX }
+
+## Émis quand le joueur passe du clavier à une manette (ou d'une manette à une autre famille).
+signal device_type_changed
+
+var device_type := DeviceType.KEYBOARD
 ## Délai après la connexion d'une manette avant de regarder ses axes (ms) : le temps
 ## que leurs vraies valeurs arrivent.
 const AXIS_CHECK_DELAY := 500
@@ -61,6 +70,33 @@ func _ready() -> void:
 		_connected_at[device] = Time.get_ticks_msec()
 	# Émis aussi au démarrage pour les manettes déjà branchées.
 	Input.joy_connection_changed.connect(_on_joy_connection_changed)
+
+
+## Repère l'appareil utilisé : clavier / souris, ou manette (axe déjà jugé fiable).
+func _input(event: InputEvent) -> void:
+	var type := -1
+	if event is InputEventKey or event is InputEventMouseButton:
+		type = DeviceType.KEYBOARD
+	elif event is InputEventJoypadButton and event.pressed:
+		type = joypad_type(event.device)
+	elif event is InputEventJoypadMotion and absf(event.axis_value) > 0.5 \
+			and _trusted_axes.get(event.device, {}).has(event.axis):
+		type = joypad_type(event.device)
+	if type != -1 and type != device_type:
+		device_type = type as DeviceType
+		device_type_changed.emit()
+
+
+## Famille de la manette `device`, d'après son nom (Xbox par défaut).
+static func joypad_type(device: int) -> DeviceType:
+	var joy_name := Input.get_joy_name(device).to_lower()
+	for word in ["nintendo", "switch", "joy-con", "pro controller"]:
+		if word in joy_name:
+			return DeviceType.NINTENDO
+	for word in ["playstation", "dualsense", "dualshock", "sony", "ps3", "ps4", "ps5"]:
+		if word in joy_name:
+			return DeviceType.PLAYSTATION
+	return DeviceType.XBOX
 
 
 func _process(_delta: float) -> void:

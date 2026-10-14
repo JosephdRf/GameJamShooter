@@ -10,8 +10,9 @@ extends Control
 ## A (ou Entrée, ou un clic sur son propre joueur) valide le choix et place le curseur
 ## sur « Lancer » ; B (ou Retour arrière) annule la validation. L'hôte lance la partie
 ## avec Start ou la bulle « Lancer ». Échap / bulle « Quitter » -> écran hôte/IP.
-## Les boutons grossissent au survol (et au focus clavier / manette) ; le joueur choisi
-## par cet ordinateur reste un peu plus gros.
+## Les boutons grossissent au survol (et au focus clavier / manette).
+## Joueur choisi par cet ordinateur : un peu plus gros, entouré d'un contour jaune qui
+## pulse (fixe une fois le choix validé). Joueur pris par un autre ordinateur : grisé.
 ## Nécessite une session réseau (sinon retour à l'écran hôte/IP).
 
 ## Échelle d'un joueur survolé, du joueur choisi par cet ordinateur, et d'une bulle survolée.
@@ -29,9 +30,15 @@ const GRID := {1: Vector2i(0, 0), 2: Vector2i(0, 1), 3: Vector2i(1, 0), 4: Vecto
 const SCALE_SPEED := 14.0
 ## Teinte d'un joueur pris par un autre ordinateur.
 const TAKEN_MODULATE := Color(0.5, 0.52, 0.58)
+## Contour du joueur choisi par cet ordinateur : couleur, épaisseur (px) et pulsation (Hz).
+const MINE_FRAME_COLOR := Color(1, 0.82, 0.1)
+const MINE_FRAME_WIDTH := 6
+const MINE_FRAME_PULSE := 1.2
 
 ## Bouton -> vrai tant que la souris le survole.
 var _hovered := {}
+## Contour jaune de chaque joueur (visible sur celui de cet ordinateur).
+var _frames: Array[Panel] = []
 
 @onready var _info: Label = %Info
 @onready var _players: Array[TextureButton] = [%Player1, %Player2, %Player3, %Player4]
@@ -48,6 +55,7 @@ func _ready() -> void:
 	Music.play(Music.MENU)
 	for i in _players.size():
 		_players[i].pressed.connect(_on_player_pressed.bind(i + 1))
+		_frames.append(_make_frame(_players[i]))
 	for button: BaseButton in _players + [_start_button, _leave_button]:
 		button.mouse_entered.connect(func() -> void: _hovered[button] = true)
 		button.mouse_exited.connect(func() -> void: _hovered[button] = false)
@@ -67,6 +75,7 @@ func _process(delta: float) -> void:
 		UiSounds.play_confirm()
 		NetworkManager.start_match()
 	_animate_scales(delta)
+	_animate_frames()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -120,15 +129,43 @@ func _leave() -> void:
 ## Grossit en douceur les boutons survolés / avec le focus, et le joueur choisi.
 func _animate_scales(delta: float) -> void:
 	var my_slot := NetworkManager.get_my_slot()
+	# La souris l'emporte sur le focus : seul le bouton survolé grossit.
+	var mouse_over_any: bool = _hovered.values().has(true)
 	for button: BaseButton in _players + [_start_button, _leave_button]:
 		var is_player := button in _players
 		var target := 1.0
-		if _hovered.get(button, false) or button.has_focus():
+		if _hovered.get(button, false) or (button.has_focus() and not mouse_over_any):
 			target = PLAYER_HOVER_SCALE if is_player else BUBBLE_HOVER_SCALE
 		elif is_player and _players.find(button) + 1 == my_slot:
 			target = MINE_SCALE
 		var weight := 1.0 - exp(-SCALE_SPEED * delta)
 		button.scale = button.scale.lerp(Vector2.ONE * target, weight)
+
+
+## Contour arrondi (sans fond) qui suit la forme du bouton `button`, masqué au départ.
+func _make_frame(button: Control) -> Panel:
+	var style := StyleBoxFlat.new()
+	style.draw_center = false
+	style.border_color = MINE_FRAME_COLOR
+	style.set_border_width_all(MINE_FRAME_WIDTH)
+	style.set_corner_radius_all(34)
+	style.set_expand_margin_all(MINE_FRAME_WIDTH)
+	var frame := Panel.new()
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	frame.add_theme_stylebox_override(&"panel", style)
+	frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	frame.offset_bottom = -6.0 # Le bas de l'image du bouton est un peu transparent.
+	frame.visible = false
+	button.add_child(frame)
+	return frame
+
+
+## Le contour du joueur de cet ordinateur pulse tant que le choix n'est pas validé.
+func _animate_frames() -> void:
+	var pulse := 0.55 + 0.45 * sin(Time.get_ticks_msec() / 1000.0 * TAU * MINE_FRAME_PULSE)
+	var alpha := 1.0 if NetworkManager.is_my_slot_locked() else pulse
+	for frame in _frames:
+		frame.modulate.a = alpha
 
 
 func _refresh() -> void:
@@ -138,14 +175,14 @@ func _refresh() -> void:
 		var owner_id: int = NetworkManager.slots.get(player_id, 0)
 		var is_locked: bool = NetworkManager.locked.get(player_id, false)
 		var state: Label = _players[i].get_node(^"State")
-		if owner_id == my_id:
-			_players[i].modulate = Color.WHITE
-			state.text = "Toi  ✔ prêt" if is_locked else "Toi"
-		elif owner_id == 0:
-			_players[i].modulate = Color.WHITE
+		var taken := owner_id != 0 and owner_id != my_id
+		_players[i].modulate = TAKEN_MODULATE if taken else Color.WHITE
+		_frames[i].visible = owner_id == my_id
+		if owner_id == 0:
 			state.text = ""
+		elif owner_id == my_id:
+			state.text = "✔ prêt" if is_locked else ""
 		else:
-			_players[i].modulate = TAKEN_MODULATE
 			state.text = ("Pris par l'hôte" if owner_id == 1 else "Pris") + ("  ✔ prêt" if is_locked else "")
 
 	var count := NetworkManager.get_connected_count()

@@ -22,11 +22,11 @@ Les chemins sont regroupés dans `scripts/ui/screens.gd` (`Screens.TITLE`, `Scre
 
 1. **Même réseau** : tous les ordinateurs sur le même Wi-Fi. Le plus simple est le partage de
    connexion du téléphone de l'hôte (voir [Réseau](#réseau)).
-2. L'hôte lance le jeu, appuie sur **Démarrer** puis **Héberger la partie** : son adresse IP s'affiche.
+2. L'hôte lance le jeu, appuie sur **Démarrer** puis **Héberger** (serviette bleue) : son adresse IP s'affiche.
    **Un seul hôte par réseau** : dès qu'une partie est détectée, « Héberger » est désactivé chez les autres.
 3. Les autres lancent le jeu, appuient sur **Démarrer** : l'IP de l'hôte est pré-remplie si la partie
    est détectée (sinon la saisir), puis **Rejoindre**.
-4. Chacun choisit son joueur avec le joystick gauche ou ← → (un joueur déjà pris est grisé),
+4. Chacun choisit son joueur avec le joystick gauche ou ← → (un joueur déjà pris par un autre ordinateur est grisé ; le sien est entouré de jaune, contour qui pulse jusqu'à la validation),
    puis valide avec **A** : le curseur passe sur « Lancer la partie ».
    Équipe bleue : J1 + J2 · Équipe rouge : J3 + J4 (couleurs dans `Player.TEAM_COLORS`).
 5. L'hôte appuie sur **Start** (bouton +), ou A / Entrée sur « Lancer la partie » : la partie se lance pour tous,
@@ -37,13 +37,16 @@ Les chemins sont regroupés dans `scripts/ui/screens.gd` (`Screens.TITLE`, `Scre
 6. En jeu, l'hôte peut mettre en pause (**P** ou **+**) : la partie est figée pour tous.
    « Quitter » ramène tout le monde à la sélection d'équipe.
 7. Un **compte à rebours** (2:00 par défaut) est affiché en haut au centre ; il est figé pendant la
-   pause. À 0:00, tout le monde passe à l'écran de fin. L'hôte fait foi : il envoie le temps restant
+   pause. À 0:00, tout le monde passe à l'écran de fin, sauf si une zone est en cours de capture :
+   **prolongation** (« Prolongation ! » 2 s, le 0:00 clignote) jusqu'à ce que la zone soit capturée
+   ou que sa barre reparte à 0 (l'équipe est sortie). L'hôte fait foi : il envoie le temps restant
    aux autres toutes les 0,5 s. Durée réglable avec `match_duration` sur le nœud `Game`
    (0 = pas de limite, chrono masqué).
-8. **Défense de zone** : une seule zone ronde est active à la fois (tirée au hasard, jamais la
+8. **Défense de zone** : une seule zone (ronde, ou rectangulaire pour l'îlot central) est active à la fois (tirée au hasard, jamais la
    même deux fois de suite). Une équipe qui y reste **seule 10 s** la capture et gagne **2 points** ;
    la zone prend la couleur de l'équipe présente et une barre de progression s'affiche sous le
-   score. Si l'équipe sort, la barre repart à 0 ; si les deux équipes sont dedans, elle est en
+   score. Un canard compte comme dedans tant que son corps touche la zone (même centré un peu
+   hors du bord). Si l'équipe sort, la barre repart à 0 ; si les deux équipes sont dedans, elle est en
    pause. Une zone non capturée disparaît au bout de **20 s** (décompte en pause tant qu'une
    équipe la capture). Scores : bleu à gauche du chrono, rouge à droite. À chaque prise :
    « Ton équipe a pris la zone clé ! » ou « L'adversaire a pris la zone clé ! ».
@@ -202,6 +205,7 @@ Un joueur qui tombe de la plateforme meurt.
 ├── addons/godot_ai_mcp/     # Plugin éditeur MCP (pilotage de l'éditeur par une IA)
 ├── assets/                  # Ressources brutes, importées par Godot
 │   ├── themes/ui_theme.tres # Thème commun à tous les écrans (taille de police…)
+│   ├── fonts/titan_one/     # Police des annonces et du texte de capture (Titan One, licence OFL)
 │   ├── audio/{music,sfx}/   # sfx/*.tres : sons tirés au hasard dans sfx/<nom>/ (cf. Sons)
 │   ├── fonts/
 │   ├── icons/               # icon.png (icône du projet : rendu du canard bleu)
@@ -212,17 +216,17 @@ Un joueur qui tombe de la plateforme meurt.
 │   ├── ui/                  # Un fichier par écran, modifiable indépendamment
 │   │   ├── loading_screen.tscn  # Écran de chargement (scène de départ)
 │   │   ├── title_screen.tscn    # Écran d'accueil : « Duck my Life » + Démarrer
-│   │   ├── connect_screen.tscn  # Écran hôte/IP : Héberger / Rejoindre
+│   │   ├── connect_screen.tscn  # Écran hôte/IP (style sélection d'équipe) : Héberger / IP + Rejoindre / Quitter
 │   │   ├── team_select.tscn     # Sélection d'équipe (choix des joueurs)
 │   │   ├── match_hud.tscn       # HUD en jeu : compte à rebours (instancié dans game.tscn)
 │   │   ├── pause_menu.tscn      # Menu pause (instancié dans game.tscn)
 │   │   ├── end_screen.tscn      # Écran de fin : scores, équipe gagnante, Rejouer / Quitter
 │   │   ├── death_screen.tscn    # « You died » + image grisée (instancié dans game.tscn)
-│   │   ├── announcer.tscn       # Messages de match (Attention…, C'est parti !, zone, Terminé !)
+│   │   ├── announcer.tscn       # Messages de match (Attention…, C'est parti !, zone, Prolongation !, Terminé !), style Splatoon, effet au choix (`effect` : Splat, Slide, Stamp, Flash, Jelly)
 │   │   ├── crosshair.tscn       # Viseur (rouge sur un adversaire)
 │   │   ├── damage_overlay.tscn  # Regroupe les écrans de dégâts (instancié dans game.tscn)
 │   │   └── damage/damage_screen_1..3.tscn  # Bulles sur les bords, de plus en plus couvrantes
-│   ├── game/game.tscn       # Partie : Arena + Players/Player1..4 + SpawnZones (2) + Projectiles + ZoneDefenseMode (3 zones) + MatchHud + PauseMenu
+│   ├── game/game.tscn       # Partie : Arena + Players/Player1..4 + SpawnZones (2) + Projectiles + ZoneDefenseMode (4 zones) + MatchHud + PauseMenu
 │   ├── game/zone_defense.tscn   # Une zone à capturer (rayon, points, timeout, durée de capture)
 │   ├── game/zone_spawn.tscn     # Zone d'apparition d'une équipe (équipe, rayon)
 │   ├── game/bubble_projectile.tscn  # Bulle tirée (vitesse, portée, dégâts)
@@ -260,7 +264,7 @@ Un joueur qui tombe de la plateforme meurt.
 - Pause, retour à la sélection d'équipe et fin du combat sont décidés par l'hôte et appliqués
   sur tous les ordinateurs (RPC de `NetworkManager`).
 - **Un seul hôte** : l'hôte diffuse une annonce UDP (port **7778**) toutes les 0,5 s ; l'écran
-  hôte/IP l'écoute, désactive « Héberger » et pré-remplit l'IP. Si le réseau bloque la diffusion,
+  hôte/IP l'écoute, grise « Héberger » et pré-remplit l'IP. Si le réseau bloque la diffusion,
   rien n'est détecté et on saisit l'IP à la main.
 - Si l'hôte quitte, les autres reviennent à l'écran hôte/IP avec un message.
 - Tester seul : *Débogage › Personnaliser les instances lancées…* → 2 à 4 instances, puis F5.
@@ -323,10 +327,12 @@ Un joueur qui tombe de la plateforme meurt.
 
 ### Régler les zones
 
-Dans `scenes/game/game.tscn`, les zones sont les enfants de `ZoneDefenseMode` (`ZoneLeft`,
-`ZoneCenter`, `ZoneRight`) : les déplacer dans la vue 3D, régler `radius`, `points`, `timeout` et
-`capture_time` dans l'inspecteur, ou en ajouter / supprimer (instancier `zone_defense.tscn` sous
-`ZoneDefenseMode`). Placement actuel : sur la ligne à égale distance des deux points d'apparition.
+Dans `scenes/game/game.tscn`, les zones sont les enfants de `ZoneDefenseMode`
+(`ZoneDefense1` à `ZoneDefense4`, numérotées du côté bleu au côté rouge) : les déplacer dans la vue 3D
+(centre au niveau du sol), régler `shape` (rond : `radius`, 6 m par défaut ; rectangle : `size`),
+`points`, `timeout` et `capture_time` dans l'inspecteur, ou en ajouter / supprimer (instancier
+`zone_defense.tscn` sous `ZoneDefenseMode`). `ZoneDefense2` est un rectangle qui couvre tout le
+dessus de l'îlot central.
 
 ### Ajouter un niveau
 

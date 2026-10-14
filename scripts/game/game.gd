@@ -15,7 +15,10 @@ extends Node3D
 ##
 ## Compte à rebours : l'hôte décompte match_duration secondes (figé pendant la
 ## pause) et envoie régulièrement le temps restant aux autres ordinateurs, qui
-## décomptent de leur côté entre deux envois. À 0, l'hôte termine le combat.
+## décomptent de leur côté entre deux envois. À 0, l'hôte termine le combat, sauf
+## si une zone est en cours de capture : prolongation (« Prolongation ! » pendant
+## overtime_message_duration, le 0:00 clignote) jusqu'à ce que la zone soit capturée
+## ou que la capture reparte à 0 (l'équipe a quitté la zone).
 ## Les scores (par équipe) viennent du mode défense de zone.
 ##
 ## Messages (Announcer) : au lancement « Attention… » (joueurs figés) pendant
@@ -40,11 +43,14 @@ const DEBUG_DAMAGE := 10.0
 @export var capture_message_duration := 2.5
 ## Durée de « Terminé ! » avant l'écran de fin (s).
 @export var finish_duration := 1.5
+## Durée de « Prolongation ! » (s).
+@export var overtime_message_duration := 2.0
 
 ## Temps restant (s). Ne diminue qu'une fois la partie lancée.
 var time_left := 0.0
 var _running := false
 var _ended := false
+var _overtime := false
 var _time_sync_cooldown := 0.0
 var _debug_mode := false
 
@@ -102,8 +108,12 @@ func _process(delta: float) -> void:
 	if _time_sync_cooldown <= 0.0:
 		_time_sync_cooldown = TIME_SYNC_INTERVAL
 		_sync_time_left.rpc(time_left)
-	if time_left <= 0.0:
+	if time_left > 0.0:
+		return
+	if not _mode.is_capture_in_progress():
 		_end_match()
+	elif not _overtime:
+		_start_overtime.rpc()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -217,7 +227,15 @@ func _sync_time_left(value: float) -> void:
 	_hud.set_time_left(time_left)
 
 
-## Hôte uniquement, quand le chrono arrive à 0.
+## Sur tous les ordinateurs : chrono à 0 pendant une capture.
+@rpc("authority", "call_local", "reliable")
+func _start_overtime() -> void:
+	_overtime = true
+	_announcer.show_overtime(overtime_message_duration)
+	_hud.set_overtime(true)
+
+
+## Hôte uniquement, quand le chrono arrive à 0 (et la prolongation éventuelle est finie).
 func _end_match() -> void:
 	if _ended:
 		return
@@ -229,6 +247,7 @@ func _end_match() -> void:
 func _finish_match(scores: Dictionary) -> void:
 	_ended = true
 	_running = false
+	_hud.set_overtime(false)
 	for player: Player in _players.get_children():
 		player.freeze()
 	_projectiles.process_mode = Node.PROCESS_MODE_DISABLED

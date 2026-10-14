@@ -1,6 +1,6 @@
 extends CanvasLayer
 ## Interface affichée pendant le combat (instanciée dans scenes/game/game.tscn) :
-## score bleu | compte à rebours | score rouge, et en dessous la barre de capture
+## score bleu | compte à rebours (clignote pendant la prolongation) | score rouge, et en dessous la barre de capture
 ## de la zone ; en bas à gauche, la réserve d'eau du joueur. La scène de jeu
 ## appelle les fonctions set_* ; ce script ne fait qu'afficher.
 
@@ -8,6 +8,8 @@ extends CanvasLayer
 const WATER_COLOR := Color(0.3, 0.68, 1.0)
 const WATER_RECHARGE_COLOR := Color(0.55, 0.82, 1.0)
 const WATER_DENIED_COLOR := Color(0.95, 0.3, 0.3)
+## Prolongation : durée d'un clignotement du chrono (s).
+const OVERTIME_BLINK_PERIOD := 0.6
 
 @onready var _timer_panel: Control = %TimerPanel
 @onready var _timer_label: Label = %TimerLabel
@@ -21,6 +23,7 @@ const WATER_DENIED_COLOR := Color(0.95, 0.3, 0.3)
 @onready var _water_percent: Label = %WaterPercent
 
 var _water_flash: Tween
+var _overtime_blink: Tween
 
 
 ## Affiche le temps restant au format m:ss, arrondi à la seconde supérieure
@@ -29,6 +32,19 @@ func set_time_left(seconds: float) -> void:
 	_timer_panel.visible = seconds >= 0.0
 	var whole := ceili(maxf(seconds, 0.0))
 	_timer_label.text = "%d:%02d" % [whole / 60, whole % 60]
+
+
+## Prolongation : le chrono (0:00) clignote tant que `enabled` est vrai.
+func set_overtime(enabled: bool) -> void:
+	if _overtime_blink:
+		_overtime_blink.kill()
+		_overtime_blink = null
+	_timer_label.modulate.a = 1.0
+	if not enabled:
+		return
+	_overtime_blink = create_tween().set_loops()
+	_overtime_blink.tween_property(_timer_label, ^"modulate:a", 0.15, OVERTIME_BLINK_PERIOD / 2.0)
+	_overtime_blink.tween_property(_timer_label, ^"modulate:a", 1.0, OVERTIME_BLINK_PERIOD / 2.0)
 
 
 ## Jauge d'eau : `ratio` de 0 à 1 (négatif = masquée), plus claire pendant la recharge.
@@ -70,7 +86,11 @@ func set_capture(team: int, ratio: float, contested: bool) -> void:
 	if team == 0:
 		return
 	_capture_bar.value = ratio
-	(_capture_bar.get_theme_stylebox(&"fill") as StyleBoxFlat).bg_color = Player.TEAM_COLORS[team - 1]
+	var color := Player.TEAM_COLORS[team - 1]
+	(_capture_bar.get_theme_stylebox(&"fill") as StyleBoxFlat).bg_color = color
+	# Même style que les annonces (Announcer) : ombre portée à la couleur de l'équipe.
+	_capture_label.add_theme_color_override(&"font_shadow_color", color)
+	_capture_label.add_theme_color_override(&"font_outline_color", color.darkened(0.45))
 	if contested:
 		_capture_label.text = "Zone contestée !"
 	else:

@@ -931,6 +931,11 @@ func _ground_normal() -> Vector3:
 	return get_floor_normal() if is_on_floor() else Vector3.UP
 
 
+## Rayon de la capsule du canard (m).
+func get_body_radius() -> float:
+	return (_collision_shape.shape as CapsuleShape3D).radius
+
+
 ## Point du sol sous le canard (bas de sa capsule).
 func _feet_position() -> Vector3:
 	return global_position + Vector3.DOWN * (_collision_shape.shape as CapsuleShape3D).height / 2.0

@@ -806,7 +806,7 @@ size = Vector3(8.256836, 4.678772, 23.60813)
 material = SubResource("StandardMaterial3D_702kj")
 
 [node name="Rampe" type="CSGPolygon3D" parent="Verticalite/Balcon_bleu" unique_id=649638164]
-transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -42.61547, 0, -4.421549)
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -42.640778, 0, -14.46631)
 polygon = PackedVector2Array(0, 0, 7.5015054, 0, 7.5015054, 4.5, 7.201505, 4.5)
 depth = 5.0
 material = SubResource("StandardMaterial3D_702kj")
@@ -937,7 +937,7 @@ material = SubResource("StandardMaterial3D_702kj")
 use_collision = true
 
 [node name="P1_palier_A" type="CSGBox3D" parent="Verticalite/Parcours_tours" unique_id=1434863831]
-transform = Transform3D(0.96362144, -0.07844409, 0.25549993, -0.024079017, 0.92659134, 0.37529826, -0.2661839, -0.36779767, 0.89099437, -51.31328, 8.840265, 9.6143)
+transform = Transform3D(0.9663997, -0.027517542, 0.2555665, -0.072746, 0.92432564, 0.37460658, -0.24653493, -0.38061115, 0.89126635, -51.31328, 8.74943, 9.6143)
 size = Vector3(5.7578125, 0.5, 22.001953)
 material = SubResource("StandardMaterial3D_702kj")
 

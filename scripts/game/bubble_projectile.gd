@@ -16,6 +16,9 @@ extends Node3D
 ## grande vitesse. Mesh, matériau et forme de collision sont partagés par
 ## toutes les bulles.
 ##
+## Flaque : en éclatant sur une surface presque horizontale (sol, dessus d'un meuble),
+## elle émet `splashed` (Game y crée une flaque d'eau, cf. Puddles).
+##
 ## Réseau : chaque ordinateur fait voler sa propre copie de la bulle (même
 ## départ, même trajectoire) ; seule celle de l'ordinateur du tireur inflige
 ## les dégâts (Player.take_damage les transmet au bon ordinateur).
@@ -48,12 +51,22 @@ extends Node3D
 @export var capture := false
 ## Durée pendant laquelle l'adversaire touché reste piégé (s).
 @export var capture_duration := 2.0
+@export_group("Flaque")
+## Rayon de la tache d'eau laissée en éclatant sur le sol (m) ; 0 = pas de flaque.
+@export var puddle_radius := 2.0
 @export_group("")
 
 ## Rayon du SphereMesh de la scène (m).
 const RADIUS := 0.455
 ## Rayon de la bulle de capture (m), cf. `radius` de capture_bubble.tscn.
 const CAPTURE_RADIUS := 0.7
+## Rayon de contact avec le décor des bulles (m), cf. `world_radius` des deux scènes.
+const WORLD_CONTACT_RADIUS := 0.3
+## Surface considérée comme un sol (flaque) si la composante verticale de sa normale dépasse ce seuil.
+const GROUND_MIN_NORMAL_Y := 0.7
+
+## Émis quand la bulle éclate sur le sol : `point` sur la surface, rayon de la flaque (m).
+signal splashed(point: Vector3, puddle_radius: float)
 
 ## Matériau de chaque équipe (index 0 = équipe 1), partagé par toutes ses bulles :
 ## celui de la scène, teinté à la couleur de l'équipe (même transparence).
@@ -119,7 +132,7 @@ func _physics_process(delta: float) -> void:
 			query.motion = Vector3.ZERO
 			var overlap := space.get_rest_info(query)
 			if not overlap.is_empty():
-				_on_hit(instance_from_id(overlap.collider_id))
+				_on_hit(instance_from_id(overlap.collider_id), overlap)
 				return
 		query.motion = motion
 		var fractions := space.cast_motion(query)
@@ -130,7 +143,7 @@ func _physics_process(delta: float) -> void:
 		first.transform.origin = global_position + motion * first_fractions[1]
 		var contact := space.get_rest_info(first)
 		global_position += motion * first_fractions[0]
-		_on_hit(instance_from_id(contact.collider_id) if not contact.is_empty() else null)
+		_on_hit(instance_from_id(contact.collider_id) if not contact.is_empty() else null, contact)
 		return
 	global_position += motion
 	_travelled += step
@@ -138,13 +151,17 @@ func _physics_process(delta: float) -> void:
 		_pop()
 
 
-func _on_hit(collider: Object) -> void:
+## `contact` : résultat de get_rest_info ({ point, normal… }, vide si inconnu).
+func _on_hit(collider: Object, contact: Dictionary) -> void:
 	var player := collider as Player
 	if player and _deals_damage and (friendly_fire or Player.team_of(player.player_id) != _shooter_team):
 		if capture:
 			player.capture(capture_duration, _shooter_team)
 		else:
 			player.take_damage(damage)
+	elif not player and not contact.is_empty() and puddle_radius > 0.0 \
+			and (contact.normal as Vector3).y > GROUND_MIN_NORMAL_Y:
+		splashed.emit(contact.point, puddle_radius)
 	_pop()
 
 

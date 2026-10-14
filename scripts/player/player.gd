@@ -19,9 +19,9 @@ extends CharacterBody3D
 ##
 ## Capture : l'action capture (clic molette) tire une grosse bulle (toutes les
 ## `capture_cooldown` s). Un adversaire touché est piégé (capture()) : enfermé dans une
-## bulle à la couleur de l'équipe qui l'a eu, il lévite `capture_lift` m au-dessus du
-## sol et ne peut ni bouger, ni sauter, ni dasher, ni tirer pendant la durée de la
-## bulle (2 s). Il peut toujours prendre des dégâts.
+## bulle à la couleur de l'équipe qui l'a eu, il décolle de `capture_lift` m puis
+## s'élève lentement de `capture_rise` m pendant toute la durée de la bulle (2 s), sans
+## pouvoir bouger, sauter, dasher ni tirer. Il peut toujours prendre des dégâts.
 
 ## Émis sur tous les ordinateurs quand la vie change / à la mort / à la réapparition.
 signal health_changed(health: float)
@@ -62,6 +62,9 @@ const DASH_RAMP := 0.15
 const DASH_SLOWDOWN_START := 0.3
 ## Portée de la visée (m) : au-delà, on vise un point à cette distance.
 const AIM_DISTANCE := 80.0
+## Surface visée considérée comme un mur (décalage d'un rayon de bulle, cf. _fire) si la
+## composante verticale de sa normale est sous ce seuil (0,5 = pente de plus de 60°).
+const AIM_WALL_MAX_NORMAL_Y := 0.5
 ## Mesh du pistolet dans le modèle (les bulles partent du bout de son canon).
 const GUN_MESH := "Gun"
 ## Matériaux texturés des meshes du modèle. Le réservoir, le tuyau et la ceinture
@@ -86,9 +89,13 @@ const FOOTSTEPS := {
 	&"walk": [0.49, 0.98],
 	&"run": [0.47, 0.95],
 }
-## Capture : vitesse de montée vers la hauteur de lévitation, vitesse du flottement.
+## Sillage sur l'eau pendant une glissade : un rond et une gerbe toutes les WAKE_INTERVAL s.
+const WAKE_INTERVAL := 0.035
+## Capture : vitesse à laquelle il rejoint sa hauteur de lévitation, vitesse du flottement.
 const CAPTURE_RISE_SPEED := 10.0
 const CAPTURE_BOB_SPEED := 4.0
+## Marge (m) au-dessus des pieds pour chercher un plafond pendant la montée (cf. _simulate_captured).
+const CAPTURE_CEILING_TEST := 0.02
 
 @export_range(1, 4) var player_id := 1:
 	set(value):
@@ -116,6 +123,9 @@ const CAPTURE_BOB_SPEED := 4.0
 @export var dash_duration := 0.4
 ## Temps minimum entre deux dashs (s).
 @export var dash_cooldown := 2.0
+## Sur l'eau (flaques), le dash ne s'use pas : il garde sa vitesse tant que le canard glisse
+## sur la flaque, et la distance du dash ne compte que sur le sol sec.
+@export var dash_slides_on_water := true
 @export_group("Tir")
 ## Temps minimum entre deux appuis sur la touche de tir (s).
 @export var fire_cooldown := 0.15
@@ -127,8 +137,10 @@ const CAPTURE_BOB_SPEED := 4.0
 @export_group("Capture")
 ## Temps minimum entre deux bulles de capture (s).
 @export var capture_cooldown := 5.0
-## Hauteur à laquelle lévite un joueur capturé, au-dessus du sol (m).
+## Hauteur à laquelle décolle un joueur capturé, au-dessus du sol (m).
 @export var capture_lift := 0.25
+## Hauteur qu'il prend ensuite, lentement, pendant toute la capture (m).
+@export var capture_rise := 1.0
 ## Amplitude du flottement d'un joueur capturé (m).
 @export var capture_bob := 0.05
 @export_group("Vie")
@@ -198,12 +210,17 @@ var _camera_base_y: float
 ## Animation et position (fraction) à l'image précédente, pour les bruits de pas.
 var _footstep_animation: StringName
 var _footstep_phase := 0.0
+## Flaques de la partie (Puddles), cherchées au premier besoin ; null hors d'une partie.
+var _puddles: Puddles
+## Temps restant avant le prochain rond du sillage (s).
+var _wake_left := 0.0
 ## Temps restant avant de pouvoir tirer une bulle de capture (s).
 var _capture_cooldown_left := 0.0
 ## Capture en cours (ordinateur qui a l'autorité) : temps restant (s), hauteur de
-## lévitation visée, temps écoulé (flottement).
+## décollage, durée totale et temps écoulé (s).
 var _captured_left := 0.0
 var _capture_height := 0.0
+var _capture_duration := 0.0
 var _capture_time := 0.0
 var _capture_tween: Tween
 
@@ -220,6 +237,8 @@ var _capture_tween: Tween
 @onready var _shoot_sound: AudioStreamPlayer3D = $ShootSound
 ## Autres sons du canard, chacun tiré au hasard dans assets/audio/sfx/duck_*.tres.
 @onready var _step_sound: AudioStreamPlayer3D = $StepSound
+## Pas dans l'eau : « splotch » au lieu du bruit de pas.
+@onready var _water_step_sound: AudioStreamPlayer3D = $WaterStepSound
 @onready var _dash_sound: AudioStreamPlayer3D = $DashSound
 @onready var _jump_sound: AudioStreamPlayer3D = $JumpSound
 @onready var _hit_sound: AudioStreamPlayer3D = $HitSound
@@ -384,7 +403,8 @@ func _simulate(delta: float) -> void:
 			velocity.y -= _gravity * gravity_scale * delta
 		if _dash_time > 0.0:
 			# Dash : vitesse horizontale selon la courbe (la gravité s'applique si on quitte le sol).
-			_dash_time = maxf(_dash_time - delta, 0.0)
+			if not _dash_paused_on_water():
+				_dash_time = maxf(_dash_time - delta, 0.0)
 			var speed := _dash_speed_at(1.0 - _dash_time / dash_duration)
 			velocity.x = _dash_direction.x * speed
 			velocity.z = _dash_direction.z * speed
@@ -416,10 +436,18 @@ func _ladder_climb_axis(direction: Vector3) -> Vector3:
 func _fire(capture: bool) -> void:
 	# Tout droit devant la caméra (à l'horizontale), depuis le centre du cube.
 	var target := aim()
-	# La bulle vise avec sa surface : son centre s'arrête à un rayon de la surface
-	# visée, sinon son bas frôlerait le sol (ou le mur) et elle éclaterait avant.
-	var radius := BubbleProjectile.CAPTURE_RADIUS if capture else BubbleProjectile.RADIUS
-	var aim_point: Vector3 = target.point + target.normal * radius
+	# Sur un mur (surface presque verticale), la bulle vise avec sa surface : son centre
+	# s'arrête à un rayon du mur, sinon elle le toucherait avec son bord et éclaterait avant.
+	# Sur le sol, on vise le point décalé du rayon de contact avec le décor (0,3 m, plus bas
+	# que le canon à 0,4 m) : la bulle descend un peu et éclate pile sous le viseur. Décalée
+	# de son vrai rayon, elle partirait à l'horizontale ; sans décalage, elle toucherait le
+	# sol bien avant le viseur. Plafond : on vise le point lui-même.
+	var aim_point: Vector3 = target.point
+	if absf(target.normal.y) < AIM_WALL_MAX_NORMAL_Y:
+		var radius := BubbleProjectile.CAPTURE_RADIUS if capture else BubbleProjectile.RADIUS
+		aim_point += target.normal * radius
+	elif target.normal.y > 0.0:
+		aim_point += target.normal * BubbleProjectile.WORLD_CONTACT_RADIUS
 	# Le canard n'a peut-être pas fini de se tourner vers sa visée : la bulle part
 	# de là où sera le bout du canon une fois tourné.
 	var origin := global_position
@@ -433,8 +461,8 @@ func _fire(capture: bool) -> void:
 	_shoot.rpc(origin, shot_direction, capture)
 
 
-## Piégé dans une bulle de capture : immobile, il monte en douceur à la hauteur de
-## lévitation et y flotte, puis est libéré (la gravité le repose au sol).
+## Piégé dans une bulle de capture : immobile, il décolle, puis s'élève lentement (de
+## capture_rise m sur toute la durée) en flottant ; libéré, la gravité le repose au sol.
 func _simulate_captured(delta: float) -> void:
 	_captured_left -= delta
 	_capture_time += delta
@@ -442,8 +470,16 @@ func _simulate_captured(delta: float) -> void:
 	_dash_time = 0.0
 	_combat_left = 0.0
 	sync_facing = Vector2.ZERO
-	var target_y := _capture_height + sin(_capture_time * CAPTURE_BOB_SPEED) * capture_bob
-	global_position.y = lerpf(global_position.y, target_y, 1.0 - exp(-CAPTURE_RISE_SPEED * delta))
+	var rise := capture_rise * clampf(_capture_time / _capture_duration, 0.0, 1.0)
+	var target_y := _capture_height + rise + sin(_capture_time * CAPTURE_BOB_SPEED) * capture_bob
+	var step := lerpf(global_position.y, target_y, 1.0 - exp(-CAPTURE_RISE_SPEED * delta)) - global_position.y
+	if step > 0.0:
+		# S'arrête sous un plafond, une étagère… Le test part 2 cm plus haut : sinon le sol
+		# sous ses pieds (contact au repos) compterait comme un obstacle et bloquerait la montée.
+		var ceiling := KinematicCollision3D.new()
+		if test_move(global_transform.translated(Vector3.UP * CAPTURE_CEILING_TEST), Vector3.UP * step, ceiling):
+			step = maxf(CAPTURE_CEILING_TEST + ceiling.get_travel().y, 0.0)
+	global_position.y += step
 	if _captured_left <= 0.0:
 		_set_captured.rpc(false, 0)
 
@@ -469,6 +505,7 @@ func _apply_capture(duration: float, team: int) -> void:
 	if not is_alive() or captured or duration <= 0.0:
 		return
 	_captured_left = duration
+	_capture_duration = duration
 	_capture_time = 0.0
 	# Hauteur de lévitation : capture_lift au-dessus du sol (sur place s'il n'y a pas de sol dessous).
 	var feet := (_collision_shape.shape as CapsuleShape3D).height / 2.0
@@ -600,7 +637,16 @@ func _update_model(velocity_now: Vector3, delta: float) -> void:
 		_turn_model_towards(Vector3(sync_facing.x, 0.0, sync_facing.y), 1.0 - exp(-AIM_TURN_SPEED * delta))
 	elif moving:
 		_turn_model_towards(horizontal, 1.0 - exp(-TURN_SPEED * delta))
-	_dash_animation_left = maxf(_dash_animation_left - delta, 0.0)
+	# Glissade sur l'eau : l'animation du dash dure aussi longtemps que la glissade (cf.
+	# _dash_paused_on_water ; les autres ordinateurs la devinent à sa vitesse), et l'eau
+	# s'écarte derrière le canard (sillage).
+	var sliding := _dash_animation_left > 0.0 and speed > move_speed and is_on_water()
+	if not (dash_slides_on_water and sliding):
+		_dash_animation_left = maxf(_dash_animation_left - delta, 0.0)
+	_wake_left -= delta
+	if sliding and _wake_left <= 0.0:
+		_wake_left = WAKE_INTERVAL
+		_puddles.wake(_feet_position(), horizontal)
 	var dashing := _dash_animation_left > 0.0
 	_animation_tree.set(&"parameters/conditions/dashing", dashing)
 	_animation_tree.set(&"parameters/conditions/dash_over", not dashing)
@@ -625,7 +671,10 @@ func _play_footsteps(enabled: bool) -> void:
 		for contact: float in FOOTSTEPS[animation]:
 			var crossed := (_footstep_phase < contact and contact <= phase) if phase >= _footstep_phase \
 					else (contact > _footstep_phase or contact <= phase) # L'animation a bouclé.
-			if crossed:
+			if crossed and is_on_water():
+				_water_step_sound.play()
+				_puddles.step_splash(_feet_position())
+			elif crossed:
 				_step_sound.play()
 	_footstep_animation = animation
 	_footstep_phase = phase
@@ -672,6 +721,26 @@ func _on_respawned() -> void:
 func _dash_speed_at(t: float) -> float:
 	var cruise := lerpf(dash_speed, move_speed, smoothstep(DASH_SLOWDOWN_START, 1.0, t))
 	return lerpf(_dash_start_speed, cruise, smoothstep(0.0, DASH_RAMP, t))
+
+
+## Vrai si le canard est sur une flaque d'eau (sous ses pieds).
+func is_on_water() -> bool:
+	if _puddles == null:
+		_puddles = get_tree().get_first_node_in_group(Puddles.GROUP) as Puddles
+	return _puddles != null and _puddles.is_wet(_feet_position())
+
+
+## Point du sol sous le canard (bas de sa capsule).
+func _feet_position() -> Vector3:
+	return global_position + Vector3.DOWN * (_collision_shape.shape as CapsuleShape3D).height / 2.0
+
+
+## Vrai si le dash en cours ne s'use pas cette image : le canard glisse sur l'eau, au sol.
+## Sauf pendant la montée en vitesse (il resterait à l'arrêt) et contre un mur (il resterait
+## bloqué en plein dash).
+func _dash_paused_on_water() -> bool:
+	return dash_slides_on_water and 1.0 - _dash_time / dash_duration >= DASH_RAMP \
+			and is_on_floor() and not is_on_wall() and is_on_water()
 
 
 ## Dash (au sol uniquement) dans la direction du joystick, ou devant la caméra s'il est au repos.
@@ -740,6 +809,7 @@ func _apply_color() -> void:
 	if _model == null: # Setter appelé avant que le nœud soit prêt.
 		return
 	for mesh: MeshInstance3D in _model.find_children("*", "MeshInstance3D", true, false):
+		mesh.layers = Puddles.DUCK_VISUAL_LAYER # Les flaques (Decals) ne colorent pas le canard.
 		if mesh.name in TEAM_COLORED_MESHES:
 			mesh.material_override = TEAM_MATERIALS[team_of(player_id) - 1]
 		else:

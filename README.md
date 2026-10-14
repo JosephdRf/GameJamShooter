@@ -36,7 +36,7 @@ Les chemins sont regroupés dans `scripts/ui/screens.gd` (`Screens.TITLE`, `Scre
 
 6. En jeu, l'hôte peut mettre en pause (**P** ou **+**) : la partie est figée pour tous.
    « Quitter » ramène tout le monde à la sélection d'équipe.
-7. Un **compte à rebours** (1:00 par défaut) est affiché en haut au centre ; il est figé pendant la
+7. Un **compte à rebours** (2:00 par défaut) est affiché en haut au centre ; il est figé pendant la
    pause. À 0:00, tout le monde passe à l'écran de fin. L'hôte fait foi : il envoie le temps restant
    aux autres toutes les 0,5 s. Durée réglable avec `match_duration` sur le nœud `Game`
    (0 = pas de limite, chrono masqué).
@@ -108,14 +108,29 @@ Un joueur qui tombe de la plateforme meurt.
 
 - **Clic molette** (action `capture`) : tire une grosse bulle, plus lente (18 m/s, **portée illimitée** : elle vole jusqu'à toucher quelque chose), au plus
   une toutes les **5 s**.
-- Un adversaire touché est **piégé 2 s** dans une bulle à la couleur de l'équipe qui l'a eu : il lévite à
-  25 cm du sol en flottant et ne peut plus bouger, sauter, dasher ni tirer (il peut toujours tourner la
-  caméra et prendre des dégâts). Puis la bulle éclate et il retombe au sol. Rien sur un coéquipier ; un
+- Un adversaire touché est **piégé 2 s** dans une bulle à la couleur de l'équipe qui l'a eu : il décolle de
+  25 cm puis **s'élève lentement** (1 m de plus en 2 s, en flottant ; il s'arrête sous un plafond) et ne peut
+  plus bouger, sauter, dasher ni tirer (il peut toujours tourner la caméra et prendre des dégâts). Puis la bulle éclate et il retombe au sol. Rien sur un coéquipier ; un
   joueur déjà piégé ne l'est pas une 2e fois. Mort dans la bulle : elle disparaît.
 - Réglages : `scenes/game/capture_bubble.tscn` (scène héritée de la bulle normale : `speed`,
   `max_distance`, `radius`, `world_radius` : rayon plus petit contre le décor pour qu'elle frôle le sol
   sans éclater, `capture_duration`) et sur le joueur, groupe « Capture » (`capture_cooldown`,
-  `capture_lift`, `capture_bob`). Bulle autour du canard : nœud `CaptureBubble` de `player.tscn`.
+  `capture_lift`, `capture_rise`, `capture_bob`). Bulle autour du canard : nœud `CaptureBubble` de `player.tscn`.
+
+### Flaques (prototype)
+
+- Une bulle qui éclate sur le sol (ou le dessus d'un meuble) laisse une **flaque d'eau** (rayon 2 m,
+  3,6 m pour la maxi-bulle : `puddle_radius`), de forme irrégulière. Deux flaques proches se rejoignent
+  en une seule ; tirer plusieurs fois au même endroit l'agrandit. Les flaques ne sèchent pas.
+- **Dash sur l'eau** : il ne s'use pas. Le canard garde sa vitesse tant qu'il glisse sur une flaque, et
+  la distance du dash ne compte que sur le sol sec (`dash_slides_on_water` sur le joueur). Contre un mur,
+  le dash se termine normalement.
+- **L'eau réagit** : à chaque éclatement, des ronds dans l'eau et des gouttes ; un canard qui marche
+  dedans fait un rond et un « splotch » à chaque pas (`WaterStepSound`), et laisse un sillage (ronds +
+  gerbes) quand il glisse dessus.
+- Code : `scripts/game/puddles.gd` (nœud `Puddles` de `game.tscn` : couleur, forme, résolution, budget de
+  peinture par image). Rien n'est envoyé en réseau : chaque ordinateur fait éclater sa copie de la bulle
+  au même endroit.
 
 ### Vie
 

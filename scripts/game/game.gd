@@ -5,7 +5,7 @@ extends Node3D
 ## enfants de SpawnZones) de son équipe.
 ## La vie du joueur local s'affiche via DamageOverlay (bulles) et DeathScreen.
 ## Tirs : chaque bulle tirée (signal Player.shot) est créée sous Projectiles et
-## se supprime d'elle-même en éclatant.
+## se supprime d'elle-même en éclatant ; sur le sol, elle laisse une flaque (Puddles).
 ## Test (version de développement) : l'action debug_damage (H) inflige 10 dégâts à son propre cube.
 ## Debug mode (action debug_mode : Ctrl + D), désactivé au lancement : affiche les
 ## PV du joueur local (DebugHealth) et le rectangle de l'aide à la visée.
@@ -32,7 +32,7 @@ const CAPTURE_PROJECTILE_SCENE := preload("res://scenes/game/capture_bubble.tscn
 const DEBUG_DAMAGE := 10.0
 
 ## Durée d'un combat en secondes (0 = pas de limite, chrono masqué).
-@export var match_duration := 60.0
+@export var match_duration := 120.0
 ## Durée de « Attention… » (joueurs figés), puis de « C'est parti ! » (s).
 @export var ready_duration := 2.0
 @export var go_duration := 2.0
@@ -52,6 +52,7 @@ var _debug_mode := false
 @onready var _players: Node3D = $Players
 @onready var _spawn_zones: Node3D = $SpawnZones
 @onready var _projectiles: Node3D = $Projectiles
+@onready var _puddles: Puddles = $Puddles
 @onready var _mode: ZoneDefenseMode = $ZoneDefenseMode
 @onready var _hud: CanvasLayer = $MatchHud
 @onready var _damage_overlay: CanvasLayer = $DamageOverlay
@@ -124,6 +125,7 @@ func _on_player_health_changed(health: float, player: Player) -> void:
 ## Sur tous les ordinateurs ; seule la bulle de l'ordinateur du tireur inflige des dégâts.
 func _on_player_shot(origin: Vector3, direction: Vector3, capture: bool, player: Player) -> void:
 	var bubble: BubbleProjectile = (CAPTURE_PROJECTILE_SCENE if capture else PROJECTILE_SCENE).instantiate()
+	bubble.splashed.connect(_puddles.add_puddle) # Flaque là où elle éclate sur le sol.
 	_projectiles.add_child(bubble)
 	bubble.launch(player, origin, direction, player.is_multiplayer_authority())
 

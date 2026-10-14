@@ -119,6 +119,8 @@ size = Vector3(1.7, 16.284174, 0.5)
 [sub_resource type="BoxShape3D" id="BoxShape3D_f8rj3"]
 size = Vector3(1.5, 15.884174, 0.2)
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_vj1es"]
+
 [node name="Arena4" type="Node3D" unique_id=144376407]
 
 [node name="Reference_map" type="Sprite3D" parent="." unique_id=1891454870]
@@ -1010,9 +1012,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.04705715, -3.7816572, -0.10
 size = Vector3(20.892471, 23.46974, 14.69751)
 
 [node name="Creux2" type="CSGBox3D" parent="Verticalite/Prototypes/Cage/Volume" unique_id=1131747151]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.628777, 0.035178185, -5.1428185)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.137081, 0.5492182, -3.8972168)
 operation = 2
-size = Vector3(4.336419, 6.6200275, 11.189484)
+size = Vector3(4.336419, 6.6200275, 12.77626)
 
 [node name="Creux" type="CSGBox3D" parent="Verticalite/Prototypes/Cage/Volume" unique_id=191632345]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.24102545, -0.6341057, -1.8311672)
@@ -1024,6 +1026,20 @@ metadata/_edit_lock_ = true
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.97692966, 3.849079, 18.88064)
 use_collision = true
 size = Vector3(25.858454, 8.243515, 10.543945)
+
+[node name="CSGCylinder3D" type="CSGCylinder3D" parent="Verticalite/Prototypes/Bloc_central" unique_id=1413830901]
+transform = Transform3D(1.9106853e-15, 4.3711385e-08, 1, 0.99999994, -4.3711385e-08, 0, 4.3711385e-08, 0.99999994, -4.371139e-08, -7.742943, -1.7465899, 6.533684)
+radius = 1.219
+height = 25.06897
+sides = 48
+material = SubResource("StandardMaterial3D_vj1es")
+
+[node name="CSGCylinder3D2" type="CSGCylinder3D" parent="Verticalite/Prototypes/Bloc_central" unique_id=1713179302]
+transform = Transform3D(-4.3711385e-08, 0, 1, 0, 0.99999994, 0, -0.99999994, 0, -4.371139e-08, -7.490362, 1.8837845, 18.165686)
+radius = 1.219
+height = 10.28373
+sides = 48
+material = SubResource("StandardMaterial3D_vj1es")
 
 [node name="Bloc_central2" type="CSGBox3D" parent="Verticalite/Prototypes/Bloc_central" unique_id=1675993602]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.537732, 4.0083227, -0.18597221)
@@ -1063,7 +1079,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.2909565, 6.4886317, 32.493
 size = Vector3(56.965286, 13.641418, 22.47171)
 
 [node name="Creux_interieur" type="CSGBox3D" parent="Verticalite/Prototypes/Coque_haute/Volume" unique_id=1118824571]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8599386, 4.9363465, 0.11074066)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.8488197, 4.951573, 0.16919708)
 operation = 2
 size = Vector3(50.60264, 4.4243164, 17.889652)
 

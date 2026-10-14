@@ -439,7 +439,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40.17, 0, -25.05)
 use_collision = true
 
 [node name="Banc" type="CSGBox3D" parent="Props/Douche_interieur" unique_id=1972248508]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -3.4169502, 4.010378, 6.785328)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.9859962, 4.010378, 6.785328)
 size = Vector3(6, 4.5, 10)
 material = SubResource("StandardMaterial3D_702kj")
 
@@ -909,7 +909,7 @@ material = SubResource("StandardMaterial3D_702kj")
 
 [node name="Rampe_E" type="CSGPolygon3D" parent="Verticalite/Ilot_central" unique_id=1256366604]
 transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, 4.210059, 0, -5.649227)
-polygon = PackedVector2Array(0, 0, 8.868888, 0, 8.868888, 6, 8.568888, 6)
+polygon = PackedVector2Array(-10.99136, -0.5095968, 8.868888, 0, 8.868888, 6, 8.568888, 6)
 depth = 10.05
 material = SubResource("StandardMaterial3D_702kj")
 
@@ -931,7 +931,7 @@ size = Vector3(8.256836, 4.678772, 23.60813)
 material = SubResource("StandardMaterial3D_702kj")
 
 [node name="Rampe" type="CSGPolygon3D" parent="Verticalite/Balcon_bleu" unique_id=649638164]
-transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -42.61547, 0, -21.4)
+transform = Transform3D(-1, 0, 0, 0, 1, 0, 0, 0, -1, -42.61547, 0, -4.421549)
 polygon = PackedVector2Array(0, 0, 7.5015054, 0, 7.5015054, 4.5, 7.201505, 4.5)
 depth = 5.0
 material = SubResource("StandardMaterial3D_702kj")
@@ -1009,7 +1009,7 @@ material = SubResource("StandardMaterial3D_702kj")
 use_collision = true
 
 [node name="Pilier_2" type="CSGBox3D" parent="Verticalite/Pas_japonais_douche" unique_id=870954063]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36.78893, 8.464149, -16.274672)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42.53172, 8.464149, -16.274672)
 size = Vector3(3.5, 5.108594, 3.5)
 material = SubResource("StandardMaterial3D_702kj")
 
@@ -1042,9 +1042,9 @@ size = Vector3(2, 5.1, 7.1)
 material = SubResource("StandardMaterial3D_702kj")
 
 [node name="Rampe_savon" type="CSGPolygon3D" parent="Verticalite/Coin_balance" unique_id=768997491]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -35, 0, -30.55)
-polygon = PackedVector2Array(0, 0, 10, 0, 10, 5.1, 9.7, 5.1)
-depth = 2.8
+transform = Transform3D(-0.09400823, 0, 0.99557143, 0, 1, 0, -0.99557143, 0, -0.09400823, -31.76602, -0.18887901, -20.234043)
+polygon = PackedVector2Array(0, 0, 10, 0, 10, 5.1, 7.042244, 6.204624)
+depth = 6.61
 material = SubResource("StandardMaterial3D_702kj")
 
 [node name="Parcours_tours" type="CSGCombiner3D" parent="Verticalite" unique_id=182042554]

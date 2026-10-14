@@ -4,6 +4,7 @@
 [ext_resource type="PackedScene" path="res://scenes/player/player_camera.tscn" id="2_camera"]
 [ext_resource type="PackedScene" uid="uid://dbbvnlau4bc6d" path="res://assets/models/duck_v3.glb" id="3_duck"]
 [ext_resource type="Script" path="res://scripts/player/aim_assist.gd" id="4_aim_assist"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/bubble_shoot.tres" id="5_shoot_sound"]
 
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_gmlin"]
 animation = &"dash"
@@ -166,3 +167,9 @@ public_visibility = false
 
 [node name="AimAssist" type="Node" parent="."]
 script = ExtResource("4_aim_assist")
+
+[node name="ShootSound" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("5_shoot_sound")
+volume_db = -4.0
+max_distance = 40.0
+max_polyphony = 4

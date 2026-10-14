@@ -161,6 +161,8 @@ var _camera_base_y: float
 @onready var _animation_playback: AnimationNodeStateMachinePlayback = _animation_tree.get(&"parameters/playback")
 @onready var _collision_shape: CollisionShape3D = $CollisionShape
 @onready var _sync: MultiplayerSynchronizer = $Sync
+## Son du tir : un son de bulle au hasard (assets/audio/sfx/bubble_shoot.tres).
+@onready var _shoot_sound: AudioStreamPlayer3D = $ShootSound
 
 
 ## Équipe (1 ou 2) du joueur `id`.
@@ -321,6 +323,8 @@ func _regenerate(delta: float) -> void:
 @rpc("authority", "call_local", "reliable")
 func _shoot(origin: Vector3, direction: Vector3) -> void:
 	_turn_model_towards(direction, 1.0) # Le canard se tourne d'un coup vers son tir.
+	_shoot_sound.global_position = origin # Le son part du canon, en même temps que la bulle.
+	_shoot_sound.play()
 	shot.emit(origin, direction)
 
 

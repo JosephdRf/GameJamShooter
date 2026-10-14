@@ -7,7 +7,7 @@ extends Node3D
 ##     ou le mur invisible de la zone d'apparition adverse ;
 ##   - elle touche un joueur : `damage` PV de dégâts s'il est de l'autre équipe ;
 ##   - elle a parcouru `max_distance` mètres.
-## Puis le nœud est supprimé (queue_free) à la fin de l'animation d'éclatement.
+## Puis le nœud est supprimé (queue_free) à la fin de l'animation et du son d'éclatement.
 ##
 ## Optimisation : pas de corps physique ni de zone de collision. À chaque image
 ## physique, une sphère de la taille de la bulle est « lancée » de l'ancienne à
@@ -110,13 +110,19 @@ func _on_hit(collider: Object) -> void:
 	_pop()
 
 
-## Éclatement : la bulle gonfle et s'efface, puis le nœud est supprimé.
+## Éclatement : la bulle gonfle et s'efface (avec un son d'éclatement au hasard,
+## assets/audio/sfx/bubble_pop.tres), puis le nœud est supprimé une fois le son fini.
 func _pop() -> void:
 	set_physics_process(false)
 	if _grow_tween:
 		_grow_tween.kill()
+	var pop_sound := $PopSound as AudioStreamPlayer3D
+	pop_sound.play()
 	var mesh := $Mesh as GeometryInstance3D
 	var tween := create_tween().set_parallel()
 	tween.tween_property(self, ^"scale", Vector3.ONE * 1.8, pop_duration)
 	tween.tween_property(mesh, ^"transparency", 1.0, pop_duration)
-	tween.chain().tween_callback(queue_free)
+	await tween.finished
+	if pop_sound.playing:
+		await pop_sound.finished
+	queue_free()

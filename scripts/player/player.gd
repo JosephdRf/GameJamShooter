@@ -326,6 +326,19 @@ var _capture_height := 0.0
 var _capture_duration := 0.0
 var _capture_time := 0.0
 var _capture_tween: Tween
+## Tunnel en cours (ordinateur qui a l'autorité seulement) : tuyau parcouru, distance (m)
+## depuis son entrée et sens (true : parcouru de l'extrémité d'arrivée vers le départ).
+var _tunnel: WaterTunnel
+var _tunnel_offset := 0.0
+var _tunnel_reverse := false
+## Point au sol où il reprend la main à la sortie (cf. _tunnel_landing_spot), cherché une
+## fois sorti du tuyau.
+var _tunnel_landing := Vector3.ZERO
+var _tunnel_landing_found := false
+## Vrai pendant la traversée d'un tunnel, sur tous les ordinateurs (cf. _set_tunnel) : garde
+## la pose du dash tout le trajet (variable, contrairement à un dash normal) et resserre la
+## caméra locale (cf. PlayerCamera.tunnel_mode).
+var _in_tunnel := false
 
 ## Caméra du joueur : les déplacements sont relatifs à son orientation.
 @onready var camera: PlayerCamera = $PlayerCamera
@@ -493,7 +506,9 @@ func _physics_process(delta: float) -> void:
 	var previous_position := position
 	if is_multiplayer_authority():
 		if is_alive():
-			if _captured_left > 0.0:
+			if _tunnel:
+				_simulate_tunnel(delta)
+			elif _captured_left > 0.0:
 				_simulate_captured(delta)
 			else:
 				_simulate(delta)
@@ -553,6 +568,16 @@ func capture(duration: float, team: int) -> void:
 		_apply_capture(duration, team)
 	else:
 		_apply_capture.rpc_id(get_multiplayer_authority(), duration, team)
+
+
+## Fait entrer ce joueur dans `tunnel` (dash automatique jusqu'à l'autre bout, cf. WaterTunnel) ;
+## `reverse` : true s'il y entre par l'extrémité d'arrivée (il le parcourt donc à l'envers).
+## Appelable depuis n'importe quel ordinateur (comme take_damage).
+func enter_tunnel(tunnel: WaterTunnel, reverse: bool) -> void:
+	if is_multiplayer_authority():
+		_apply_tunnel(tunnel.get_path(), reverse)
+	else:
+		_apply_tunnel.rpc_id(get_multiplayer_authority(), tunnel.get_path(), reverse)
 
 
 ## Réapparition au point de départ, avec toute sa vie.
@@ -816,6 +841,77 @@ func _simulate_captured(delta: float) -> void:
 		_set_captured.rpc(false, 0)
 
 
+## Traversée automatique d'un tunnel d'eau : avance le long de sa courbe à dash_speed, la
+## caméra locale posée sur ce même axe en traînant derrière (cf. PlayerCamera.
+## set_tunnel_position/set_tunnel_target, WaterTunnel.camera_trail) ; une fois sorti du
+## tuyau, glisse en ligne droite de l'ouverture jusqu'à un point au sol bien dégagé devant
+## elle (cf. _tunnel_landing_spot), puis reprend la main (cf. _apply_tunnel).
+func _simulate_tunnel(delta: float) -> void:
+	if cannon_on:
+		_set_cannon.rpc(false) # Dans le tunnel : plus de jet d'eau.
+	var direction := -1.0 if _tunnel_reverse else 1.0
+	_tunnel_offset += direction * _tunnel.dash_speed * delta
+	var length := _tunnel.length()
+	var sample := _tunnel.sample_extrapolated(_tunnel_offset)
+	var tangent: Vector3 = (sample.tangent as Vector3) * direction
+	var past := maxf(-_tunnel_offset, 0.0) if _tunnel_reverse else maxf(_tunnel_offset - length, 0.0)
+	var landed := false
+	if past > 0.0:
+		var end: Dictionary = _tunnel.ends[0 if _tunnel_reverse else 1]
+		var mouth: Vector3 = end.point
+		if not _tunnel_landing_found:
+			_tunnel_landing = _tunnel_landing_spot(_tunnel, end)
+			_tunnel_landing_found = true
+		var run := maxf(mouth.distance_to(_tunnel_landing), 0.01)
+		global_position = mouth.lerp(_tunnel_landing, minf(past / run, 1.0))
+		tangent = (_tunnel_landing - mouth).normalized()
+		landed = past >= run
+	else:
+		global_position = sample.point
+	velocity = Vector3.ZERO
+	if is_local:
+		var cam_sample := _tunnel.sample_extrapolated(_tunnel_offset - direction * _tunnel.camera_trail)
+		var cam_point: Vector3 = cam_sample.point - Vector3.UP * _tunnel.camera_drop
+		camera.set_tunnel_position(cam_point)
+		camera.set_tunnel_target(tangent)
+	if landed:
+		var tunnel := _tunnel
+		_tunnel = null
+		velocity = Vector3(tangent.x, 0.0, tangent.z).normalized() * tunnel.exit_speed
+		_set_tunnel.rpc(false)
+		_play_dash.rpc() # Pose du dash maintenue en fondu à la sortie, comme un dash normal.
+
+
+## Point (repère monde, centre du canard) où il reprend la main en sortant de `tunnel` par
+## son extrémité `end` (cf. WaterTunnel.ends) : droit devant l'ouverture, à exit_margin (ou un
+## peu plus loin, ou plus près si la place est prise), posé sur le sol, là où sa capsule tient
+## sans toucher de mur et sans mur entre l'ouverture et lui (sinon il le traverserait).
+func _tunnel_landing_spot(tunnel: WaterTunnel, end: Dictionary) -> Vector3:
+	var mouth: Vector3 = end.point
+	var out := -(end.tangent as Vector3) # La tangente d'une extrémité pointe vers l'intérieur.
+	var flat := Vector3(out.x, 0.0, out.z).normalized()
+	var space := get_world_3d().direct_space_state
+	var feet := (_collision_shape.shape as CapsuleShape3D).height / 2.0
+	var fits := PhysicsShapeQueryParameters3D.new()
+	fits.shape = _collision_shape.shape
+	fits.collision_mask = WORLD_LAYER
+	fits.exclude = [get_rid()]
+	for extra: float in [0.0, 0.5, 1.0, 1.5, 2.0, 3.0, -0.5, -1.0, -1.5]:
+		var probe := mouth + flat * (tunnel.exit_margin + extra)
+		var blocked := PhysicsRayQueryParameters3D.create(mouth, probe, WORLD_LAYER, [get_rid()])
+		if not space.intersect_ray(blocked).is_empty():
+			continue
+		var down := PhysicsRayQueryParameters3D.create(probe, probe + Vector3.DOWN * 6.0, WORLD_LAYER, [get_rid()])
+		var ground := space.intersect_ray(down)
+		if ground.is_empty():
+			continue
+		var spot: Vector3 = ground.position + Vector3.UP * (feet + 0.05)
+		fits.transform = Transform3D(_collision_shape.global_basis, spot + _collision_shape.position)
+		if space.intersect_shape(fits, 1).is_empty():
+			return spot
+	return mouth + flat * tunnel.exit_margin
+
+
 func _regenerate(delta: float) -> void:
 	_regen_cooldown_left = maxf(_regen_cooldown_left - delta, 0.0)
 	if _regen_cooldown_left == 0.0 and health < max_health:
@@ -862,6 +958,34 @@ func _set_captured(value: bool, team: int) -> void:
 	else:
 		_captured_left = 0.0
 		_hide_capture_bubble(true)
+
+
+## Ordinateur qui a l'autorité sur ce cube : entrée dans le tunnel (cf. enter_tunnel()).
+@rpc("any_peer", "call_remote", "reliable")
+func _apply_tunnel(tunnel_path: NodePath, reverse: bool) -> void:
+	if not is_alive() or captured or _tunnel:
+		return
+	var tunnel := get_node(tunnel_path) as WaterTunnel
+	if tunnel == null:
+		return
+	_tunnel = tunnel
+	_tunnel_reverse = reverse
+	_tunnel_offset = tunnel.length() if reverse else 0.0
+	_tunnel_landing_found = false
+	_dash_time = 0.0
+	_combat_left = 0.0
+	sync_facing = Vector2.ZERO
+	_set_tunnel.rpc(true)
+	_play_dash.rpc()
+
+
+## Sur tous les ordinateurs : garde (ou relâche) la pose du dash et resserre (ou rend) la
+## caméra locale pendant la traversée (cf. _in_tunnel, PlayerCamera.tunnel_mode).
+@rpc("authority", "call_local", "reliable")
+func _set_tunnel(value: bool) -> void:
+	_in_tunnel = value
+	if is_local:
+		camera.tunnel_mode = value
 
 
 ## Matériau de la bulle de capture : celui de la scène, teinté à la couleur de l'équipe `team`.
@@ -980,7 +1104,8 @@ func _create_muzzle() -> void:
 func _update_model(velocity_now: Vector3, delta: float) -> void:
 	_step_offset *= exp(-STEP_SMOOTHING * delta)
 	_model.position.y = _model_base_y + _step_offset + _death_drop
-	camera.position.y = _camera_base_y + _step_offset
+	if not camera.tunnel_mode: # Dans le tunnel, la caméra est posée sur l'axe du tuyau (cf. PlayerCamera).
+		camera.position.y = _camera_base_y + _step_offset
 	var horizontal := Vector3(velocity_now.x, 0.0, velocity_now.z)
 	var speed := horizontal.length()
 	var moving := speed > MOVING_SPEED and is_alive()
@@ -1000,7 +1125,7 @@ func _update_model(velocity_now: Vector3, delta: float) -> void:
 	if sliding and _wake_left <= 0.0:
 		_wake_left = WAKE_INTERVAL
 		_puddles.wake(_feet_position(), horizontal, _ground_normal())
-	var dashing := _dash_animation_left > 0.0
+	var dashing := _dash_animation_left > 0.0 or _in_tunnel
 	_animation_tree.set(&"parameters/conditions/dashing", dashing)
 	_animation_tree.set(&"parameters/conditions/dash_over", not dashing)
 	_animation_tree.set(&"parameters/conditions/idle", not moving)

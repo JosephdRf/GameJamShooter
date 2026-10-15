@@ -22,8 +22,9 @@ func _ready() -> void:
 
 func _ensure_colliders(node: Node) -> void:
 	# Ajouts à la carte qui gèrent eux-mêmes leurs collisions : souffle d'un sèche-cheveux
-	# (traversable), eau des toilettes (déjà solide).
-	if node is HairDryer or node is StaticBody3D:
+	# (traversable), eau des toilettes (déjà solide), tunnel d'eau (traversé par dash, sans
+	# collision : son ruban d'eau ne doit pas en recevoir une).
+	if node is HairDryer or node is StaticBody3D or node is WaterTunnel:
 		return
 	if node is MeshInstance3D:
 		_ensure_mesh_collider(node as MeshInstance3D)

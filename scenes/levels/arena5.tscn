@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://d1tvujld7tni" path="res://scripts/levels/arena5.gd" id="2_script"]
 [ext_resource type="PackedScene" path="res://scenes/levels/eclairage_arene.tscn" id="3_eclairage"]
 [ext_resource type="PackedScene" path="res://scenes/game/hair_dryer.tscn" id="4_dryer"]
+[ext_resource type="PackedScene" path="res://scenes/game/water_tunnel.tscn" id="5_tunnel"]
 
 [sub_resource type="StandardMaterial3D" id="Mat_eau_toilettes"]
 transparency = 1
@@ -54,3 +55,6 @@ nozzle_height = 4.8
 nozzle_radius = 0.7
 column_height = 22.0
 hover_height = 19.0
+
+[node name="TunnelDouche" parent="." instance=ExtResource("5_tunnel")]
+pipe_path = NodePath("../Arene/Socle_Seche_Cheveux")

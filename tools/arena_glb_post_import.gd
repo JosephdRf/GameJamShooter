@@ -4,7 +4,9 @@ extends EditorScenePostImport
 ## Collisions de l'arène (GLB), légères (« low poly ») : la forme exacte d'un objet détaillé
 ## (serviettes pliées, toilettes, tongs…) fait accrocher et trembler le canard. Selon l'objet :
 ##   - aucune : l'eau (on la traverse) et les petits objets (moins de TINY_SIZE m), pour ne pas
-##     buter dessus ;
+##     buter dessus ; aussi Socle_Seche_Cheveux, qui malgré son nom (objet réutilisé dans Blender)
+##     est le tuyau du tunnel douche-meuble : sa collision ne sert à rien, on y entre et en sort
+##     par un dash automatique, cf. scripts/game/water_tunnel.gd ;
 ##   - forme exacte (trimesh) : la structure (sol, murs, plafond, marches)
 ##     et les objets déjà simples (au plus TRIMESH_MAX_TRIANGLES triangles) ;
 ##   - coque convexe prolongée jusqu'au sol (RAMPS) : la serviette pliée en pente, sur laquelle on
@@ -24,12 +26,12 @@ extends EditorScenePostImport
 ## Les objets sans collision reçoivent la métadonnée `sans_collision` (arena5.gd n'en ajoute pas).
 ## Préfixes : « Bateau_* » garde ses collisions ; noms comparés en minuscules.
 
-const SKIP := ["eau"]
+const SKIP := ["eau", "socle_seche_cheveux"]
 const TINY_SIZE := 1.0
 const TRIMESH_MAX_TRIANGLES := 150
 const TRIMESH_PREFIXES := ["sol", "murs", "plafond", "marche"]
 const BOX_PREFIXES := ["serviette", "magazine", "rebord", "etagere", "machine_a_laver",
-		"socle_seche_cheveux", "cadre", "vitre", "porte"]
+		"cadre", "vitre", "porte"]
 const CONCAVE_PREFIXES := ["cuve", "placard", "tabouret", "bouee_matelas", "pieds_baignoire", "toilettes", "table_repassage",
 		"bateau_coque", "carton", "vasque", "tuyaux", "panier_linge",
 		"bouee_detail"]

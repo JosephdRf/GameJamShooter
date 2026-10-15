@@ -352,6 +352,14 @@ Un joueur qui tombe de la plateforme meurt.
 
 ### L'arène salle de bain
 
+- **Arène du jeu : `scenes/levels/arena5.tscn`** (modèle Blender `assets/models/arene_bain/arene_bain.glb`,
+  éclairage `scenes/levels/eclairage_arene.tscn`, collisions ajoutées par `scripts/levels/arena5.gd` et
+  `tools/arena_glb_post_import.gd`). Même plan qu'`arena4` (maquette) : zone d'apparition bleue sous la
+  planche à repasser (ouest), rouge sur la marche du placard (est) ; zones de défense sur le matelas gonflable
+  de la baignoire (11 m), le dessus du panier à linge (7,2 m, rectangle, ex-îlot central), le rebord de
+  fenêtre sous le lavabo (6,2 m) et le sol de la douche ; plastron au sol, au centre. L'ancienne arène
+  ci-dessous (`arena.tscn`, `arena4.tscn`) reste dans le projet.
+
 - Source : `assets/models/bain-de-coin-coin.blend`. Godot l'importe avec **Blender**
   (Éditeur › Paramètres › Système de fichiers › Import › chemin de Blender) : chaque coéquipier qui
   ouvre le projet doit avoir Blender installé.

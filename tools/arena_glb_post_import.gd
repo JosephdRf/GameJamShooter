@@ -33,12 +33,20 @@ const CONCAVE_TRIANGLES := 400
 const CONCAVE_DETAILED := {"panier_linge": 3000}
 ## Parmi CONCAVE_PREFIXES, ceux sur lesquels on marche directement : décomposés en coques
 ## convexes (cf. ci-dessus) plutôt qu'une seule forme concave.
+## Carton : mesh déjà simple (240 triangles), la forme exacte suffit (pas de VHACD, qui
+## pourrait laisser des interstices au bord de sa porte).
 const MULTICONVEX_PREFIXES := ["panier_linge"]
 ## Nombre de coques convexes au plus (plus = forme plus fidèle, mais plus de calcul).
-const MULTICONVEX_MAX_HULLS := 24
-## Hauteur (m) du bas de l'objet sans collision : le rebord du panier posé au sol, sur lequel le
-## canard bute à l'entrée des poignées.
-const COLLISION_BOTTOM_CUT := {"panier_linge": 0.2}
+const MULTICONVEX_MAX_HULLS := 32
+## Réglages VHACD par défaut (max_concavity 1.0, resolution 10000) : une seule coque qui
+## englobe tout, trou de la porte compris. Plus bas / plus haut (coûte plus cher à l'import)
+## pour que la décomposition respecte le trou (porte du panier) au lieu de le boucher.
+const MULTICONVEX_CONCAVITY := 0.002
+const MULTICONVEX_RESOLUTION := 400000
+## Hauteur (m, depuis le bas) de la bande basse du panier (rebord, poignées) : exclue du dôme
+## décomposé en coques convexes (qui en bouchait les ouvertures en les arrondissant) et reprise
+## à part, en forme exacte (cf. le bloc MULTICONVEX_PREFIXES ci-dessous).
+const COLLISION_BOTTOM_CUT := {"panier_linge": 2.0}
 
 
 ## Parties de maillage retirées (rendu et collisions) : nom de l'objet -> boîte, dans l'espace
@@ -106,10 +114,13 @@ func _collider_for(mi: MeshInstance3D) -> String:
 		for prefix: String in CONCAVE_DETAILED:
 			if name.begins_with(prefix):
 				target = CONCAVE_DETAILED[prefix]
-		var faces := _simplified_faces(mi.mesh, target)
+		var all_faces := _simplified_faces(mi.mesh, target)
+		var faces := all_faces
+		var cut_height := 0.0
 		for prefix: String in COLLISION_BOTTOM_CUT:
 			if name.begins_with(prefix):
-				faces = _without_bottom(faces, _scene_transform(mi), COLLISION_BOTTOM_CUT[prefix])
+				cut_height = COLLISION_BOTTOM_CUT[prefix]
+				faces = _without_bottom(all_faces, _scene_transform(mi), cut_height)
 		if faces.is_empty():
 			mi.create_trimesh_collision()
 			return "trimesh"
@@ -117,6 +128,18 @@ func _collider_for(mi: MeshInstance3D) -> String:
 			var multi := _build_multiconvex(faces)
 			if multi:
 				mi.add_child(multi)
+				if cut_height > 0.0:
+					# Bas (rebord, poignées) : forme exacte plutôt que la décomposition VHACD, qui
+					# arrondit trop les petites ouvertures ; peu de risque d'accrocher ici (on y
+					# passe, on n'y marche pas dessus comme sur le dôme au-dessus).
+					var lower := _only_near_bottom(all_faces, _scene_transform(mi), cut_height)
+					if not lower.is_empty():
+						var lower_shape := CollisionShape3D.new()
+						lower_shape.name = "CollisionShape3D_bas"
+						var lower_concave := ConcavePolygonShape3D.new()
+						lower_concave.set_faces(lower)
+						lower_shape.shape = lower_concave
+						multi.add_child(lower_shape)
 				_own_recursive(multi, mi.owner)
 				return "coques multiples"
 		var body := StaticBody3D.new()
@@ -147,6 +170,8 @@ static func _build_multiconvex(faces: PackedVector3Array) -> StaticBody3D:
 	temp_mi.mesh = temp_mesh
 	var settings := MeshConvexDecompositionSettings.new()
 	settings.max_convex_hulls = MULTICONVEX_MAX_HULLS
+	settings.max_concavity = MULTICONVEX_CONCAVITY
+	settings.resolution = MULTICONVEX_RESOLUTION
 	temp_mi.create_multiple_convex_collisions(settings)
 	var body: StaticBody3D = null
 	for child in temp_mi.get_children():
@@ -177,6 +202,22 @@ static func _without_bottom(faces: PackedVector3Array, transform: Transform3D, h
 		var tri := faces.slice(t * 3, t * 3 + 3)
 		if (transform * tri[0]).y > bottom + height or (transform * tri[1]).y > bottom + height \
 				or (transform * tri[2]).y > bottom + height:
+			kept.append_array(tri)
+	return kept
+
+
+## Triangles de `faces` dont au moins un sommet est à moins de `height` m (dans la scène,
+## `transform` place le maillage) du point le plus bas : la bande du bas (rebord, ouvertures),
+## avec un peu de recouvrement avec le dôme au-dessus (sans trou à la jointure).
+static func _only_near_bottom(faces: PackedVector3Array, transform: Transform3D, height: float) -> PackedVector3Array:
+	var bottom := INF
+	for v in faces:
+		bottom = minf(bottom, (transform * v).y)
+	var kept := PackedVector3Array()
+	for t in faces.size() / 3:
+		var tri := faces.slice(t * 3, t * 3 + 3)
+		if (transform * tri[0]).y <= bottom + height or (transform * tri[1]).y <= bottom + height \
+				or (transform * tri[2]).y <= bottom + height:
 			kept.append_array(tri)
 	return kept
 

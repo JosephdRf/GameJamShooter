@@ -33,7 +33,7 @@ const SLOW_EVERY := 5
 ## Gouttes émises par seconde et par canon.
 @export var drops_per_second := 140.0
 ## Vitesse de départ (m/s) : celle des gouttes les plus rapides (le cœur du jet).
-@export var speed := 20.0
+@export var speed := 40.0
 ## Les gouttes les plus lentes partent à cette fraction de `speed` : elles retombent avant le
 ## point visé (le jet se déverse un peu sur le sol).
 @export_range(0.0, 1.0) var min_speed_ratio := 0.85
@@ -46,12 +46,12 @@ const SLOW_EVERY := 5
 ## Durée de vie maximale d'une goutte (s).
 @export var lifetime := 2.5
 ## Rayon (m) et quantité d'eau de la tache laissée au sol par une goutte (cf. Puddles).
-@export var puddle_radius := 1.3
-@export var puddle_amount := 0.2
+@export var puddle_radius := 2.0
+@export var puddle_amount := 0.35
 ## Dégâts infligés par chaque goutte qui touche un adversaire (PV).
-@export var damage_per_drop := 0.4
+@export var damage_per_drop := 1.0
 ## Taille d'une goutte (m) et étirement selon sa vitesse.
-@export var drop_size := 0.15
+@export var drop_size := 0.24
 @export var stretch := 0.03
 
 ## Gouttes en vol : [position, vitesse, âge, joueur].
@@ -95,7 +95,7 @@ func _ready() -> void:
 	# Couleur unie, sans ombrage : les gouttes qui se chevauchent forment un ruban d'eau continu
 	# et translucide (ombrées, elles ressemblaient à une file de perles grises).
 	var material := StandardMaterial3D.new()
-	material.albedo_color = Color(0.72, 0.9, 1.0, 0.4)
+	material.albedo_color = Color(0.62, 0.86, 1.0, 0.55)
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mesh.material = material

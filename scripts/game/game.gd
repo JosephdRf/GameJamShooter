@@ -39,7 +39,7 @@ const CAPTURE_PROJECTILE_SCENE := preload("res://scenes/game/capture_bubble.tscn
 const DEBUG_DAMAGE := 10.0
 
 ## Durée d'un combat en secondes (0 = pas de limite, chrono masqué).
-@export var match_duration := 120.0
+@export var match_duration := 240.0
 ## Durée de « Attention… » (joueurs figés), puis de « C'est parti ! » (s).
 @export var ready_duration := 2.0
 @export var go_duration := 2.0
@@ -175,8 +175,11 @@ func _on_player_eliminated(killer_id: int, victim: Player) -> void:
 			killer = player
 			mine = mine or player.is_local
 	_kill_feed.add_elimination(killer, victim, mine)
-	if killer and killer.is_local and killer != victim:
-		_kill_feed.show_my_elimination(victim)
+	var kill := killer != null and victim.get_team() != 0 and killer.get_team() != victim.get_team()
+	if kill and multiplayer.is_server() and not _ended:
+		_mode.add_kill(killer.get_team())
+	if kill and killer.is_local:
+		_kill_feed.show_my_elimination(victim, _mode.kill_points)
 
 
 func _on_player_respawned(player: Player) -> void:

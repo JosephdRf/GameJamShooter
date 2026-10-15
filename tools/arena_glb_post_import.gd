@@ -18,10 +18,9 @@ extends EditorScenePostImport
 ##     toilettes, carton…) ;
 ##     certains gardent plus de triangles (CONCAVE_DETAILED : le panier à linge, renversé, pour
 ##     garder les trous par lesquels on entre dessous : le grand trou d'un côté et les poignées) ;
-##     dessus duquel on marche (MULTICONVEX_PREFIXES : le panier à linge), plusieurs coques
-##     convexes (décomposition VHACD) à la place d'une seule forme concave : un personnage qui
-##     marche sur une forme concave accroche sur les arêtes internes des triangles (tremble,
-##     n'avance plus) ; plusieurs coques convexes n'ont pas ce problème ;
+##     le panier et le carton ont un dessus en boîte (TOP_BOX), pour y marcher sans accrocher ;
+##     ceux de MULTICONVEX_PREFIXES (vide pour l'instant) sont décomposés en plusieurs coques
+##     convexes (VHACD) plutôt qu'en une seule forme concave ;
 ##   - une coque convexe simplifiée : tout le reste.
 ## Les objets sans collision reçoivent la métadonnée `sans_collision` (arena5.gd n'en ajoute pas).
 ## Préfixes : « Bateau_* » garde ses collisions ; noms comparés en minuscules.
@@ -47,12 +46,17 @@ const RAMPS := {
 }
 ## Parmi CONCAVE_PREFIXES, ceux sur lesquels on marche directement : décomposés en coques
 ## convexes (cf. ci-dessus) plutôt qu'une seule forme concave.
-const MULTICONVEX_PREFIXES := ["panier_linge"]
+const MULTICONVEX_PREFIXES := []
 ## Nombre de coques convexes au plus (plus = forme plus fidèle, mais plus de calcul).
 const MULTICONVEX_MAX_HULLS := 24
 ## Hauteur (m) du bas de l'objet sans collision : le rebord du panier posé au sol, sur lequel le
 ## canard bute à l'entrée des poignées.
 const COLLISION_BOTTOM_CUT := {"panier_linge": 0.2}
+## Dessus remplacé par une boîte (épaisseur en m, depuis le point le plus haut) : le panier à linge
+## (renversé) et le carton, sur lesquels on marche. La forme fidèle (simplifiée) ne garde que les
+## parois en dessous, avec les trous par lesquels on entre ; la boîte, orientée comme l'objet,
+## couvre le dessus : on y marche sans accrocher sur les arêtes des triangles.
+const TOP_BOX := {"panier_linge": 0.8, "carton": 0.6}
 
 
 ## Parties de maillage retirées (rendu et collisions) : nom de l'objet -> boîte, dans l'espace
@@ -137,6 +141,9 @@ func _collider_for(mi: MeshInstance3D) -> String:
 		if faces.is_empty():
 			mi.create_trimesh_collision()
 			return "trimesh"
+		for prefix: String in TOP_BOX:
+			if name.begins_with(prefix):
+				return _walls_and_top_box(mi, faces, TOP_BOX[prefix])
 		if _starts(name, MULTICONVEX_PREFIXES):
 			var multi := _build_multiconvex(faces)
 			if multi:
@@ -157,6 +164,50 @@ func _collider_for(mi: MeshInstance3D) -> String:
 		return "simplifiée"
 	mi.create_convex_collision(true, true)
 	return "coque"
+
+
+## Collision de `mi` : les triangles `faces` (espace du maillage) sous les `thickness` derniers
+## mètres du haut (dans la scène), plus une boîte (orientée comme le maillage) englobant ceux du
+## dessus.
+static func _walls_and_top_box(mi: MeshInstance3D, faces: PackedVector3Array, thickness: float) -> String:
+	var transform := _scene_transform(mi)
+	var top := -INF
+	for v in faces:
+		top = maxf(top, (transform * v).y)
+	var walls := PackedVector3Array()
+	var top_box := AABB()
+	var has_top := false
+	for t in faces.size() / 3:
+		var tri := faces.slice(t * 3, t * 3 + 3)
+		var low := minf((transform * tri[0]).y, minf((transform * tri[1]).y, (transform * tri[2]).y))
+		if low < top - thickness:
+			walls.append_array(tri)
+			continue
+		for v in tri:
+			top_box = top_box.expand(v) if has_top else AABB(v, Vector3.ZERO)
+			has_top = true
+	var body := StaticBody3D.new()
+	body.name = "StaticBody3D"
+	mi.add_child(body)
+	body.owner = mi.owner
+	if not walls.is_empty():
+		var concave := ConcavePolygonShape3D.new()
+		concave.set_faces(walls)
+		var shape := CollisionShape3D.new()
+		shape.name = "Parois"
+		shape.shape = concave
+		body.add_child(shape)
+		shape.owner = mi.owner
+	if has_top:
+		var box := BoxShape3D.new()
+		box.size = top_box.size.max(Vector3.ONE * 0.05)
+		var shape := CollisionShape3D.new()
+		shape.name = "Dessus"
+		shape.shape = box
+		shape.position = top_box.get_center()
+		body.add_child(shape)
+		shape.owner = mi.owner
+	return "parois + dessus"
 
 
 ## Décomposition convexe (VHACD) des triangles `faces` : StaticBody3D avec une ConvexPolygonShape3D

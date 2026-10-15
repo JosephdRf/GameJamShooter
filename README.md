@@ -40,7 +40,7 @@ Les chemins sont regroupés dans `scripts/ui/screens.gd` (`Screens.TITLE`, `Scre
 
 6. En jeu, l'hôte peut mettre en pause (**P** ou **+**) : la partie est figée pour tous.
    « Quitter » ramène tout le monde à la sélection d'équipe.
-7. Un **compte à rebours** (2:00 par défaut) est affiché en haut au centre, sur un nuage de bulles, entre
+7. Un **compte à rebours** (4:00 par défaut) est affiché en haut au centre, sur un nuage de bulles, entre
    les scores des deux équipes dans des bulles à leur couleur (`Scoreboard`, `scripts/ui/scoreboard.gd` :
    police Titan One, formes qui respirent ; un score qui augmente gonfle avec sa bulle ; dans les
    **20 dernières secondes** les chiffres passent au jaune et battent à chaque seconde). Il est figé pendant la
@@ -60,9 +60,9 @@ Les chemins sont regroupés dans `scripts/ui/screens.gd` (`Screens.TITLE`, `Scre
    résorbe vite si l'équipe sort (`zone_floor.gdshader`). Une colonne de lumière de 30 m, parcourue de vagues qui montent (plus vite pendant une
    capture), dorée puis à la couleur de l'équipe qui capture (
    `beacon_height`) montre la zone active de loin. Un canard compte comme dedans tant que son corps touche la zone (même centré un peu
-   hors du bord). Si l'équipe sort, la barre repart à 0 ; si les deux équipes sont dedans, elle est en
-   pause. Une zone non capturée disparaît au bout de **20 s** (décompte en pause tant qu'une
-   équipe la capture) ; une autre apparaît alors, annoncée par « Une nouvelle zone est apparue ! ». Scores : bleu à gauche du chrono, rouge à droite. À chaque prise :
+   hors du bord), jusqu'à 4,5 m au-dessus de son sol (`capture_height` : en sautant oui, depuis l'étage du dessus non). Si l'équipe sort, la barre repart à 0 ; si les deux équipes sont dedans, elle est en
+   pause. Une zone reste jusqu'à sa capture (pas de limite de temps) ; **5 s** après
+   une capture, une autre apparaît, annoncée par « Une nouvelle zone est apparue ! » (`next_zone_delay`). Scores : bleu à gauche du chrono, rouge à droite. À chaque prise :
    « Ton équipe a pris la zone clé ! » ou « L'adversaire a pris la zone clé ! ».
 9. Fin du combat : écran des scores de chaque équipe, **Rejouer** (retour à la sélection
    d'équipe) ou **Quitter** (ferme le jeu). Avant l'écran de fin, « Terminé ! » s'affiche 1,5 s,
@@ -81,11 +81,11 @@ par commande, avec sa touche clavier et son bouton de manette. Le code n'utilise
 | Se déplacer | `move_left/right/up/down` | Z/Q/S/D (W/A/S/D en QWERTY) ou flèches | Stick gauche | Stick gauche |
 | Tourner la caméra | `look_left/right/up/down` | Souris / trackpad | Stick droit | Stick droit |
 | Sauter | `jump` | Espace | B | Croix |
-| Dash (au sol, toutes les 2 s ; gauche / droite l'infléchissent) | `dash` | Maj | Y | Carré |
+| Dash (au sol, ~10 m, toutes les 2 s ; gauche / droite l'infléchissent) | `dash` | Maj | Y | Carré |
 | Tirer une bulle (maintenir = en continu) | `shoot` | Clic gauche / T | ZR | R2 |
 | Viser : la caméra zoome, sans aide à la visée (**désactivé pour l'instant** : aucune touche) | `aim` | — | — | — |
 | Bulle de capture (toutes les 1 s, 20 % d'eau) | `capture` | Clic molette | R | R1 |
-| Canon à eau (maintenir, prototype) | `water_cannon` | Clic droit | ZL / L | L2 / L1 |
+| Canon à eau (maintenir ; simple appui : trace droite devant) | `water_cannon` | Clic droit | ZL / L | L2 / L1 |
 | **Menus** : naviguer / choisir son joueur (4 directions) | `menu_left/right/up/down` (+ `ui_*` de Godot) | Flèches (Z/Q/S/D) | Stick gauche / croix | Stick gauche / croix |
 | **Menus** : valider | `ui_accept` | Entrée / Espace | A | Rond |
 | **Accueil** : démarrer ; **Sélection** : lancer la partie (hôte) | `start` | Entrée sur le bouton | + | Options |
@@ -130,11 +130,13 @@ Un joueur qui tombe de la plateforme meurt.
   une par seconde ; elle coûte **20 %** de la réserve d'eau. Elle est aussi grosse que la bulle qui enferme un
   canard (1,54 m de rayon visible, 1 m de contact avec les canards) et roule au ras du sol (`visual_lift`).
 - En éclatant (sur un canard, le décor…), elle **explose** : les adversaires à moins de **4 m** perdent de
-  **50 PV** (au centre) à **20 PV** (au bord) ; un canard capturé (dont celui que la bulle vient de piéger) et les
+  **30 PV** (au centre) à **10 PV** (au bord) ; un canard capturé (dont celui que la bulle vient de piéger) et les
   coéquipiers ne sont pas touchés (`explosion_radius`, `explosion_damage_max`, `explosion_damage_min`).
 - Un adversaire touché est **piégé 2 s** dans une bulle à la couleur de l'équipe qui l'a eu : il décolle de
   25 cm puis **s'élève lentement** (1 m de plus en 2 s, en flottant ; il s'arrête sous un plafond) et ne peut
-  plus bouger, sauter, dasher ni tirer (il peut toujours tourner la caméra et prendre des dégâts). Puis la bulle éclate et il retombe au sol. Rien sur un coéquipier ; un
+  plus bouger, sauter, dasher ni tirer (il peut toujours tourner la caméra et prendre des dégâts, réduits à
+  **37 %** : `Player.captured_damage_scale`, réglé pour qu'un canard arrosé de bulles sans arrêt dès sa
+  capture meure tout juste à la fin de la bulle). Puis la bulle éclate et il retombe au sol. Rien sur un coéquipier ; un
   joueur déjà piégé ne l'est pas une 2e fois. Mort dans la bulle : elle disparaît.
 - Réglages : `scenes/game/capture_bubble.tscn` (scène héritée de la bulle normale : `speed`,
   `max_distance`, `radius`, `world_radius` : rayon plus petit contre le décor pour qu'elle frôle le sol
@@ -143,9 +145,9 @@ Un joueur qui tombe de la plateforme meurt.
 
 ### Plastron
 
-- Un **canard plastron** (`Players/Plastron` dans `game.tscn`, `Player.dummy`) attend au centre de la carte
-  (îlot central), réservoir gris : il est l'adversaire de tout le monde (`get_team()` = 0) pour s'entraîner
-  au tir, au jet et à la capture. Il ne bouge pas, ne compte pas dans les zones et réapparaît au même endroit.
+- Plus de canard plastron dans la partie (retiré de `game.tscn`). Le code le permet toujours : une
+  instance de joueur avec `Player.dummy` est l'adversaire de tout le monde (`get_team()` = 0), ne bouge
+  pas, ne compte pas dans les zones et réapparaît au même endroit.
 
 ### Réserve d'eau
 
@@ -162,8 +164,11 @@ Un joueur qui tombe de la plateforme meurt.
 - **Clic droit maintenu** (action `water_cannon`) : jet d'eau continu vers le viseur. Les gouttes partent un peu vers
   le haut pour que leur arc retombe sur le point visé (comme un tuyau d'arrosage) ; une sur cinq, plus lente,
   retombe un peu avant. Là où le jet touche le sol, une flaque se forme et grandit (cf. Flaques). Chaque
-  goutte qui touche un adversaire lui inflige **0,4 PV** (`damage_per_drop`), soit environ 56 PV/s si tout
-  le jet le touche ; rien aux coéquipiers.
+  goutte qui touche un adversaire lui inflige **1 PV** (`damage_per_drop`), soit environ 140 PV/s si tout
+  le jet le touche ; rien aux coéquipiers. Gouttes plus grosses et trace au sol large (rayon 2 m).
+- **Simple appui** (moins de 0,2 s) : le jet part devant le canard et balaie le sol en ligne droite, de
+  1,5 à 14 m en 0,6 s (`Player.cannon_tap_duration`, `cannon_tap_range`) : une trace d'eau droite sur
+  laquelle dasher (le dash glisse sur l'eau).
 - Code : `scripts/game/water_cannon.gd` (nœud `WaterCannon` de `game.tscn` : débit, vitesse, gravité,
   dispersion, eau laissée au sol, taille des gouttes). Toutes les gouttes sont dessinées d'un coup
   (MultiMesh). Réseau : seuls « canon en marche » et le point visé sont envoyés ; chaque ordinateur
@@ -175,6 +180,13 @@ Un joueur qui tombe de la plateforme meurt.
   10 m pour la maxi-bulle : `puddle_radius`), de forme irrégulière, qui s'étale du centre vers les bords
   en 0,3 s (`spread_time`). Deux flaques proches se rejoignent
   en une seule ; tirer plusieurs fois au même endroit l'agrandit.
+- **Eau profonde** (baignoire, toilettes) : on y entre, le canard s'y enfonce de 0,5 m (sa collision est
+  sous la surface), y marche normalement et c'est de l'eau (dash qui glisse, pas mouillés). On en sort d'un
+  **grand saut** (`Player.water_jump_velocity`, ~4,4 m : le bord de la baignoire est 3,2 m au-dessus de
+  l'eau). Même rendu que les flaques. Code : `scripts/levels/arena5.gd` (`_setup_deep_water`, groupe
+  `eau_profonde`).
+- **Rendu** : eau bleu vif bien visible sur le sol clair, cernée d'un liseré bleu plus foncé, avec un
+  léger halo bleu clair autour (`water_color`, `rim_color`, `damp_color` du nœud `Puddles`).
 - **Évaporation** : l'eau reste **1 min** après son dernier arrosage, puis pâlit et disparaît en **3 s**
   (`water_lifetime` = 63 s, `fade_duration`) ; réarroser une flaque la rafraîchit (groupe « Évaporation » du nœud `Puddles`).
 - **Dash sur l'eau** : il ne s'use pas. Le canard garde sa vitesse tant qu'il glisse sur une flaque, et
@@ -212,7 +224,8 @@ Un joueur qui tombe de la plateforme meurt.
   `duck_v4.glb`, état `death` de l'AnimationTree : il bascule sur le dos, pattes en l'air, et retombe au sol
   s'il était en l'air), disparaît dans un pop de bulle, puis il réapparaît 2 s après sa mort sur sa
   zone d'apparition avec 100 PV.
-- Chez le tireur, en bas de l'écran à droite de la jauge d'eau : « Vous avez éliminé ROMEO » (« Joueur 3 » sans
+- Chez le tireur, en bas de l'écran à droite de la jauge d'eau : « Vous avez éliminé ROMEO ! +1 » (+1 en jaune : chaque élimination d'un adversaire rapporte
+  **1 point** à l'équipe, `ZoneDefenseMode.kill_points` ; « Joueur 3 » sans
   pseudo), 2,5 s, avec un son d'élimination (pop de bulle + arpège de clochettes, `sfx/kill/kill.wav`).
 - Fil des éliminations en haut à droite (`scripts/ui/kill_feed.gd`) : « ROMEO a éclaté EDOUARD », pseudos aux
   couleurs des équipes, « Edouard est tombé » sans tireur ; entouré de jaune quand ça concerne son joueur.
@@ -236,7 +249,7 @@ Un joueur qui tombe de la plateforme meurt.
   est disputée et repart du début si l'équipe sort. Son 3D au centre de la zone : plein volume à moins de 8 m,
   de plus en plus discret au-delà, inaudible à 60 m (`ZoneDefense`, groupe « Montée de capture » ;
   `sfx/capture/capture_note.wav`). La gamme « Zone capturée » prend le relais.
-- Nouvelle zone (la première, ou celle qui remplace une zone expirée) : la même gamme, plus grave
+- Nouvelle zone (la première, puis 5 s après chaque capture) : la même gamme, plus grave
   (`NewZoneSound`, `sfx/capture/zone_appeared.wav`), entendue partout. Les deux sons ont de la réverbération.
 - Menus : autoload `UiSounds` (clic en naviguant, « plop » en validant), branché sur tous les boutons.
 - Musique : autoload `Music` (`play(...)` dans le `_ready()` de chaque écran ; changement en fondu).
@@ -288,7 +301,7 @@ Un joueur qui tombe de la plateforme meurt.
 │   │   ├── crosshair.tscn       # Viseur (rouge sur un adversaire)
 │   │   ├── damage_overlay.tscn  # Regroupe les écrans de dégâts (instancié dans game.tscn)
 │   │   └── damage/damage_screen_1..3.tscn  # Bulles sur les bords, de plus en plus couvrantes
-│   ├── game/game.tscn       # Partie : Arena + Players/Player1..4 + SpawnZones (2) + Projectiles + ZoneDefenseMode (4 zones) + MatchHud + PauseMenu
+│   ├── game/game.tscn       # Partie : Arena + Players/Player1..4 + SpawnZones (2) + Projectiles + ZoneDefenseMode (11 zones) + MatchHud + PauseMenu
 │   ├── game/zone_defense.tscn   # Une zone à capturer (rayon, points, timeout, durée de capture)
 │   ├── game/zone_spawn.tscn     # Zone d'apparition d'une équipe (équipe, rayon)
 │   ├── game/bubble_projectile.tscn  # Bulle tirée (vitesse, portée, dégâts)
@@ -355,17 +368,21 @@ Un joueur qui tombe de la plateforme meurt.
 
 - **Arène du jeu : `scenes/levels/arena5.tscn`** (modèle Blender `assets/models/arene_bain/arene_bain.glb`,
   éclairage `scenes/levels/eclairage_arene.tscn`, collisions ajoutées par `scripts/levels/arena5.gd` et
-  `tools/arena_glb_post_import.gd`). Même plan qu'`arena4` (maquette) : zone d'apparition bleue sous la
-  planche à repasser (ouest), rouge sur la marche du placard (est) ; zones de défense sur le matelas gonflable
-  de la baignoire (11 m), le dessus du panier à linge (7,2 m, rectangle, ex-îlot central), le rebord de
-  fenêtre sous le lavabo (6,2 m) et le sol de la douche ; plastron au sol, au centre. L'ancienne arène
+  `tools/arena_glb_post_import.gd`). Zones d'apparition (bleue à l'ouest, rouge à
+  l'est) et 11 zones de défense placées par Edouard (branche `dev-equilibrage`) : grandes zones à 5 points
+  (dessus du panier à linge et du carton, 15 s de capture), petites zones rapides (rayon 1,7 m, 5 s), etc.
+  Chaque zone est posée 10 cm au-dessus du point le plus haut de la surface sous elle (sinon son disque
+  scintille avec la surface). Une étagère en plus (`Etagere_006`) est un repère qu'`arena5.gd` remplit avec
+  une copie d'`Etagere_002` (métadonnée `copie_de`). L'ancienne arène
   ci-dessous (`arena.tscn`, `arena4.tscn`) reste dans le projet.
 - Collisions d'`arena5` légères, choisies à l'import par `tools/arena_glb_post_import.gd` : forme exacte pour
   la structure (sol, murs, plafond, marches), boîtes pour les objets en pavé (serviettes, magazines…), forme
   simplifiée (~400 triangles) pour les objets creux (baignoire, placard, matelas, planche à repasser,
   tabouret…), coque convexe pour le reste, rien pour l'eau et les petits objets (< 1 m). Environ 10 000
   triangles au total (370 000 avant). Le panier à linge (renversé) garde 3 000 triangles, sans son rebord
-  au sol, pour qu'on entre dessous par le grand trou et les deux poignées. Le même script retire les 4 barres
+  au sol, pour qu'on entre dessous par le grand trou et les deux poignées ; son dessus, comme celui du
+  carton voisin (où l'on entre aussi par deux trous), est une boîte plate (`TOP_BOX`) pour y marcher sans
+  accrocher. Le même script retire les 4 barres
   du tabouret entre les pieds (rendu et collision, `REMOVED_PARTS`), pour passer dessous. La bouée oiseau
   (`Bouee_Detail`) a une forme simplifiée (plus de coque convexe) ; la serviette pliée en pente
   (`Serviette_005`) a une coque prolongée jusqu'au sol (`RAMPS`) : on y monte sans sauter. Après modification
@@ -401,15 +418,15 @@ Un joueur qui tombe de la plateforme meurt.
   de combat (pendant le tir, la visée et 0,6 s après), le canard regarde là où il vise ; il joue la
   marche qui correspond à sa direction (reculer, pas de côté), même à pleine vitesse. Sinon il regarde
   où il va : marche avant, ou `run` au-delà de `RUN_SPEED`.
-- Dash : `dash_start` est jouée en 0,2 s (timeline personnalisée de son nœud, la moitié de
+- Dash : environ 10 m à sec (0,6 s). `dash_start` est jouée en 0,3 s (timeline personnalisée de son nœud, la moitié de
   `dash_duration`), puis `dash` en boucle jusqu'à la fin du dash, puis `dash_end` avant de revenir à
   la marche. Le début du dash est envoyé aux autres ordinateurs (RPC `_play_dash`).
 
 ### Régler les zones
 
 Dans `scenes/game/game.tscn`, les zones sont les enfants de `ZoneDefenseMode`
-(`ZoneDefense1` à `ZoneDefense4`, numérotées du côté bleu au côté rouge) : les déplacer dans la vue 3D
-(centre au niveau du sol), régler `shape` (rond : `radius`, 6 m par défaut ; rectangle : `size`),
+(`ZoneDefense1` à `ZoneDefense11`) : les déplacer dans la vue 3D (centre ~10 cm au-dessus de la surface,
+pour que le disque ne scintille pas), régler `shape` (rond : `radius`, 6 m par défaut ; rectangle : `size`),
 `points`, `timeout` et `capture_time` dans l'inspecteur, ou en ajouter / supprimer (instancier
 `zone_defense.tscn` sous `ZoneDefenseMode`). `ZoneDefense2` est un rectangle qui couvre tout le
 dessus de l'îlot central.

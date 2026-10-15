@@ -24,7 +24,7 @@ animation = &"dash_end"
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_p47bc"]
 animation = &"dash_start"
 use_custom_timeline = true
-timeline_length = 0.2
+timeline_length = 0.3
 stretch_time_scale = true
 start_offset = 0.0
 loop_mode = 0

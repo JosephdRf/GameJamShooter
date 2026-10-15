@@ -74,6 +74,9 @@ const NAME_TAG_SIGHT_SIDE := 0.65
 ## calque 3 « spawn_blue » (valeur 4), calque 4 « spawn_red » (valeur 8). Un joueur
 ## (et ses bulles) est bloqué par la zone d'apparition de l'équipe adverse.
 const WORLD_LAYER := 1
+## Groupe des surfaces d'eau profonde (baignoire, toilettes, cf. arena5.gd) : le canard y marche
+## un peu enfoncé, c'est de l'eau (dash qui glisse, pas mouillés) et il en sort d'un grand saut.
+const DEEP_WATER_GROUP := &"eau_profonde"
 const PLAYERS_LAYER := 2
 const SPAWN_LAYERS: Array[int] = [4, 8]
 ## Vitesse de rattrapage des cubes distants (plus élevé = plus réactif, moins lisse).
@@ -142,6 +145,8 @@ const MIN_MUZZLE_HEIGHT := 0.6825
 const LAND_SOUND_MIN_SPEED := 4.0
 ## Canon à eau : intervalle (s) entre deux envois du point visé aux autres ordinateurs.
 const CANNON_AIM_SYNC_INTERVAL := 0.066
+## Canon à eau : un appui plus court que ça (s) est un « simple appui » (cf. cannon_tap_duration).
+const CANNON_TAP_TIME := 0.2
 ## Sillage sur l'eau pendant une glissade : un rond et une gerbe toutes les WAKE_INTERVAL s.
 const WAKE_INTERVAL := 0.035
 ## Capture : vitesse à laquelle il rejoint sa hauteur de lévitation, vitesse du flottement.
@@ -164,6 +169,9 @@ const CAPTURE_CEILING_TEST := 0.02
 ## Élevée = réponse quasi instantanée au stick / aux touches.
 @export var acceleration := 90.0
 @export var jump_velocity := 8.5
+## Saut depuis l'eau profonde (cf. DEEP_WATER_GROUP) : assez haut (~4,4 m) pour passer le bord de
+## la baignoire (3,2 m au-dessus de l'eau) ou des toilettes.
+@export var water_jump_velocity := 12.5
 ## Multiplicateur de la gravité du projet (plus élevé = saut moins flottant).
 @export var gravity_scale := 1.8
 ## Hauteur maximale d'un relief (marche, rebord…) que le canard monte en marchant, sans sauter (m).
@@ -176,9 +184,9 @@ const CAPTURE_CEILING_TEST := 0.02
 @export var dash_speed := 25.0
 ## Durée du dash (s). Courbe de vitesse : montée douce jusqu'à dash_speed
 ## (DASH_RAMP), plateau, puis ralentissement doux jusqu'à move_speed.
-## Distance ≈ 6,8 m avec les valeurs par défaut. Si on la change, ajuster aussi la durée
+## Distance ≈ 10 m avec les valeurs par défaut. Si on la change, ajuster aussi la durée
 ## de dash_start dans l'AnimationTree (timeline de son nœud, la moitié de dash_duration).
-@export var dash_duration := 0.4
+@export var dash_duration := 0.6
 ## Temps minimum entre deux dashs (s).
 @export var dash_cooldown := 2.0
 ## Sur l'eau (flaques), le dash ne s'use pas : il garde sa vitesse tant que le canard glisse
@@ -212,6 +220,11 @@ const CAPTURE_CEILING_TEST := 0.02
 @export var water_per_shot := 0.05
 @export var water_per_capture := 0.2
 @export var water_per_second := 0.2
+## Simple appui sur le jet d'eau : le jet part devant le canard et balaie le sol en ligne droite
+## (de 1,5 m à cannon_tap_range m, en cannon_tap_duration s), pour laisser une trace sur laquelle
+## dasher. Maintenu, le jet vise le viseur comme d'habitude.
+@export var cannon_tap_duration := 0.6
+@export var cannon_tap_range := 14.0
 ## Temps sans dépenser d'eau avant que la réserve se recharge (s).
 @export var water_recharge_delay := 2.0
 ## Recharge : vitesse au départ (fraction par seconde), qui double toutes les
@@ -221,6 +234,11 @@ const CAPTURE_CEILING_TEST := 0.02
 @export var water_recharge_max_rate := 0.9
 @export_group("Vie")
 @export var max_health := 100.0
+## Piégé dans une bulle de capture, le canard ne prend que cette fraction des dégâts : arrosé de
+## bulles sans arrêt dès sa capture (à 6 à 10 m), il meurt tout juste à la fin de la bulle (2 s) ;
+## au jet d'eau, il survit de justesse (mesuré : 270 à 300 PV de bulles, 220 à 240 PV de jet
+## pendant les 2 s, sans réduction).
+@export var captured_damage_scale := 0.37
 ## Vie regagnée par seconde (PV/s) quand le joueur ne prend pas de dégâts.
 @export var regen_rate := 10.0
 ## Temps sans dégâts avant que la vie commence à remonter (s).
@@ -313,6 +331,11 @@ var _puddles: Puddles
 var _wake_left := 0.0
 ## Temps restant avant le prochain envoi de cannon_target (s).
 var _cannon_sync_left := 0.0
+## Jet d'un simple appui : temps écoulé depuis l'appui (-1 hors balayage), départ (pieds) et
+## direction (horizontale) de la trace.
+var _cannon_tap_elapsed := -1.0
+var _cannon_tap_origin := Vector3.ZERO
+var _cannon_tap_forward := Vector3.FORWARD
 ## floor_snap_length hors dash (celui de la scène), cf. dash_floor_snap.
 var _floor_snap_default := 0.1
 ## Temps depuis la dernière dépense d'eau (s), pour la recharge.
@@ -607,7 +630,7 @@ func _simulate(delta: float) -> void:
 				velocity.y = dryer.launch_speed
 				_play_updraft.rpc()
 			else:
-				velocity.y = jump_velocity
+				velocity.y = water_jump_velocity if is_in_deep_water() else jump_velocity
 				_play_jump.rpc()
 	var direction := Vector3(input.x, 0.0, input.y).rotated(Vector3.UP, camera.get_yaw())
 
@@ -623,6 +646,8 @@ func _simulate(delta: float) -> void:
 	var held := Input.is_action_pressed(&"shoot") and _since_last_shot >= auto_fire_interval
 	var capture_pressed := Input.is_action_just_pressed(&"capture") and _capture_cooldown_left == 0.0
 	var cannon := is_local and Input.is_action_pressed(&"water_cannon")
+	if is_local:
+		cannon = _update_cannon_tap(cannon, delta)
 	# Réserve d'eau : sans assez d'eau, rien ne part (et la jauge clignote au nouvel appui).
 	_recharge_water(delta)
 	if is_local and (pressed or held) and water < water_per_shot:
@@ -792,18 +817,45 @@ func _recharge_water(delta: float) -> void:
 ## le monde, et pendant qu'il arrose, suit la visée et l'envoie régulièrement aux autres.
 func _update_cannon(want: bool, delta: float) -> void:
 	if want and not cannon_on:
-		cannon_target = aim().point # Avant le premier envoi : le jet part tout de suite au bon endroit.
+		cannon_target = _cannon_aim_point() # Avant le premier envoi : le jet part tout de suite au bon endroit.
 		_sync_cannon_target.rpc(cannon_target)
 	if want != cannon_on:
 		_set_cannon.rpc(want)
 	if not cannon_on:
 		return
 	_spend_water(water_per_second * delta)
-	cannon_target = aim().point
+	cannon_target = _cannon_aim_point()
 	_cannon_sync_left -= delta
 	if _cannon_sync_left <= 0.0:
 		_cannon_sync_left = CANNON_AIM_SYNC_INTERVAL
 		_sync_cannon_target.rpc(cannon_target)
+
+
+## Jet d'un simple appui (ordinateur qui contrôle ce canard) : à l'appui, démarre le balayage ;
+## il s'arrête si la touche est encore tenue après CANNON_TAP_TIME (jet visé normal) ou au bout
+## de cannon_tap_duration. Rend vrai si le jet doit couler (touche tenue ou balayage en cours).
+func _update_cannon_tap(held: bool, delta: float) -> bool:
+	if Input.is_action_just_pressed(&"water_cannon"):
+		_cannon_tap_elapsed = 0.0
+		_cannon_tap_origin = _feet_position()
+		_cannon_tap_forward = Vector3.FORWARD.rotated(Vector3.UP, camera.get_yaw())
+	elif _cannon_tap_elapsed >= 0.0:
+		_cannon_tap_elapsed += delta
+		if (held and _cannon_tap_elapsed > CANNON_TAP_TIME) or _cannon_tap_elapsed >= cannon_tap_duration:
+			_cannon_tap_elapsed = -1.0
+	return held or _cannon_tap_elapsed >= 0.0
+
+
+## Point visé par le jet : le viseur, ou pendant le balayage d'un simple appui, le sol sur la
+## ligne droite devant le canard.
+func _cannon_aim_point() -> Vector3:
+	if _cannon_tap_elapsed < 0.0:
+		return aim().point
+	var t := clampf(_cannon_tap_elapsed / cannon_tap_duration, 0.0, 1.0)
+	var point := _cannon_tap_origin + _cannon_tap_forward * lerpf(1.5, cannon_tap_range, t)
+	var hit := get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(
+			point + Vector3.UP * 2.0, point + Vector3.DOWN * 4.0, WORLD_LAYER))
+	return hit.position if hit else point
 
 
 @rpc("authority", "call_local", "reliable")
@@ -1176,6 +1228,8 @@ func _turn_model_towards(direction: Vector3, weight: float) -> void:
 func _apply_damage(amount: float, attacker_id := 0) -> void:
 	if not is_alive() or amount <= 0.0:
 		return
+	if captured:
+		amount *= captured_damage_scale
 	_regen_cooldown_left = regen_delay
 	health = maxf(health - amount, 0.0)
 	if health <= 0.0:
@@ -1262,7 +1316,16 @@ func _dash_speed_at(t: float) -> float:
 func is_on_water() -> bool:
 	if _puddles == null:
 		_puddles = get_tree().get_first_node_in_group(Puddles.GROUP) as Puddles
-	return _puddles != null and _puddles.is_wet(_feet_position())
+	return (_puddles != null and _puddles.is_wet(_feet_position())) or is_in_deep_water()
+
+
+## Vrai si le canard a les pieds dans l'eau profonde (baignoire, toilettes : DEEP_WATER_GROUP).
+func is_in_deep_water() -> bool:
+	var feet := _feet_position()
+	var query := PhysicsRayQueryParameters3D.create(feet + Vector3.UP * 0.2, feet + Vector3.DOWN * 0.3,
+			WORLD_LAYER, [get_rid()])
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	return not hit.is_empty() and (hit.collider as Node).is_in_group(DEEP_WATER_GROUP)
 
 
 ## Normale du sol sous le canard (vers le haut si on ne la connaît pas : en l'air, ou canard

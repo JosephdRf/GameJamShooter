@@ -63,8 +63,9 @@ extends Node3D
 @export_group("Explosion")
 ## En éclatant (sur un canard, le décor, ou au bout de sa portée), la bulle blesse les
 ## adversaires à moins de `explosion_radius` m de son centre (0 = pas d'explosion) :
-## `explosion_damage_max` PV au centre (et au canard touché de plein fouet), jusqu'à
-## `explosion_damage_min` PV au bord (distance mesurée jusqu'au corps du canard).
+## `explosion_damage_max` PV au centre, jusqu'à `explosion_damage_min` PV au bord (distance
+## mesurée jusqu'au corps du canard). Un canard capturé (dont celui que la bulle vient de
+## piéger) n'est pas blessé par l'explosion.
 @export var explosion_radius := 0.0
 @export var explosion_damage_max := 50.0
 @export var explosion_damage_min := 20.0
@@ -96,7 +97,8 @@ var _direction := Vector3.FORWARD
 var _travelled := 0.0
 var _shooter_team := 0
 var _deals_damage := false
-## Canard touché de plein fouet (il prend les dégâts maximaux de l'explosion).
+## Canard touché de plein fouet : piégé, il n'est pas blessé par l'explosion (sur l'ordinateur
+## du tireur, sa capture n'est peut-être pas encore arrivée quand la bulle explose).
 var _direct_hit: Player
 ## Détection : [décor, joueurs], chacune avec sa forme (world_radius, radius).
 var _queries: Array[PhysicsShapeQueryParameters3D] = []
@@ -229,10 +231,11 @@ func _explode(center: Vector3) -> void:
 	query.collision_mask = Player.PLAYERS_LAYER
 	for hit in get_world_3d().direct_space_state.intersect_shape(query, 16):
 		var player := hit.collider as Player
-		if player == null or not player.is_alive() or (not friendly_fire and player.get_team() == _shooter_team):
+		if player == null or not player.is_alive() or player.captured or player == _direct_hit \
+				or (not friendly_fire and player.get_team() == _shooter_team):
 			continue
 		var distance := maxf(center.distance_to(player.global_position) - player.get_body_radius(), 0.0)
-		var t := 0.0 if player == _direct_hit else clampf(distance / explosion_radius, 0.0, 1.0)
+		var t := clampf(distance / explosion_radius, 0.0, 1.0)
 		player.take_damage(lerpf(explosion_damage_max, explosion_damage_min, t))
 
 

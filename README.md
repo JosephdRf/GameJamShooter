@@ -121,8 +121,8 @@ Un joueur qui tombe de la plateforme meurt.
   une par seconde ; elle coûte **20 %** de la réserve d'eau. Elle est aussi grosse que la bulle qui enferme un
   canard (1,54 m de rayon visible, 1 m de contact avec les canards) et roule au ras du sol (`visual_lift`).
 - En éclatant (sur un canard, le décor…), elle **explose** : les adversaires à moins de **4 m** perdent de
-  **50 PV** (au centre, et le canard touché de plein fouet) à **20 PV** (au bord) ; les coéquipiers ne sont pas
-  touchés (`explosion_radius`, `explosion_damage_max`, `explosion_damage_min`).
+  **50 PV** (au centre) à **20 PV** (au bord) ; un canard capturé (dont celui que la bulle vient de piéger) et les
+  coéquipiers ne sont pas touchés (`explosion_radius`, `explosion_damage_max`, `explosion_damage_min`).
 - Un adversaire touché est **piégé 2 s** dans une bulle à la couleur de l'équipe qui l'a eu : il décolle de
   25 cm puis **s'élève lentement** (1 m de plus en 2 s, en flottant ; il s'arrête sous un plafond) et ne peut
   plus bouger, sauter, dasher ni tirer (il peut toujours tourner la caméra et prendre des dégâts). Puis la bulle éclate et il retombe au sol. Rien sur un coéquipier ; un

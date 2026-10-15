@@ -13,7 +13,7 @@ caméra à la 3e personne. Un des joueurs héberge la partie (« listen server �
 | Sélection d'équipe (une fois son joueur validé : fenêtre du pseudo, gardé pour la fois suivante ; en jeu, affiché au-dessus des canards des autres joueurs) | `team_select.tscn` | **Lancer la partie** (hôte) → GAME |
 | GAME | `game/game.tscn` | Pause (hôte) · fin du combat → Écran de fin |
 | Pause (dans GAME) | `pause_menu.tscn` | Reprendre → GAME · Quitter → Sélection d'équipe (tout le monde) |
-| Écran de fin | `end_screen.tscn` | **Rejouer** → Sélection d'équipe · **Quitter** → ferme le jeu |
+| Écran de fin (style des menus : serviettes bleue et rouge avec scores et pseudos, badge « Gagné ! ») | `end_screen.tscn` | **Rejouer** → Sélection d'équipe · **Quitter** → ferme le jeu |
 
 Chaque écran est une scène indépendante de `scenes/ui/` (script du même nom dans `scripts/ui/`).
 Les chemins sont regroupés dans `scripts/ui/screens.gd` (`Screens.TITLE`, `Screens.GAME`…).
@@ -250,7 +250,7 @@ Un joueur qui tombe de la plateforme meurt.
 │   │   ├── team_select.tscn     # Sélection d'équipe (choix des joueurs)
 │   │   ├── match_hud.tscn       # HUD en jeu : chrono et scores (Scoreboard), capture, eau (instancié dans game.tscn)
 │   │   ├── pause_menu.tscn      # Menu pause (instancié dans game.tscn)
-│   │   ├── end_screen.tscn      # Écran de fin : scores, équipe gagnante, Rejouer / Quitter
+│   │   ├── end_screen.tscn      # Écran de fin : serviettes avec scores et pseudos, équipe gagnante, Rejouer / Quitter
 │   │   ├── death_screen.tscn    # « You died » + image grisée (instancié dans game.tscn)
 │   │   ├── announcer.tscn       # Messages de match (Attention…, C'est parti !, zone, Prolongation !, Terminé !), style Splatoon, effet au choix (`effect` : Splat, Slide, Stamp, Flash, Jelly)
 │   │   ├── crosshair.tscn       # Viseur (rouge sur un adversaire)

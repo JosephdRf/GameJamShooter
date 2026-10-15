@@ -27,7 +27,7 @@ extends Node3D
 ## plus grosse et plus lente), tirée avec l'action capture (clic molette).
 
 ## Vitesse (m/s).
-@export var speed := 30.0
+@export var speed := 36.0
 ## Portée (m) : la bulle éclate au-delà (le viseur pâlit au-delà de RANGE, cf. Crosshair). Bulle de capture : 1000 m, portée illimitée en
 ## pratique (elle vole jusqu'à toucher quelque chose) ; tirée dans le vide, elle finit par disparaître.
 @export var max_distance := RANGE

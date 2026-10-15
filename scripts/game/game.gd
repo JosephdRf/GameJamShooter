@@ -39,7 +39,7 @@ const CAPTURE_PROJECTILE_SCENE := preload("res://scenes/game/capture_bubble.tscn
 const DEBUG_DAMAGE := 10.0
 
 ## Durée d'un combat en secondes (0 = pas de limite, chrono masqué).
-@export var match_duration := 120.0
+@export var match_duration := 240.0
 ## Durée de « Attention… » (joueurs figés), puis de « C'est parti ! » (s).
 @export var ready_duration := 2.0
 @export var go_duration := 2.0

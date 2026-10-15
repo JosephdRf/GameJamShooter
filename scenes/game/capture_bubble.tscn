@@ -14,6 +14,8 @@ world_radius = 0.3
 capture = true
 puddle_radius = 10.0
 explosion_radius = 4.0
+explosion_damage_max = 30.0
+explosion_damage_min = 10.0
 
 [node name="PopSound" parent="." index="1"]
 volume_db = 2.0

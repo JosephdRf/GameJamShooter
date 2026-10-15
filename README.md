@@ -40,7 +40,7 @@ Les chemins sont regroupés dans `scripts/ui/screens.gd` (`Screens.TITLE`, `Scre
 
 6. En jeu, l'hôte peut mettre en pause (**P** ou **+**) : la partie est figée pour tous.
    « Quitter » ramène tout le monde à la sélection d'équipe.
-7. Un **compte à rebours** (2:00 par défaut) est affiché en haut au centre, sur un nuage de bulles, entre
+7. Un **compte à rebours** (4:00 par défaut) est affiché en haut au centre, sur un nuage de bulles, entre
    les scores des deux équipes dans des bulles à leur couleur (`Scoreboard`, `scripts/ui/scoreboard.gd` :
    police Titan One, formes qui respirent ; un score qui augmente gonfle avec sa bulle ; dans les
    **20 dernières secondes** les chiffres passent au jaune et battent à chaque seconde). Il est figé pendant la
@@ -130,7 +130,7 @@ Un joueur qui tombe de la plateforme meurt.
   une par seconde ; elle coûte **20 %** de la réserve d'eau. Elle est aussi grosse que la bulle qui enferme un
   canard (1,54 m de rayon visible, 1 m de contact avec les canards) et roule au ras du sol (`visual_lift`).
 - En éclatant (sur un canard, le décor…), elle **explose** : les adversaires à moins de **4 m** perdent de
-  **50 PV** (au centre) à **20 PV** (au bord) ; un canard capturé (dont celui que la bulle vient de piéger) et les
+  **30 PV** (au centre) à **10 PV** (au bord) ; un canard capturé (dont celui que la bulle vient de piéger) et les
   coéquipiers ne sont pas touchés (`explosion_radius`, `explosion_damage_max`, `explosion_damage_min`).
 - Un adversaire touché est **piégé 2 s** dans une bulle à la couleur de l'équipe qui l'a eu : il décolle de
   25 cm puis **s'élève lentement** (1 m de plus en 2 s, en flottant ; il s'arrête sous un plafond) et ne peut
@@ -143,9 +143,9 @@ Un joueur qui tombe de la plateforme meurt.
 
 ### Plastron
 
-- Un **canard plastron** (`Players/Plastron` dans `game.tscn`, `Player.dummy`) attend au centre de la carte
-  (îlot central), réservoir gris : il est l'adversaire de tout le monde (`get_team()` = 0) pour s'entraîner
-  au tir, au jet et à la capture. Il ne bouge pas, ne compte pas dans les zones et réapparaît au même endroit.
+- Plus de canard plastron dans la partie (retiré de `game.tscn`). Le code le permet toujours : une
+  instance de joueur avec `Player.dummy` est l'adversaire de tout le monde (`get_team()` = 0), ne bouge
+  pas, ne compte pas dans les zones et réapparaît au même endroit.
 
 ### Réserve d'eau
 
@@ -358,7 +358,7 @@ Un joueur qui tombe de la plateforme meurt.
   `tools/arena_glb_post_import.gd`). Même plan qu'`arena4` (maquette) : zone d'apparition bleue sous la
   planche à repasser (ouest), rouge sur la marche du placard (est) ; zones de défense sur le matelas gonflable
   de la baignoire (11 m), le dessus du panier à linge (7,2 m, rectangle, ex-îlot central), le rebord de
-  fenêtre sous le lavabo (6,2 m) et le sol de la douche ; plastron au sol, au centre. L'ancienne arène
+  fenêtre sous le lavabo (6,2 m) et le sol de la douche . L'ancienne arène
   ci-dessous (`arena.tscn`, `arena4.tscn`) reste dans le projet.
 - Collisions d'`arena5` légères, choisies à l'import par `tools/arena_glb_post_import.gd` : forme exacte pour
   la structure (sol, murs, plafond, marches), boîtes pour les objets en pavé (serviettes, magazines…), forme

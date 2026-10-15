@@ -303,6 +303,9 @@ var _dash_start_speed := 0.0
 ## Temps restant du dash pour ses animations (condition « dashing »), décompté sur
 ## tous les ordinateurs (cf. _play_dash).
 var _dash_animation_left := 0.0
+## Éclaboussures de savon de chaque côté du canard pendant le dash (cf. _create_dash_splash),
+## tournées comme le modèle.
+var _dash_splash: Node3D
 ## Direction du déplacement vue par le canard (x : droite, y : avant), pour l'état walk.
 var _strafe := Vector2(0, 1)
 ## Bout du canon (Marker3D créé dans _ready sur le mesh du pistolet) : départ des bulles.
@@ -420,6 +423,7 @@ func _ready() -> void:
 	if not Engine.is_editor_hint():
 		_create_muzzle()
 		_create_name_tag()
+		_create_dash_splash()
 	# L'éditeur enregistre parfois les triangles du mélange des marches avant ses points :
 	# ils sont alors ignorés au chargement et la marche reste figée. On les recalcule.
 	var walk_space := (_animation_tree.tree_root as AnimationNodeStateMachine).get_node(&"walk") as AnimationNodeBlendSpace2D
@@ -1073,6 +1077,55 @@ func _hide_capture_bubble(pop: bool) -> void:
 	_capture_tween.chain().tween_callback(_capture_bubble.hide)
 
 
+## Effet de savon du dash : deux gerbes de gouttes et de bulles de savon, projetées sur les côtés
+## (et un peu vers le haut et l'arrière) au ras du sol, tant que le canard file en dash (sur tous
+## les ordinateurs : l'animation du dash est déjà envoyée, cf. _play_dash).
+func _create_dash_splash() -> void:
+	_dash_splash = Node3D.new()
+	_dash_splash.name = "DashSplash"
+	_dash_splash.position.y = _model.position.y # Au niveau des pieds.
+	add_child(_dash_splash)
+	var mesh := SphereMesh.new()
+	mesh.radius = 0.15
+	mesh.height = 0.3
+	mesh.radial_segments = 8
+	mesh.rings = 4
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.vertex_color_use_as_albedo = true
+	mesh.material = material
+	var colors := Gradient.new()
+	colors.set_color(0, Color(0.3, 0.68, 1.0, 1.0))
+	colors.add_point(0.5, Color(0.2, 0.55, 0.95, 0.9))
+	colors.set_color(2, Color(0.6, 0.85, 1.0, 0.0))
+	var sizes := Curve.new()
+	sizes.add_point(Vector2(0.0, 0.6))
+	sizes.add_point(Vector2(0.25, 1.0))
+	sizes.add_point(Vector2(1.0, 0.3))
+	for side in [-1.0, 1.0]:
+		var splash := CPUParticles3D.new()
+		splash.emitting = false
+		splash.amount = 90
+		splash.lifetime = 0.6
+		splash.local_coords = false # Les gouttes restent derrière le canard qui file.
+		splash.mesh = mesh
+		splash.position = Vector3(side * 0.55, 0.15, 0.1)
+		splash.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
+		splash.emission_sphere_radius = 0.15
+		splash.direction = Vector3(side, 0.8, -0.35)
+		splash.spread = 22.0
+		splash.initial_velocity_min = 3.5
+		splash.initial_velocity_max = 6.5
+		splash.gravity = Vector3(0, -16, 0)
+		splash.scale_amount_min = 0.5
+		splash.scale_amount_max = 1.4
+		splash.scale_amount_curve = sizes
+		splash.color_ramp = colors
+		splash.layers = Puddles.DUCK_VISUAL_LAYER # Les flaques (Decals) ne les colorent pas.
+		_dash_splash.add_child(splash)
+
+
 ## Sur tous les ordinateurs (appelé par celui qui contrôle ce cube) : lance les
 ## animations et le son du dash.
 @rpc("authority", "call_local", "reliable")
@@ -1178,6 +1231,10 @@ func _update_model(velocity_now: Vector3, delta: float) -> void:
 		_wake_left = WAKE_INTERVAL
 		_puddles.wake(_feet_position(), horizontal, _ground_normal())
 	var dashing := _dash_animation_left > 0.0 or _in_tunnel
+	if _dash_splash:
+		_dash_splash.rotation.y = _model.rotation.y
+		for splash: CPUParticles3D in _dash_splash.get_children():
+			splash.emitting = _dash_animation_left > 0.0 and speed > move_speed
 	_animation_tree.set(&"parameters/conditions/dashing", dashing)
 	_animation_tree.set(&"parameters/conditions/dash_over", not dashing)
 	_animation_tree.set(&"parameters/conditions/idle", not moving)

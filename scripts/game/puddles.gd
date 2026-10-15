@@ -36,6 +36,11 @@ extends Node3D
 ## Passe d'évaporation toutes les EVAPORATION_STEP s, sur les seuls pixels mouillés, dans le
 ## même budget de temps par image que la peinture.
 ##
+## Murs, côtés et dessous des objets (surfaces trop raides pour une flaque) : une tache d'eau
+## ronde (wall_splash), un Decal orienté selon la surface, au même rendu que l'eau au sol. Arroser
+## le même endroit rafraîchit la tache au lieu d'en ajouter une ; au plus `wall_splat_max` taches
+## (les plus vieilles partent). Elles sèchent comme les flaques (water_lifetime, fade_duration).
+##
 ## Les joueurs savent s'ils marchent dans l'eau avec is_wet() (groupe GROUP).
 ##
 ## Réseau : rien n'est envoyé. Chaque ordinateur fait éclater sa copie de la bulle au même
@@ -91,6 +96,10 @@ const DRIP_RING_EVERY := 3
 ## Durée des ronds dans l'eau (s) et nombre de gouttes.
 @export var splash_duration := 0.7
 @export var splash_drops := 14
+@export_group("Murs")
+## Nombre maximal de taches d'eau sur les murs, et rayon maximal d'une tache (m).
+@export var wall_splat_max := 80
+@export var wall_splat_max_radius := 2.5
 @export_group("")
 ## Humidité maximale (une flaque très arrosée n'est pas infinie).
 @export var max_wetness := 3.0
@@ -110,6 +119,9 @@ var _drop_mesh: SphereMesh
 var _burst_mesh: SphereMesh
 ## Gouttes du canon à eau reçues (cf. drip) : seule une sur DRIP_RING_EVERY fait un rond.
 var _drips := 0
+## Taches d'eau sur les murs : { decal, normal, born (instant du dernier arrosage, _clock) }.
+var _wall_splats: Array[Dictionary] = []
+var _wall_texture: ImageTexture
 
 ## Carreau (Vector3i(x, étage, z)) -> { wet: PackedFloat32Array, albedo: Image,
 ## orm: Image, decal: Decal, dirty: bool, stamp: PackedFloat32Array (instant du dernier
@@ -136,6 +148,7 @@ func _ready() -> void:
 	_ring_mesh = _make_ring_mesh()
 	_drop_mesh = _make_drop_mesh()
 	_burst_mesh = _make_burst_mesh()
+	_wall_texture = _make_wall_texture()
 
 
 ## Vrai s'il y a de l'eau en `point` (à la surface du sol) : humidité au-dessus du seuil.
@@ -180,6 +193,7 @@ func _process(delta: float) -> void:
 	while not _evaporations.is_empty() and Time.get_ticks_usec() < deadline:
 		if _evaporate(_evaporations[0], deadline):
 			_evaporations.pop_front()
+	_dry_wall_splats()
 	for chunk: Dictionary in _chunks.values():
 		if chunk.dirty:
 			chunk.dirty = false
@@ -189,6 +203,68 @@ func _process(delta: float) -> void:
 			# (flaques en retard, voire jamais affichées).
 			chunk.decal.texture_albedo = ImageTexture.create_from_image(chunk.albedo)
 			chunk.decal.texture_orm = ImageTexture.create_from_image(chunk.orm)
+
+
+## Tache d'eau sur un mur (ou le côté, le dessous d'un objet) en `point`, de normale `normal`.
+## Si une tache presque au même endroit existe déjà, elle est seulement rafraîchie.
+func wall_splash(point: Vector3, radius: float, normal: Vector3, splash := true) -> void:
+	radius = minf(radius, wall_splat_max_radius)
+	normal = normal.normalized()
+	if splash and splash_effects:
+		_play_splash(point, radius * 0.6, normal)
+	for splat: Dictionary in _wall_splats:
+		if (splat.decal as Decal).global_position.distance_to(point) < radius * 0.5 \
+				and (splat.normal as Vector3).dot(normal) > 0.8:
+			splat.born = _clock
+			(splat.decal as Decal).modulate.a = 1.0
+			return
+	if _wall_splats.size() >= wall_splat_max:
+		(_wall_splats.pop_front().decal as Decal).queue_free()
+	var decal := Decal.new()
+	decal.size = Vector3(radius * 2.0, 0.8, radius * 2.0)
+	decal.texture_albedo = _wall_texture # Sans rides : vues de côté, elles l'assombrissaient.
+	decal.normal_fade = 0.3 # Seulement les faces tournées vers le tir.
+	decal.upper_fade = 0.3
+	decal.lower_fade = 0.3
+	decal.cull_mask = ~DUCK_VISUAL_LAYER & 0xFFFFF
+	add_child(decal)
+	# Axe Y du Decal (sens de projection) le long de la normale ; tourné au hasard autour d'elle.
+	var side := normal.cross(Vector3.UP if absf(normal.y) < 0.9 else Vector3.RIGHT).normalized()
+	side = side.rotated(normal, fmod(point.x * 12.9898 + point.z * 78.233, TAU))
+	decal.global_transform = Transform3D(Basis(side, normal, side.cross(normal)), point)
+	_wall_splats.append({"decal": decal, "normal": normal, "born": _clock})
+
+
+## Taches d'eau sur les murs : pâlissent pendant leurs fade_duration dernières secondes, puis
+## disparaissent water_lifetime s après leur dernier arrosage.
+func _dry_wall_splats() -> void:
+	for splat: Dictionary in _wall_splats.duplicate():
+		var age: float = _clock - splat.born
+		if age >= water_lifetime:
+			(splat.decal as Decal).queue_free()
+			_wall_splats.erase(splat)
+		elif age > water_lifetime - fade_duration:
+			(splat.decal as Decal).modulate.a = (water_lifetime - age) / fade_duration
+
+
+## Tache d'eau ronde à contour irrégulier, couleurs de l'eau au sol (liseré, cf. _shade).
+func _make_wall_texture() -> ImageTexture:
+	var size := 128
+	var image := Image.create_empty(size, size, false, Image.FORMAT_RGBA8)
+	for y in size:
+		for x in size:
+			var offset := Vector2(x + 0.5, y + 0.5) / size * 2.0 - Vector2.ONE
+			var edge := 0.78 + 0.18 * _noise.get_noise_2d(cos(offset.angle()) * 3.0, sin(offset.angle()) * 3.0)
+			var d := offset.length() / edge
+			if d >= 1.0:
+				image.set_pixel(x, y, Color(0, 0, 0, 0))
+				continue
+			var rim := smoothstep(0.75, 0.95, d)
+			var color := Color(water_color.r, water_color.g, water_color.b).lerp(Color(rim_color, 1.0), rim)
+			var alpha := lerpf(water_color.a, rim_color.a, rim) * (1.0 - smoothstep(0.95, 1.0, d))
+			image.set_pixel(x, y, Color(color, alpha))
+	image.generate_mipmaps()
+	return ImageTexture.create_from_image(image)
 
 
 ## Tache à peindre dans le carreau dont le coin (x, z) minimal est `origin` (m), étage

@@ -151,8 +151,12 @@ func _on_player_health_changed(health: float, player: Player) -> void:
 func _on_player_shot(origin: Vector3, direction: Vector3, capture: bool, visual_origin: Vector3, player: Player) -> void:
 	var bubble: BubbleProjectile = (CAPTURE_PROJECTILE_SCENE if capture else PROJECTILE_SCENE).instantiate()
 	# Flaque là où elle éclate sur le sol (éclaboussure orientée selon la surface).
+	# Sur un mur (ou le côté, le dessous d'un objet) : tache d'eau.
 	bubble.splashed.connect(func(point: Vector3, radius: float, normal: Vector3) -> void:
-		_puddles.add_puddle(point, radius, 1.0, true, normal))
+		if normal.y > BubbleProjectile.GROUND_MIN_NORMAL_Y:
+			_puddles.add_puddle(point, radius, 1.0, true, normal)
+		else:
+			_puddles.wall_splash(point, radius, normal))
 	# Touché : grosse éclaboussure sur le canard, pour voir qu'on a fait des dégâts.
 	bubble.hit_duck.connect(_puddles.duck_splash)
 	# Au bout de sa portée : elle éclate en l'air en projetant des gouttes.

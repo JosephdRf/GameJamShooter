@@ -41,9 +41,18 @@ const CONCAVE_DETAILED := {"panier_linge": 3000}
 ## 0,6 à 0,8 m, plus haut que la marche que le canard franchit seul (Player.max_step_height) : sa
 ## coque, étendue jusqu'à une arête au sol, devient une pente lisse (environ 30°) du sol au haut de
 ## la pile, sans sauter.
+## Tong_L, posée en pente du sol à la marche de la zone d'apparition rouge : arête au sol au bout
+## bas (sinon une marche de 0,54 m), et bout haut élargi contre la marche (sinon le canard se
+## coinçait entre le bord de la marche et le flanc de la tong) ; cf. HULL_TOP.
 const RAMPS := {
 	"serviette_005": [Vector3(-27.45, -0.27, -17.3), Vector3(-27.8, -0.27, -10.8)],
+	"tong_l": [Vector3(29.3, -0.27, 11.2), Vector3(29.3, -0.27, 12.9),
+			Vector3(34.6, 1.87, 9.6), Vector3(34.6, 1.87, 12.9)],
 }
+## Hauteur maximale (dans la scène) de la coque d'un objet de RAMPS : Tong_L dépasse de 0,2 m la
+## marche contre laquelle elle s'appuie (bourrelet où le canard butait en venant de la marche) ;
+## arasée au niveau de la marche, on passe de l'une à l'autre de plain-pied.
+const HULL_TOP := {"tong_l": 1.87}
 ## Parmi CONCAVE_PREFIXES, ceux sur lesquels on marche directement : décomposés en coques
 ## convexes (cf. ci-dessus) plutôt qu'une seule forme concave.
 const MULTICONVEX_PREFIXES := []
@@ -110,9 +119,15 @@ func _collider_for(mi: MeshInstance3D) -> String:
 			mi.create_convex_collision(true, false)
 			var hull: ConvexPolygonShape3D = mi.find_children("*", "CollisionShape3D", true, false)[0].shape
 			var points := hull.points
-			var to_mesh := _scene_transform(mi).affine_inverse()
+			var to_scene := _scene_transform(mi)
+			var to_mesh := to_scene.affine_inverse()
 			for point: Vector3 in RAMPS[prefix]:
 				points.append(to_mesh * point)
+			if HULL_TOP.has(prefix):
+				for i in points.size():
+					var point := to_scene * points[i]
+					point.y = minf(point.y, HULL_TOP[prefix])
+					points[i] = to_mesh * point
 			hull.points = points
 			return "coque + rampe"
 	if _starts(name, BOX_PREFIXES):

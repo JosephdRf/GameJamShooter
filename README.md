@@ -180,6 +180,9 @@ Un joueur qui tombe de la plateforme meurt.
   10 m pour la maxi-bulle : `puddle_radius`), de forme irrégulière, qui s'étale du centre vers les bords
   en 0,3 s (`spread_time`). Deux flaques proches se rejoignent
   en une seule ; tirer plusieurs fois au même endroit l'agrandit.
+- **Murs** : une bulle ou le jet qui touche un mur, le côté ou le dessous d'un objet y laisse une **tache
+  d'eau** (même rendu), qui sèche comme les flaques ; arroser le même endroit la rafraîchit
+  (`Puddles.wall_splash`, au plus 80 taches).
 - **Eau profonde** (baignoire, toilettes) : on y entre, le canard s'y enfonce de 0,5 m (sa collision est
   sous la surface), y marche normalement et c'est de l'eau (dash qui glisse, pas mouillés). On en sort d'un
   **grand saut** (`Player.water_jump_velocity`, ~4,4 m : le bord de la baignoire est 3,2 m au-dessus de
@@ -189,6 +192,8 @@ Un joueur qui tombe de la plateforme meurt.
   léger halo bleu clair autour (`water_color`, `rim_color`, `damp_color` du nœud `Puddles`).
 - **Évaporation** : l'eau reste **1 min** après son dernier arrosage, puis pâlit et disparaît en **3 s**
   (`water_lifetime` = 63 s, `fade_duration`) ; réarroser une flaque la rafraîchit (groupe « Évaporation » du nœud `Puddles`).
+- **Effet de savon du dash** : deux gerbes de gouttes bleues projetées sur les côtés du canard pendant
+  tout le dash (`Player._create_dash_splash`).
 - **Dash sur l'eau** : il ne s'use pas. Le canard garde sa vitesse tant qu'il glisse sur une flaque, et
   la distance du dash ne compte que sur le sol sec (`dash_slides_on_water` sur le joueur). Contre un mur,
   le dash se termine normalement.

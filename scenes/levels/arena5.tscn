@@ -1,0 +1,10 @@
+[gd_scene load_steps=4 format=3 uid="uid://bx86nblhj5yqy"]
+
+[ext_resource type="PackedScene" uid="uid://bpy12ahj74gdi" path="res://assets/models/arene_bain/arene_bain.glb" id="1_arena"]
+[ext_resource type="Script" uid="uid://d1tvujld7tni" path="res://scripts/levels/arena5.gd" id="2_script"]
+[ext_resource type="PackedScene" path="res://scenes/levels/eclairage_arene.tscn" id="3_eclairage"]
+
+[node name="Arena5" instance=ExtResource("1_arena")]
+script = ExtResource("2_script")
+
+[node name="Eclairage" parent="." instance=ExtResource("3_eclairage")]

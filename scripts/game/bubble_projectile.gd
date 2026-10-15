@@ -65,6 +65,8 @@ extends Node3D
 const RADIUS := 0.455
 ## Portée de la bulle normale (m), cf. max_distance.
 const RANGE := 25.0
+## Amortissement (m/s²) de la montée donnée par un sèche-cheveux, une fois sortie de son air.
+const LIFT_DECAY := 30.0
 ## Vitesse à laquelle l'image de la bulle rejoint sa vraie trajectoire (cf. _visual_offset).
 const VISUAL_CATCH_UP_SPEED := 25.0
 ## Rayon de la bulle de capture (m), cf. `radius` de capture_bubble.tscn.
@@ -83,8 +85,11 @@ signal splashed(point: Vector3, puddle_radius: float, normal: Vector3)
 static var _team_materials: Array[StandardMaterial3D] = []
 
 var _direction := Vector3.FORWARD
+## Vitesse de montée (m/s) donnée par l'air chaud d'un sèche-cheveux (cf. _update_lift).
+var _lift := 0.0
 var _travelled := 0.0
 var _shooter_team := 0
+var _shooter_id := 0
 var _deals_damage := false
 ## Détection : [décor, joueurs], chacune avec sa forme (world_radius, radius).
 var _queries: Array[PhysicsShapeQueryParameters3D] = []
@@ -108,6 +113,7 @@ func launch(shooter: Player, origin: Vector3, direction: Vector3, deals_damage: 
 		_visual_offset = visual_from - origin
 	_direction = direction.normalized()
 	_shooter_team = Player.team_of(shooter.player_id)
+	_shooter_id = shooter.player_id
 	var mesh := $Mesh as MeshInstance3D
 	mesh.scale = Vector3.ONE * (visual_radius if visual_radius >= 0.0 else radius) / RADIUS
 	if _team_materials.is_empty():
@@ -138,7 +144,8 @@ func _physics_process(delta: float) -> void:
 	var grown := minf(scale.x, 1.0)
 	_hit_shape.radius = radius * grown
 	_world_shape.radius = (world_radius if world_radius >= 0.0 else radius) * grown
-	var motion := _direction * step
+	_update_lift(delta)
+	var motion := _direction * step + Vector3.UP * _lift * delta
 	# Premier contact (décor ou joueur) : [fraction sans contact, fraction au contact]
 	# du déplacement ; 1 = aucun obstacle.
 	var first: PhysicsShapeQueryParameters3D = null
@@ -169,6 +176,15 @@ func _physics_process(delta: float) -> void:
 		_pop()
 
 
+## Dans la colonne d'air chaud d'un sèche-cheveux, la bulle est poussée vers le haut ; une fois
+## sortie, cette montée s'amortit en LIFT_DECAY m/s².
+func _update_lift(delta: float) -> void:
+	var dryers := get_tree().get_nodes_in_group(HairDryer.GROUP)
+	# Hors de l'air, la montée s'amortit (LIFT_DECAY) au lieu de tomber : la bulle flotte.
+	var lift := HairDryer.lift_projectile(dryers, global_position, _lift, LIFT_DECAY, delta)
+	_lift = maxf(lift, 0.0) if lift < _lift else lift
+
+
 ## `contact` : résultat de get_rest_info ({ point, normal… }, vide si inconnu).
 func _on_hit(collider: Object, contact: Dictionary) -> void:
 	var player := collider as Player
@@ -176,7 +192,7 @@ func _on_hit(collider: Object, contact: Dictionary) -> void:
 		if capture:
 			player.capture(capture_duration, _shooter_team)
 		else:
-			player.take_damage(damage)
+			player.take_damage(damage, _shooter_id)
 	elif not player and not contact.is_empty() and puddle_radius > 0.0 \
 			and (contact.normal as Vector3).y > GROUND_MIN_NORMAL_Y:
 		splashed.emit(contact.point, puddle_radius, contact.normal)

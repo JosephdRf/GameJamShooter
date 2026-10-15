@@ -63,6 +63,8 @@ var _multimesh := MultiMesh.new()
 var _landed := 0
 ## Dégâts de l'image en cours, par cible (Player -> PV), envoyés en une fois (cf. _deal_damage).
 var _pending_damage := {}
+## Cible -> joueur (1 à 4) qui l'a arrosée en dernier dans l'image (pour le fil des éliminations).
+var _pending_attacker := {}
 var _puddles: Puddles
 
 @onready var _players: Node = get_node(^"../Players")
@@ -153,11 +155,13 @@ func _move_drops(delta: float) -> void:
 	var space := get_world_3d().direct_space_state
 	var mask := Player.WORLD_LAYER | Player.PLAYERS_LAYER
 	var alive: Array[Array] = []
+	var dryers := get_tree().get_nodes_in_group(HairDryer.GROUP)
 	for drop in _drops:
 		var position: Vector3 = drop[0]
 		var velocity: Vector3 = drop[1]
 		var shooter: Player = drop[3]
-		velocity.y -= gravity * delta
+		# Gravité, ou air chaud d'un sèche-cheveux qui fait remonter la goutte.
+		velocity.y = HairDryer.lift_projectile(dryers, position, velocity.y, gravity, delta)
 		var next := position + velocity * delta
 		drop[2] += delta
 		var exclude: Array[RID] = []
@@ -182,6 +186,7 @@ func _on_drop_hit(hit: Dictionary, shooter: Player) -> void:
 	var target := hit.collider as Player
 	if target and is_instance_valid(shooter) and shooter.is_multiplayer_authority() and target.is_alive() 			and Player.team_of(target.player_id) != Player.team_of(shooter.player_id):
 		_pending_damage[target] = _pending_damage.get(target, 0.0) + damage_per_drop
+		_pending_attacker[target] = shooter.player_id
 	if _puddles == null:
 		return
 	var normal: Vector3 = hit.normal
@@ -196,8 +201,9 @@ func _on_drop_hit(hit: Dictionary, shooter: Player) -> void:
 func _deal_damage() -> void:
 	for target: Player in _pending_damage:
 		if is_instance_valid(target):
-			target.take_damage(_pending_damage[target])
+			target.take_damage(_pending_damage[target], _pending_attacker.get(target, 0))
 	_pending_damage.clear()
+	_pending_attacker.clear()
 
 
 func _draw_drops() -> void:

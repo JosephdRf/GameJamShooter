@@ -364,7 +364,10 @@ Un joueur qui tombe de la plateforme meurt.
   la structure (sol, murs, plafond, marches), boîtes pour les objets en pavé (serviettes, magazines…), forme
   simplifiée (~400 triangles) pour les objets creux (baignoire, placard, matelas, planche à repasser,
   tabouret…), coque convexe pour le reste, rien pour l'eau et les petits objets (< 1 m). Environ 10 000
-  triangles au total (370 000 avant). Après modification du script : réimporter `arene_bain.glb`.
+  triangles au total (370 000 avant). Le panier à linge (renversé) garde 3 000 triangles, sans son rebord
+  au sol, pour qu'on entre dessous par le grand trou et les deux poignées. Le même script retire les 4 barres
+  du tabouret entre les pieds (rendu et collision, `REMOVED_PARTS`), pour passer dessous. Après modification
+  du script : réimporter `arene_bain.glb`.
 
 - Source : `assets/models/bain-de-coin-coin.blend`. Godot l'importe avec **Blender**
   (Éditeur › Paramètres › Système de fichiers › Import › chemin de Blender) : chaque coéquipier qui

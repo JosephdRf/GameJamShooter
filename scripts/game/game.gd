@@ -83,7 +83,7 @@ var _kill_feed := KillFeed.new()
 func _ready() -> void:
 	# La souris est capturée pour que le trackpad pilote la caméra.
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-	Music.play(Music.COMBAT, true) # Depuis le début à chaque partie.
+	Music.stop() # Pas de musique en combat (celle des menus s'éteint en fondu).
 	add_child(_kill_feed)
 	_place_players_on_spawn_zones()
 	for player: Player in _players.get_children():

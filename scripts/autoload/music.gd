@@ -3,8 +3,8 @@ extends Node
 ## d'un écran à l'autre et pendant la pause).
 ## Chaque écran choisit sa musique dans son _ready() :
 ##   - play(MENU) : tous les menus (chargement, accueil, hôte/IP, sélection des
-##     équipes, fin) ;
-##   - play(COMBAT, true) : combat, depuis son début (START_POSITIONS) à chaque partie.
+##     équipes, fin) ; elle continue pendant la préparation du combat ;
+##   - stop() : combat, sans musique.
 ## Si la musique demandée joue déjà, elle continue sans se relancer ; une musique
 ## interrompue reprend là où elle s'était arrêtée (sauf `from_start`). Les changements
 ## se font en fondu (FADE_TIME) : l'ancienne s'éteint, puis la nouvelle monte.
@@ -12,14 +12,10 @@ extends Node
 ## « Happy Clappy Loop » (OwlishMedia, OpenGameArt, CC0) : boucle sans coupure
 ## (bouclage réglé dans les options d'import du .wav).
 const MENU := preload("res://assets/audio/music/happy_clappy_loop.wav")
-## « Glorious Morning 2 » : boucle (réglée dans les options d'import du .mp3, qui
-## reboucle sur la partie forte : loop_offset = 14,57 s).
-const COMBAT := preload("res://assets/audio/music/glorious_morning_2.mp3")
 ## Volume de chaque musique (dB), sous les effets sonores.
-const VOLUMES_DB := {MENU: -10.0, COMBAT: -12.0}
-## Début de chaque musique (s) : la musique de combat saute son intro calme et démarre
-## sur la partie forte (premier temps fort, 14,57 s).
-const START_POSITIONS := {COMBAT: 14.57}
+const VOLUMES_DB := {MENU: -10.0}
+## Début de chaque musique (s), si elle ne commence pas à 0 (pour sauter une intro).
+const START_POSITIONS := {}
 ## Volume en fin de fondu (dB) : inaudible.
 const SILENT_DB := -40.0
 ## Durée d'un fondu (s).

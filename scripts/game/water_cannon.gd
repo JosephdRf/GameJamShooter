@@ -180,7 +180,7 @@ func _move_drops(delta: float) -> void:
 ## seulement sur l'ordinateur du tireur, comme les bulles).
 func _on_drop_hit(hit: Dictionary, shooter: Player) -> void:
 	var target := hit.collider as Player
-	if target and is_instance_valid(shooter) and shooter.is_multiplayer_authority() and target.is_alive() 			and Player.team_of(target.player_id) != Player.team_of(shooter.player_id):
+	if target and is_instance_valid(shooter) and shooter.is_multiplayer_authority() and target.is_alive() 			and target.get_team() != shooter.get_team():
 		_pending_damage[target] = _pending_damage.get(target, 0.0) + damage_per_drop
 	if _puddles == null:
 		return

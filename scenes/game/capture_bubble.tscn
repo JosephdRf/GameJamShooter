@@ -7,11 +7,13 @@ speed = 18.0
 max_distance = 1000.0
 damage = 0.0
 grow_duration = 0.18
-radius = 0.7
-visual_radius = 0.95
+radius = 1.0
+visual_radius = 1.54375
+visual_lift = 0.9
 world_radius = 0.3
 capture = true
-puddle_radius = 7.2
+puddle_radius = 10.0
+explosion_radius = 4.0
 
 [node name="PopSound" parent="." index="1"]
 volume_db = 2.0

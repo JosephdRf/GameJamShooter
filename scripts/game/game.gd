@@ -11,6 +11,8 @@ extends Node3D
 ## PV du joueur local (DebugHealth) et le rectangle de l'aide à la visée.
 ## Chaque ordinateur affiche la caméra du joueur qu'il a choisi dans le salon.
 ## Les joueurs non choisis restent sur place (contrôlés par personne).
+## Plastron (Players/Plastron, Player.dummy) : canard d'entraînement au centre de la carte,
+## adversaire de tout le monde, piloté par l'hôte ; il reste là où il est posé.
 ## Échap (ui_cancel) quitte le jeu ; P / + (hôte) ouvre le menu pause.
 ##
 ## Compte à rebours : l'hôte décompte match_duration secondes (figé pendant la
@@ -164,7 +166,7 @@ func _on_player_respawned(player: Player) -> void:
 func _place_players_on_spawn_zones() -> void:
 	for zone: ZoneSpawn in _spawn_zones.get_children():
 		var team_players := _players.get_children().filter(
-				func(player: Player) -> bool: return Player.team_of(player.player_id) == zone.team)
+				func(player: Player) -> bool: return not player.dummy and player.get_team() == zone.team)
 		for i in team_players.size():
 			team_players[i].set_spawn_position(zone.get_spawn_position(i, team_players.size()))
 
@@ -175,7 +177,7 @@ func _apply_slots() -> void:
 		return
 	var my_id := multiplayer.get_unique_id()
 	for player: Player in _players.get_children():
-		var owner_id := NetworkManager.get_slot_owner(player.player_id)
+		var owner_id := 0 if player.dummy else NetworkManager.get_slot_owner(player.player_id)
 		player.set_multiplayer_authority(owner_id if owner_id != 0 else 1)
 		player.is_local = owner_id == my_id
 		player.camera.set_view_active(player.is_local)

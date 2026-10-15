@@ -42,7 +42,7 @@ func _find_target_offset() -> Vector2:
 	var best_length := INF
 	for other in _player.get_parent().get_children():
 		var enemy := other as Player
-		if enemy == null or not enemy.is_alive() or Player.team_of(enemy.player_id) == team \
+		if enemy == null or not enemy.is_alive() or enemy.get_team() == team \
 				or eye.distance_to(enemy.global_position) > max_distance:
 			continue
 		var offset: Variant = camera.screen_offset_of(enemy.global_position)

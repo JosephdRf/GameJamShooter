@@ -118,7 +118,11 @@ Un joueur qui tombe de la plateforme meurt.
 ### Capture
 
 - **Clic molette** (action `capture`) : tire une grosse bulle, plus lente (18 m/s, **portée illimitée** : elle vole jusqu'à toucher quelque chose), au plus
-  une par seconde ; elle coûte **20 %** de la réserve d'eau.
+  une par seconde ; elle coûte **20 %** de la réserve d'eau. Elle est aussi grosse que la bulle qui enferme un
+  canard (1,54 m de rayon visible, 1 m de contact avec les canards) et roule au ras du sol (`visual_lift`).
+- En éclatant (sur un canard, le décor…), elle **explose** : les adversaires à moins de **4 m** perdent de
+  **50 PV** (au centre, et le canard touché de plein fouet) à **20 PV** (au bord) ; les coéquipiers ne sont pas
+  touchés (`explosion_radius`, `explosion_damage_max`, `explosion_damage_min`).
 - Un adversaire touché est **piégé 2 s** dans une bulle à la couleur de l'équipe qui l'a eu : il décolle de
   25 cm puis **s'élève lentement** (1 m de plus en 2 s, en flottant ; il s'arrête sous un plafond) et ne peut
   plus bouger, sauter, dasher ni tirer (il peut toujours tourner la caméra et prendre des dégâts). Puis la bulle éclate et il retombe au sol. Rien sur un coéquipier ; un
@@ -127,6 +131,12 @@ Un joueur qui tombe de la plateforme meurt.
   `max_distance`, `radius`, `world_radius` : rayon plus petit contre le décor pour qu'elle frôle le sol
   sans éclater, `capture_duration`) et sur le joueur, groupe « Capture » (`capture_cooldown`,
   `capture_lift`, `capture_rise`, `capture_bob`). Bulle autour du canard : nœud `CaptureBubble` de `player.tscn`.
+
+### Plastron
+
+- Un **canard plastron** (`Players/Plastron` dans `game.tscn`, `Player.dummy`) attend au centre de la carte
+  (îlot central), réservoir gris : il est l'adversaire de tout le monde (`get_team()` = 0) pour s'entraîner
+  au tir, au jet et à la capture. Il ne bouge pas, ne compte pas dans les zones et réapparaît au même endroit.
 
 ### Réserve d'eau
 
@@ -153,7 +163,8 @@ Un joueur qui tombe de la plateforme meurt.
 ### Flaques (prototype)
 
 - Une bulle qui éclate sur le sol (ou le dessus d'un meuble) laisse une **flaque d'eau** (rayon 2 m,
-  7,2 m pour la maxi-bulle : `puddle_radius`), de forme irrégulière. Deux flaques proches se rejoignent
+  10 m pour la maxi-bulle : `puddle_radius`), de forme irrégulière, qui s'étale du centre vers les bords
+  en 0,3 s (`spread_time`). Deux flaques proches se rejoignent
   en une seule ; tirer plusieurs fois au même endroit l'agrandit.
 - **Évaporation** : l'eau disparaît **30 s** après son dernier arrosage, en pâlissant pendant les 3 dernières
   secondes ; réarroser une flaque la rafraîchit (groupe « Évaporation » du nœud `Puddles`).

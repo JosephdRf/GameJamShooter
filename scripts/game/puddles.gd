@@ -16,7 +16,8 @@ extends Node3D
 ## chaque pixel de la tache va dans l'étage de sa propre hauteur (celle du plan de la pente
 ## touchée) : la flaque couvre la pente, au lieu d'une bande horizontale de LAYER_HEIGHT m.
 ## Peinture étalée sur plusieurs images (au plus `paint_budget_ms` ms par image) : une
-## grosse flaque apparaît en quelques images au lieu de faire saccader le jeu.
+## grosse flaque ne fait pas saccader le jeu. Elle est peinte par anneaux, du centre vers
+## les bords, et s'étale en `spread_time` s (sous l'éclaboussure, qui masque cette croissance).
 ## Les canards (calque visuel DUCK_VISUAL_LAYER) ne sont pas mouillés par les Decals.
 ##
 ## Rendu : autour de l'eau, un halo de sol mouillé (plus sombre, mat) ; l'eau elle-même est
@@ -56,7 +57,9 @@ const DRIP_RING_EVERY := 3
 ## proportionnel à son carré.
 @export var pixels_per_meter := 12
 ## Temps de peinture maximal par image (ms) ; le reste attend l'image suivante.
-@export var paint_budget_ms := 2.0
+@export var paint_budget_ms := 3.0
+## Durée (s) pendant laquelle une flaque s'étale, du centre jusqu'à ses bords.
+@export var spread_time := 0.3
 ## Humidité à partir de laquelle il y a de l'eau (une tache vaut 1 en son centre).
 @export var threshold := 0.5
 @export_group("Rendu")
@@ -109,8 +112,8 @@ var _drips := 0
 ## arrosage + 1 par pixel, 0 = sec), wet_pixels: PackedInt32Array (pixels mouillés),
 ## oldest: float (plus vieux stamp), evaporating: bool }.
 var _chunks := {}
-## Taches à peindre, dans l'ordre : une par carreau touché, peinte ligne par ligne
-## (cf. _make_job, _paint_rows).
+## Taches en train de s'étaler : { parts (une par carreau touché, cf. _make_job), done (rayon
+## déjà peint, px), reach (rayon final, px), age (s) }, peintes anneau par anneau (_paint_ring).
 var _jobs: Array[Dictionary] = []
 ## Passes d'évaporation en cours, une par carreau (cf. _evaporate).
 var _evaporations: Array[Dictionary] = []
@@ -153,20 +156,22 @@ func add_puddle(point: Vector3, radius: float, amount := 1.0, splash := true, no
 	var rise := reach * Vector2(slope.x, slope.z).length() / slope.y
 	var min_chunk := Vector2i(floori((point.x - reach) / CHUNK_SIZE), floori((point.z - reach) / CHUNK_SIZE))
 	var max_chunk := Vector2i(floori((point.x + reach) / CHUNK_SIZE), floori((point.z + reach) / CHUNK_SIZE))
+	var parts: Array[Dictionary] = []
 	for layer in range(roundi((point.y - rise) / LAYER_HEIGHT), roundi((point.y + rise) / LAYER_HEIGHT) + 1):
 		for cx in range(min_chunk.x, max_chunk.x + 1):
 			for cz in range(min_chunk.y, max_chunk.y + 1):
-				_jobs.append(_make_job(_get_chunk(Vector3i(cx, layer, cz)), Vector2(cx, cz) * CHUNK_SIZE,
+				parts.append(_make_job(_get_chunk(Vector3i(cx, layer, cz)), Vector2(cx, cz) * CHUNK_SIZE,
 						point, radius, amount, slope, layer, rise > 0.0))
+	_jobs.append({"parts": parts, "done": 0.0, "reach": reach * pixels_per_meter, "age": 0.0})
 
 
 func _process(delta: float) -> void:
 	_clock += delta
 	_schedule_evaporation(delta)
 	var deadline := Time.get_ticks_usec() + int(paint_budget_ms * 1000.0)
-	while not _jobs.is_empty() and Time.get_ticks_usec() < deadline:
-		if _paint_rows(_jobs[0], deadline):
-			_jobs.pop_front()
+	for job: Dictionary in _jobs.duplicate():
+		if _spread(job, delta, deadline):
+			_jobs.erase(job)
 	while not _evaporations.is_empty() and Time.get_ticks_usec() < deadline:
 		if _evaporate(_evaporations[0], deadline):
 			_evaporations.pop_front()
@@ -198,8 +203,27 @@ func _make_job(chunk: Dictionary, origin: Vector2, point: Vector3, radius: float
 	}
 
 
-## Peint les lignes suivantes de la tache `job` jusqu'à `deadline` (µs). Vrai quand elle est finie.
-func _paint_rows(job: Dictionary, deadline: int) -> bool:
+## Étale la tache `job` : peint les anneaux suivants jusqu'au rayon qu'elle doit avoir atteint
+## (ease-out sur spread_time s), sans dépasser `deadline` (µs) ; en retard, elle rattrape aux
+## images suivantes. Vrai quand elle est finie.
+func _spread(job: Dictionary, delta: float, deadline: int) -> bool:
+	job.age += delta
+	var t := clampf(job.age / spread_time, 0.0, 1.0) if spread_time > 0.0 else 1.0
+	var target: float = job.reach * (1.0 - pow(1.0 - t, 2.0))
+	var step := 4.0 # Largeur d'un anneau (px).
+	while job.done < target and Time.get_ticks_usec() < deadline:
+		var outer: float = job.done + step
+		if outer >= job.reach:
+			outer = job.reach + 1.0 # Dernier anneau : jusqu'au bout de la tache.
+		for part: Dictionary in job.parts:
+			_paint_ring(part, job.done, outer)
+		job.done = outer
+	return job.done >= job.reach
+
+
+## Peint, dans le carreau de `job`, les pixels de la tache dont la distance au centre (px) est
+## dans [inner, outer[.
+func _paint_ring(job: Dictionary, inner: float, outer: float) -> void:
 	var chunk: Dictionary = job.chunk
 	var size := _chunk_pixels()
 	var origin: Vector2 = job.origin
@@ -216,42 +240,71 @@ func _paint_rows(job: Dictionary, deadline: int) -> bool:
 	# (Le Decal coupe net au bord de l'étage : le débordement ne se voit pas.)
 	var band := LAYER_HEIGHT / 2.0 + 2.0 / pixels_per_meter * Vector2(slope.x, slope.z).length() / slope.y + 0.01
 	var dry := threshold - damp_width # En dessous, le pixel reste transparent (cf. _shade).
+	var now := _clock + 1.0 # (+1 : 0 veut dire « sec »)
+	var inner2 := inner * inner
+	var outer2 := minf(outer * outer, reach2)
+	var first_row := maxi(job.row, floori(center.y - outer))
+	var last_row := mini(job.last_row, ceili(center.y + outer))
+	if first_row > last_row or job.first_col > job.last_col:
+		return
+	# Anneau qui ne passe pas sur ce carreau (tout entier plus près ou plus loin du centre) : rien.
+	var near := Vector2(clampf(center.x, job.first_col, job.last_col + 1), clampf(center.y, job.row, job.last_row + 1))
+	var far := Vector2(job.first_col if center.x - job.first_col > job.last_col + 1 - center.x else job.last_col + 1,
+			job.row if center.y - job.row > job.last_row + 1 - center.y else job.last_row + 1)
+	if (near - center).length() >= outer or (far - center).length() < inner:
+		return
+	# Tableaux sortis du carreau le temps de la peinture : seuls à les tenir, on les modifie
+	# sur place (sinon chaque anneau en recopierait tout le contenu).
 	var wet: PackedFloat32Array = chunk.wet
 	var stamp: PackedFloat32Array = chunk.stamp
 	var wet_pixels: PackedInt32Array = chunk.wet_pixels
-	var now := _clock + 1.0 # (+1 : 0 veut dire « sec »)
-	while job.row <= job.last_row and Time.get_ticks_usec() < deadline:
-		var py: int = job.row
-		job.row += 1
-		for px in range(job.first_col, job.last_col + 1):
-			var pixel := Vector2(px + 0.5, py + 0.5)
-			var dist2 := (pixel - center).length_squared()
-			if dist2 >= reach2:
-				continue # Hors de portée même du plus grand lobe : pas besoin du bruit.
-			var world := origin + pixel / pixels_per_meter
-			if on_slope: # Hauteur de la pente ici : ce pixel est-il dans l'étage de ce carreau ?
-				var height := point.y - (slope.x * (world.x - point.x) + slope.z * (world.y - point.z)) / slope.y
-				if absf(height - layer * LAYER_HEIGHT) > band:
+	chunk.wet = PackedFloat32Array()
+	chunk.stamp = PackedFloat32Array()
+	chunk.wet_pixels = PackedInt32Array()
+	var painted := false
+	for py in range(first_row, last_row + 1):
+		var dy := py + 0.5 - center.y
+		if dy * dy >= outer2:
+			continue
+		# Colonnes de l'anneau sur cette ligne : deux segments (un seul près du haut et du bas).
+		var half_out := sqrt(outer2 - dy * dy)
+		var half_in := sqrt(maxf(inner2 - dy * dy, 0.0))
+		var left_start := maxi(floori(center.x - half_out - 1.0), job.first_col)
+		var left_end := mini(ceili(center.x - half_in), job.last_col)
+		var right_start := maxi(floori(center.x + half_in - 1.0), job.first_col)
+		var right_end := mini(ceili(center.x + half_out), job.last_col)
+		var merged := left_end >= right_start
+		for span in 1 if merged else 2:
+			for px in range(left_start if span == 0 else right_start, (right_end if merged else left_end) + 1 if span == 0 else right_end + 1):
+				var pixel := Vector2(px + 0.5, py + 0.5)
+				var dist2 := (pixel - center).length_squared()
+				if dist2 < inner2 or dist2 >= outer2:
+					continue # Autre anneau, ou hors de portée même du plus grand lobe.
+				painted = true
+				var world := origin + pixel / pixels_per_meter
+				if on_slope: # Hauteur de la pente ici : ce pixel est-il dans l'étage de ce carreau ?
+					var height := point.y - (slope.x * (world.x - point.x) + slope.z * (world.y - point.z)) / slope.y
+					if absf(height - layer * LAYER_HEIGHT) > band:
+						continue
+				# Rayon déformé selon l'endroit : contour en lobes, pas en cercle.
+				var local_r := r * (1.0 + shape_noise * _noise.get_noise_2d(world.x, world.y))
+				var d2 := dist2 / (local_r * local_r)
+				if d2 >= 1.0:
 					continue
-			# Rayon déformé selon l'endroit : contour en lobes, pas en cercle.
-			var local_r := r * (1.0 + shape_noise * _noise.get_noise_2d(world.x, world.y))
-			var d2 := dist2 / (local_r * local_r)
-			if d2 >= 1.0:
-				continue
-			var i := py * size + px
-			# Tache douce (1 au centre, 0 au bord) : deux taches proches se rejoignent.
-			wet[i] = minf(wet[i] + amount * (1.0 - d2) * (1.0 - d2), max_wetness)
-			if stamp[i] == 0.0:
-				wet_pixels.append(i) # Pixel qui vient d'être mouillé : à faire sécher plus tard.
-			stamp[i] = now # Arrosé : l'évaporation repart de zéro.
-			if wet[i] > dry:
-				_shade(chunk, px, py, wet[i])
+				var i := py * size + px
+				# Tache douce (1 au centre, 0 au bord) : deux taches proches se rejoignent.
+				wet[i] = minf(wet[i] + amount * (1.0 - d2) * (1.0 - d2), max_wetness)
+				if stamp[i] == 0.0:
+					wet_pixels.append(i) # Pixel qui vient d'être mouillé : à faire sécher plus tard.
+				stamp[i] = now # Arrosé : l'évaporation repart de zéro.
+				if wet[i] > dry:
+					_shade(chunk, px, py, wet[i])
 	chunk.wet = wet
 	chunk.stamp = stamp
 	chunk.wet_pixels = wet_pixels
-	chunk.oldest = minf(chunk.oldest, now)
-	chunk.dirty = true
-	return job.row > job.last_row
+	if painted:
+		chunk.oldest = minf(chunk.oldest, now)
+		chunk.dirty = true
 
 
 ## Toutes les EVAPORATION_STEP s, lance une passe sur chaque carreau où de l'eau commence à

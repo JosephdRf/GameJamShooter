@@ -31,6 +31,10 @@ extends CharacterBody3D
 ## bulle à la couleur de l'équipe qui l'a eu, il décolle de `capture_lift` m puis
 ## s'élève lentement de `capture_rise` m pendant toute la durée de la bulle (2 s), sans
 ## pouvoir bouger, sauter, dasher ni tirer. Il peut toujours prendre des dégâts.
+##
+## Plastron (`dummy`) : canard d'entraînement, sans équipe (get_team() = 0, réservoir gris) :
+## adversaire de tout le monde, il ne bouge pas, encaisse les tirs, se fait capturer et
+## réapparaît où il a été posé. Contrôlé par l'hôte, il ne compte pas dans les zones.
 
 ## Émis sur tous les ordinateurs quand la vie change / à la mort / à la réapparition.
 signal health_changed(health: float)
@@ -91,6 +95,7 @@ const TEAM_MATERIALS: Array[Material] = [
 	preload("res://assets/materials/duck_container_blue.tres"),
 	preload("res://assets/materials/duck_container_red.tres"),
 ]
+const DUMMY_MATERIAL := preload("res://assets/materials/duck_container_dummy.tres")
 const REMOTE_SNAP_DISTANCE := 3.0
 ## Montée des marches : en dessous de cette hauteur (m), la capsule passe d'elle-même.
 const STEP_MIN_HEIGHT := 0.01
@@ -120,6 +125,11 @@ const CAPTURE_CEILING_TEST := 0.02
 @export_range(1, 4) var player_id := 1:
 	set(value):
 		player_id = value
+		_apply_color()
+## Plastron (canard d'entraînement sans équipe), cf. en-tête.
+@export var dummy := false:
+	set(value):
+		dummy = value
 		_apply_color()
 
 @export var move_speed := 6.0
@@ -308,6 +318,11 @@ var _capture_tween: Tween
 ## Équipe (1 ou 2) du joueur `id`.
 static func team_of(id: int) -> int:
 	return 1 if id <= 2 else 2
+
+
+## Équipe de ce canard : celle de `player_id`, 0 pour un plastron (adversaire de tous).
+func get_team() -> int:
+	return 0 if dummy else team_of(player_id)
 
 
 static func color_of(id: int) -> Color:
@@ -825,7 +840,7 @@ func is_bubble_in_range() -> bool:
 ## Vrai si le viseur est sur un adversaire vivant.
 func is_aiming_at_enemy() -> bool:
 	var target := aim().collider as Player
-	return target != null and target.is_alive() and team_of(target.player_id) != team_of(player_id)
+	return target != null and target.is_alive() and target.get_team() != get_team()
 
 
 ## Crée un repère au bout du canon : extrémité du mesh du pistolet, côté avant du canard.
@@ -1046,12 +1061,12 @@ func _follow_network(delta: float) -> void:
 
 
 func _apply_color() -> void:
-	collision_mask = WORLD_LAYER | PLAYERS_LAYER | enemy_spawn_layer(team_of(player_id))
+	collision_mask = WORLD_LAYER | PLAYERS_LAYER | (0 if dummy else enemy_spawn_layer(team_of(player_id)))
 	if _model == null: # Setter appelé avant que le nœud soit prêt.
 		return
 	for mesh: MeshInstance3D in _model.find_children("*", "MeshInstance3D", true, false):
 		mesh.layers = Puddles.DUCK_VISUAL_LAYER # Les flaques (Decals) ne colorent pas le canard.
 		if mesh.name in TEAM_COLORED_MESHES:
-			mesh.material_override = TEAM_MATERIALS[team_of(player_id) - 1]
+			mesh.material_override = DUMMY_MATERIAL if dummy else TEAM_MATERIALS[team_of(player_id) - 1]
 		else:
 			mesh.material_override = MESH_MATERIALS.get(mesh.name)

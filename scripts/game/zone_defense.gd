@@ -154,7 +154,7 @@ func update_capture(players: Array[Player], delta: float) -> void:
 func teams_inside(players: Array[Player]) -> Array[int]:
 	var teams: Array[int] = []
 	for player in players:
-		if not player.is_alive():
+		if not player.is_alive() or player.dummy:
 			continue
 		var team := Player.team_of(player.player_id)
 		if contains(player.global_position, player.get_body_radius()) and not teams.has(team):

@@ -40,7 +40,7 @@ extends Node3D
 @export var grow_duration := 0.12
 @export var start_scale := 0.2
 ## Rayon (m) de la zone de contact ; le mesh est mis à la même échelle. Garder égal
-## à RADIUS ici et à CAPTURE_RADIUS dans capture_bubble.tscn (Player vise avec la surface de la bulle).
+## à RADIUS ici (Player vise avec la surface de la bulle).
 @export var radius := RADIUS
 ## Rayon (m) de contact avec le décor (sol, murs…) et les murs des zones d'apparition ;
 ## négatif = `radius`. Plus petit que la bulle, elle frôle le sol sans éclater : la bulle
@@ -51,11 +51,23 @@ extends Node3D
 ## (0,4 m), elle file au-dessus du sol au lieu d'y être à moitié enfoncée. Elle garde un
 ## contact plus généreux (`radius`) avec les canards.
 @export var visual_radius := -1.0
+## Hauteur (m) dont la bulle visible et son contact avec les canards sont relevés au-dessus
+## de la trajectoire : la grosse bulle (aussi grande que celle qui enferme un canard) roule
+## au ras du sol au lieu de s'y enfoncer, et englobe le canard visé de la tête aux pieds.
+@export var visual_lift := 0.0
 @export_group("Capture")
 ## Bulle de capture : piège l'adversaire touché (sans dégâts) au lieu de le blesser.
 @export var capture := false
 ## Durée pendant laquelle l'adversaire touché reste piégé (s).
 @export var capture_duration := 2.0
+@export_group("Explosion")
+## En éclatant (sur un canard, le décor, ou au bout de sa portée), la bulle blesse les
+## adversaires à moins de `explosion_radius` m de son centre (0 = pas d'explosion) :
+## `explosion_damage_max` PV au centre (et au canard touché de plein fouet), jusqu'à
+## `explosion_damage_min` PV au bord (distance mesurée jusqu'au corps du canard).
+@export var explosion_radius := 0.0
+@export var explosion_damage_max := 50.0
+@export var explosion_damage_min := 20.0
 @export_group("Flaque")
 ## Rayon de la tache d'eau laissée en éclatant sur le sol (m) ; 0 = pas de flaque.
 @export var puddle_radius := 2.0
@@ -67,8 +79,6 @@ const RADIUS := 0.455
 const RANGE := 25.0
 ## Vitesse à laquelle l'image de la bulle rejoint sa vraie trajectoire (cf. _visual_offset).
 const VISUAL_CATCH_UP_SPEED := 25.0
-## Rayon de la bulle de capture (m), cf. `radius` de capture_bubble.tscn.
-const CAPTURE_RADIUS := 0.7
 ## Rayon de contact avec le décor des bulles (m), cf. `world_radius` des deux scènes.
 const WORLD_CONTACT_RADIUS := 0.3
 ## Surface considérée comme un sol (flaque) si la composante verticale de sa normale dépasse ce seuil.
@@ -86,6 +96,8 @@ var _direction := Vector3.FORWARD
 var _travelled := 0.0
 var _shooter_team := 0
 var _deals_damage := false
+## Canard touché de plein fouet (il prend les dégâts maximaux de l'explosion).
+var _direct_hit: Player
 ## Détection : [décor, joueurs], chacune avec sa forme (world_radius, radius).
 var _queries: Array[PhysicsShapeQueryParameters3D] = []
 ## Formes de détection : grandissent avec la bulle (sinon, à sa sortie du canon tenu bas,
@@ -110,6 +122,7 @@ func launch(shooter: Player, origin: Vector3, direction: Vector3, deals_damage: 
 	_shooter_team = Player.team_of(shooter.player_id)
 	var mesh := $Mesh as MeshInstance3D
 	mesh.scale = Vector3.ONE * (visual_radius if visual_radius >= 0.0 else radius) / RADIUS
+	mesh.position = Vector3.UP * visual_lift
 	if _team_materials.is_empty():
 		var base := mesh.get_active_material(0) as StandardMaterial3D
 		for team_color in Player.TEAM_COLORS:
@@ -144,7 +157,8 @@ func _physics_process(delta: float) -> void:
 	var first: PhysicsShapeQueryParameters3D = null
 	var first_fractions := PackedFloat32Array([1.0, 1.0])
 	for query in _queries:
-		query.transform = Transform3D(Basis.IDENTITY, global_position)
+		var lift := visual_lift * grown if query.shape == _hit_shape else 0.0
+		query.transform = Transform3D(Basis.IDENTITY, global_position + Vector3.UP * lift)
 		if _travelled == 0.0:
 			# Premier pas : cast_motion ignore ce qui touche déjà la bulle (canon collé à un mur, à un adversaire…).
 			query.motion = Vector3.ZERO
@@ -158,7 +172,7 @@ func _physics_process(delta: float) -> void:
 			first = query
 			first_fractions = fractions
 	if first:
-		first.transform.origin = global_position + motion * first_fractions[1]
+		first.transform.origin += motion * first_fractions[1]
 		var contact := space.get_rest_info(first)
 		global_position += motion * first_fractions[0]
 		_on_hit(instance_from_id(contact.collider_id) if not contact.is_empty() else null, contact)
@@ -172,7 +186,8 @@ func _physics_process(delta: float) -> void:
 ## `contact` : résultat de get_rest_info ({ point, normal… }, vide si inconnu).
 func _on_hit(collider: Object, contact: Dictionary) -> void:
 	var player := collider as Player
-	if player and _deals_damage and (friendly_fire or Player.team_of(player.player_id) != _shooter_team):
+	if player and _deals_damage and (friendly_fire or player.get_team() != _shooter_team):
+		_direct_hit = player
 		if capture:
 			player.capture(capture_duration, _shooter_team)
 		else:
@@ -188,7 +203,9 @@ func _on_hit(collider: Object, contact: Dictionary) -> void:
 func _pop() -> void:
 	set_physics_process(false)
 	_visual_offset = Vector3.ZERO # Éclate là où elle est vraiment.
-	$Mesh.position = Vector3.ZERO
+	$Mesh.position = Vector3.UP * visual_lift
+	if _deals_damage and explosion_radius > 0.0:
+		_explode(($Mesh as Node3D).global_position)
 	if _grow_tween:
 		_grow_tween.kill()
 	var pop_sound := $PopSound as AudioStreamPlayer3D
@@ -202,6 +219,23 @@ func _pop() -> void:
 		await pop_sound.finished
 	queue_free()
 
+## Dégâts de l'explosion autour de `center` (ordinateur du tireur seulement, cf. _pop).
+func _explode(center: Vector3) -> void:
+	var shape := SphereShape3D.new()
+	shape.radius = explosion_radius
+	var query := PhysicsShapeQueryParameters3D.new()
+	query.shape = shape
+	query.transform = Transform3D(Basis.IDENTITY, center)
+	query.collision_mask = Player.PLAYERS_LAYER
+	for hit in get_world_3d().direct_space_state.intersect_shape(query, 16):
+		var player := hit.collider as Player
+		if player == null or not player.is_alive() or (not friendly_fire and player.get_team() == _shooter_team):
+			continue
+		var distance := maxf(center.distance_to(player.global_position) - player.get_body_radius(), 0.0)
+		var t := 0.0 if player == _direct_hit else clampf(distance / explosion_radius, 0.0, 1.0)
+		player.take_damage(lerpf(explosion_damage_max, explosion_damage_min, t))
+
+
 ## L'image de la bulle rejoint en douceur sa vraie trajectoire (le nœud, lui, est mis à
 ## l'échelle par la croissance : l'écart est donc divisé par son échelle).
 func _catch_up_visual(delta: float) -> void:
@@ -210,4 +244,4 @@ func _catch_up_visual(delta: float) -> void:
 	_visual_offset *= exp(-VISUAL_CATCH_UP_SPEED * delta)
 	if _visual_offset.length() < 0.01:
 		_visual_offset = Vector3.ZERO
-	$Mesh.position = _visual_offset / maxf(scale.x, 0.01)
+	$Mesh.position = _visual_offset / maxf(scale.x, 0.01) + Vector3.UP * visual_lift

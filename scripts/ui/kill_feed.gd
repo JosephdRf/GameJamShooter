@@ -6,7 +6,8 @@ extends CanvasLayer
 ## `message_duration` s puis s'efface ; au plus `max_messages` à la fois (les plus anciens
 ## partent). Rempli par Game (signal Player.eliminated), sur chaque ordinateur.
 ## En bas de l'écran, à droite de la jauge d'eau, chez le tireur seulement : « Vous avez éliminé
-## ROMEO » (pseudo à la couleur de son équipe, « Joueur N » sans pseudo), avec un son
+## ROMEO ! +1 » (pseudo à la couleur de son équipe, « Joueur N » sans pseudo ; +1 en jaune : le
+## point gagné par l'équipe, cf. ZoneDefenseMode.kill_points), avec un son
 ## d'élimination (pop de bulle + arpège de clochettes, sfx/kill) ; il apparaît en gonflant,
 ## reste `banner_duration` s puis s'efface ; une nouvelle élimination le remplace.
 
@@ -63,14 +64,17 @@ func _ready() -> void:
 	add_child(_kill_sound)
 
 
-## Chez le tireur : « Vous avez éliminé `victim` » en bas de l'écran.
-func show_my_elimination(victim: Player) -> void:
+## Chez le tireur : « Vous avez éliminé `victim` ! +`points` » en bas de l'écran.
+func show_my_elimination(victim: Player, points: int) -> void:
 	for child in _banner.get_children():
 		_banner.remove_child(child)
 		child.queue_free()
 	var text := _text_label("Vous avez éliminé")
 	var victim_label := _name_label(victim)
-	for label: Label in [text, victim_label]:
+	victim_label.text += " !"
+	var points_label := _text_label("+%d" % points)
+	points_label.add_theme_color_override(&"font_color", MINE_BORDER)
+	for label: Label in [text, victim_label, points_label]:
 		label.add_theme_font_size_override(&"font_size", banner_font_size)
 		label.add_theme_constant_override(&"outline_size", 12)
 		_banner.add_child(label)

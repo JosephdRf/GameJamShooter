@@ -175,8 +175,11 @@ func _on_player_eliminated(killer_id: int, victim: Player) -> void:
 			killer = player
 			mine = mine or player.is_local
 	_kill_feed.add_elimination(killer, victim, mine)
-	if killer and killer.is_local and killer != victim:
-		_kill_feed.show_my_elimination(victim)
+	var kill := killer != null and victim.get_team() != 0 and killer.get_team() != victim.get_team()
+	if kill and multiplayer.is_server() and not _ended:
+		_mode.add_kill(killer.get_team())
+	if kill and killer.is_local:
+		_kill_feed.show_my_elimination(victim, _mode.kill_points)
 
 
 func _on_player_respawned(player: Player) -> void:

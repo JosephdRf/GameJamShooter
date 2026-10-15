@@ -3,8 +3,8 @@ class_name ZoneDefense
 extends Node3D
 ## Zone à capturer, ronde ou rectangulaire (mode défense de zone, cf. ZoneDefenseMode).
 ##
-## Une fois activée, la zone reste `timeout` secondes (décompte en pause tant
-## qu'une équipe la capture). Pour la capturer, une équipe doit y rester seule
+## Une fois activée, la zone reste jusqu'à sa capture (ou `timeout` secondes si `timeout` > 0,
+## décompte en pause tant qu'une équipe la capture). Pour la capturer, une équipe doit y rester seule
 ## `capture_time` secondes :
 ##   - la zone prend la couleur de l'équipe présente ;
 ##   - si l'équipe qui capture quitte la zone, la progression repart à 0 ;
@@ -101,8 +101,9 @@ enum Shape { CIRCLE, RECTANGLE }
 		_update_shape()
 ## Points gagnés par l'équipe qui capture la zone.
 @export var points := 2
-## Durée de vie de la zone une fois activée (s), en pause pendant une capture.
-@export var timeout := 20.0
+## Durée de vie de la zone une fois activée (s), en pause pendant une capture ; 0 = illimitée
+## (la zone reste jusqu'à sa capture).
+@export var timeout := 0.0
 ## Temps à passer seul dans la zone pour la capturer (s).
 @export var capture_time := 10.0
 @export_group("Montée de capture")
@@ -193,7 +194,7 @@ func update_capture(players: Array[Player], delta: float) -> void:
 		deactivate()
 		finished.emit(winner)
 		return
-	if time_left <= 0.0:
+	if timeout > 0.0 and time_left <= 0.0:
 		deactivate()
 		finished.emit(0)
 		return

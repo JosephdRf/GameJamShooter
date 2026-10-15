@@ -61,8 +61,8 @@ Les chemins sont regroupés dans `scripts/ui/screens.gd` (`Screens.TITLE`, `Scre
    capture), dorée puis à la couleur de l'équipe qui capture (
    `beacon_height`) montre la zone active de loin. Un canard compte comme dedans tant que son corps touche la zone (même centré un peu
    hors du bord). Si l'équipe sort, la barre repart à 0 ; si les deux équipes sont dedans, elle est en
-   pause. Une zone non capturée disparaît au bout de **20 s** (décompte en pause tant qu'une
-   équipe la capture) ; une autre apparaît alors, annoncée par « Une nouvelle zone est apparue ! ». Scores : bleu à gauche du chrono, rouge à droite. À chaque prise :
+   pause. Une zone reste jusqu'à sa capture (pas de limite de temps) ; **5 s** après
+   une capture, une autre apparaît, annoncée par « Une nouvelle zone est apparue ! » (`next_zone_delay`). Scores : bleu à gauche du chrono, rouge à droite. À chaque prise :
    « Ton équipe a pris la zone clé ! » ou « L'adversaire a pris la zone clé ! ».
 9. Fin du combat : écran des scores de chaque équipe, **Rejouer** (retour à la sélection
    d'équipe) ou **Quitter** (ferme le jeu). Avant l'écran de fin, « Terminé ! » s'affiche 1,5 s,
@@ -212,7 +212,8 @@ Un joueur qui tombe de la plateforme meurt.
   `duck_v4.glb`, état `death` de l'AnimationTree : il bascule sur le dos, pattes en l'air, et retombe au sol
   s'il était en l'air), disparaît dans un pop de bulle, puis il réapparaît 2 s après sa mort sur sa
   zone d'apparition avec 100 PV.
-- Chez le tireur, en bas de l'écran à droite de la jauge d'eau : « Vous avez éliminé ROMEO » (« Joueur 3 » sans
+- Chez le tireur, en bas de l'écran à droite de la jauge d'eau : « Vous avez éliminé ROMEO ! +1 » (+1 en jaune : chaque élimination d'un adversaire rapporte
+  **1 point** à l'équipe, `ZoneDefenseMode.kill_points` ; « Joueur 3 » sans
   pseudo), 2,5 s, avec un son d'élimination (pop de bulle + arpège de clochettes, `sfx/kill/kill.wav`).
 - Fil des éliminations en haut à droite (`scripts/ui/kill_feed.gd`) : « ROMEO a éclaté EDOUARD », pseudos aux
   couleurs des équipes, « Edouard est tombé » sans tireur ; entouré de jaune quand ça concerne son joueur.
@@ -236,7 +237,7 @@ Un joueur qui tombe de la plateforme meurt.
   est disputée et repart du début si l'équipe sort. Son 3D au centre de la zone : plein volume à moins de 8 m,
   de plus en plus discret au-delà, inaudible à 60 m (`ZoneDefense`, groupe « Montée de capture » ;
   `sfx/capture/capture_note.wav`). La gamme « Zone capturée » prend le relais.
-- Nouvelle zone (la première, ou celle qui remplace une zone expirée) : la même gamme, plus grave
+- Nouvelle zone (la première, puis 5 s après chaque capture) : la même gamme, plus grave
   (`NewZoneSound`, `sfx/capture/zone_appeared.wav`), entendue partout. Les deux sons ont de la réverbération.
 - Menus : autoload `UiSounds` (clic en naviguant, « plop » en validant), branché sur tous les boutons.
 - Musique : autoload `Music` (`play(...)` dans le `_ready()` de chaque écran ; changement en fondu).
@@ -365,7 +366,9 @@ Un joueur qui tombe de la plateforme meurt.
   simplifiée (~400 triangles) pour les objets creux (baignoire, placard, matelas, planche à repasser,
   tabouret…), coque convexe pour le reste, rien pour l'eau et les petits objets (< 1 m). Environ 10 000
   triangles au total (370 000 avant). Le panier à linge (renversé) garde 3 000 triangles, sans son rebord
-  au sol, pour qu'on entre dessous par le grand trou et les deux poignées. Le même script retire les 4 barres
+  au sol, pour qu'on entre dessous par le grand trou et les deux poignées ; son dessus, comme celui du
+  carton voisin (où l'on entre aussi par deux trous), est une boîte plate (`TOP_BOX`) pour y marcher sans
+  accrocher. Le même script retire les 4 barres
   du tabouret entre les pieds (rendu et collision, `REMOVED_PARTS`), pour passer dessous. La bouée oiseau
   (`Bouee_Detail`) a une forme simplifiée (plus de coque convexe) ; la serviette pliée en pente
   (`Serviette_005`) a une coque prolongée jusqu'au sol (`RAMPS`) : on y monte sans sauter. Après modification

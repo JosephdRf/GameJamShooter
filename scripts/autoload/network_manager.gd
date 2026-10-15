@@ -254,7 +254,7 @@ func _sync_slots(new_slots: Dictionary, new_locked: Dictionary, new_names: Dicti
 @rpc("authority", "call_local", "reliable")
 func _load_game() -> void:
 	_in_game = true
-	get_tree().change_scene_to_file(Screens.GAME)
+	get_tree().change_scene_to_file(Screens.MATCH_LOADING) # Puis le combat, au bout de 4 s.
 
 
 @rpc("any_peer", "reliable")

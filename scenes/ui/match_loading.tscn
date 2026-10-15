@@ -1,0 +1,82 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/match_loading.gd" id="1_loading"]
+[ext_resource type="FontFile" path="res://assets/fonts/titan_one/TitanOne-Regular.ttf" id="2_font"]
+[ext_resource type="Script" path="res://scripts/ui/bubble_bar.gd" id="3_gauge"]
+
+[node name="MatchLoading" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_loading")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.08, 0.09, 0.12, 1)
+
+[node name="Layout" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5
+anchor_top = 0.78
+anchor_right = 0.5
+anchor_bottom = 0.78
+offset_left = -320.0
+offset_top = -50.0
+offset_right = 320.0
+offset_bottom = 50.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 12
+
+[node name="Row" type="HBoxContainer" parent="Layout"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="Layout/Row"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.1, 0.38, 0.72, 1)
+theme_override_colors/font_shadow_color = Color(0.231, 0.51, 0.965, 1)
+theme_override_constants/outline_size = 10
+theme_override_constants/shadow_offset_x = 3
+theme_override_constants/shadow_offset_y = 4
+theme_override_constants/shadow_outline_size = 10
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 36
+text = "Préparation du combat…"
+
+[node name="Percent" type="Label" parent="Layout/Row"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.1, 0.38, 0.72, 1)
+theme_override_colors/font_shadow_color = Color(0.231, 0.51, 0.965, 1)
+theme_override_constants/outline_size = 10
+theme_override_constants/shadow_offset_x = 3
+theme_override_constants/shadow_offset_y = 4
+theme_override_constants/shadow_outline_size = 10
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 36
+text = "0 %"
+horizontal_alignment = 2
+
+[node name="Bar" type="Control" parent="Layout"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 46)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("3_gauge")
+ratio = 0.0
+count = 14

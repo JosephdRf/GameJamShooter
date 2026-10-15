@@ -10,7 +10,8 @@ caméra à la 3e personne. Un des joueurs héberge la partie (« listen server �
 | Chargement (fictif, 3 s, jauge d'eau `WaterGauge` + pourcentage) | `loading_screen.tscn` | Accueil |
 | Accueil (titre « Duck my Life » qui flotte, « Fuck My Life » une fois sur dix, bouton jaune) | `title_screen.tscn` | **Démarrer** → Hôte/IP |
 | Hôte/IP | `connect_screen.tscn` | Héberger → Sélection d'équipe · Rejoindre → connexion réussie ? oui : Sélection d'équipe, non : reste ici avec un message |
-| Sélection d'équipe (une fois son joueur validé : fenêtre du pseudo, tout en majuscules, gardé pour la fois suivante ; en jeu, affiché au-dessus des canards des autres joueurs) | `team_select.tscn` | **Lancer la partie** (hôte) → GAME |
+| Sélection d'équipe (une fois son joueur validé : fenêtre du pseudo, tout en majuscules, gardé pour la fois suivante ; en jeu, affiché au-dessus des canards des autres joueurs) | `team_select.tscn` | **Lancer la partie** (hôte) → Préparation du combat |
+| Préparation du combat (5 s, sur tous les ordinateurs : rangée de bulles `BubbleBar` à la couleur de son équipe + pourcentage, fond noir ; deux fiches de 2,5 s, « Le saviez-vous ? » sur l'histoire puis « Commandes » avec les touches du clavier ou de la manette utilisée (`InputBadge`) ; la scène de combat se charge en arrière-plan) | `match_loading.tscn` | GAME |
 | GAME | `game/game.tscn` | Pause (hôte) · fin du combat → Écran de fin |
 | Pause (dans GAME) | `pause_menu.tscn` | Reprendre → GAME · Quitter → Sélection d'équipe (tout le monde) |
 | Écran de fin (style des menus : serviettes bleue et rouge avec scores et pseudos, badge « Gagné ! ») | `end_screen.tscn` | **Rejouer** → Sélection d'équipe · **Quitter** → ferme le jeu |
@@ -265,6 +266,7 @@ Un joueur qui tombe de la plateforme meurt.
 ├── scenes/                  # Scènes (.tscn), un sous-dossier par domaine
 │   ├── ui/                  # Un fichier par écran, modifiable indépendamment
 │   │   ├── loading_screen.tscn  # Écran de chargement (scène de départ)
+│   │   ├── match_loading.tscn   # Préparation du combat (5 s, entre la sélection d'équipe et le combat)
 │   │   ├── title_screen.tscn    # Écran d'accueil : « Duck my Life » + Démarrer
 │   │   ├── connect_screen.tscn  # Écran hôte/IP (style sélection d'équipe) : Héberger / IP + Rejoindre / Quitter
 │   │   ├── team_select.tscn     # Sélection d'équipe (choix des joueurs)

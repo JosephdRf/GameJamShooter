@@ -3,19 +3,17 @@
 [ext_resource type="Script" path="res://scripts/game/zone_defense.gd" id="1_zone"]
 [ext_resource type="Shader" path="res://assets/shaders/zone_wall.gdshader" id="2_wall"]
 [ext_resource type="Shader" path="res://assets/shaders/zone_beacon.gdshader" id="3_beacon"]
+[ext_resource type="Shader" path="res://assets/shaders/zone_floor.gdshader" id="4_floor"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_beacon"]
 resource_local_to_scene = true
 render_priority = 0
 shader = ExtResource("3_beacon")
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_disk"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_floor"]
 resource_local_to_scene = true
-transparency = 1
-cull_mode = 2
-shading_mode = 0
-albedo_color = Color(1, 1, 1, 0.3)
-emission_enabled = true
+render_priority = 0
+shader = ExtResource("4_floor")
 
 [sub_resource type="CylinderMesh" id="CylinderMesh_disk"]
 resource_local_to_scene = true
@@ -60,7 +58,7 @@ script = ExtResource("1_zone")
 [node name="Disk" type="MeshInstance3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.03, 0)
 cast_shadow = 0
-material_override = SubResource("StandardMaterial3D_disk")
+material_override = SubResource("ShaderMaterial_floor")
 mesh = SubResource("CylinderMesh_disk")
 
 [node name="Wall" type="MeshInstance3D" parent="."]

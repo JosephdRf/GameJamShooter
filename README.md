@@ -10,7 +10,7 @@ caméra à la 3e personne. Un des joueurs héberge la partie (« listen server �
 | Chargement (fictif, 3 s, jauge d'eau `WaterGauge` + pourcentage) | `loading_screen.tscn` | Accueil |
 | Accueil (titre « Duck my Life » qui flotte, « Fuck My Life » une fois sur dix, bouton jaune) | `title_screen.tscn` | **Démarrer** → Hôte/IP |
 | Hôte/IP | `connect_screen.tscn` | Héberger → Sélection d'équipe · Rejoindre → connexion réussie ? oui : Sélection d'équipe, non : reste ici avec un message |
-| Sélection d'équipe (une fois son joueur validé : fenêtre du pseudo, tout en majuscules, gardé pour la fois suivante ; en jeu, affiché au-dessus des canards des autres joueurs) | `team_select.tscn` | **Lancer la partie** (hôte) → Préparation du combat |
+| Sélection d'équipe (une fois son joueur validé : fenêtre du pseudo, tout en majuscules, gardé pour la fois suivante, affiché sur le bouton à la place de « Joueur N » ; en jeu, affiché au-dessus des canards des autres joueurs) | `team_select.tscn` | **Lancer la partie** (hôte) → Préparation du combat |
 | Préparation du combat (5 s, sur tous les ordinateurs : rangée de bulles `BubbleBar` à la couleur de son équipe + pourcentage, fond noir ; deux fiches de 2,5 s, « Le saviez-vous ? » sur l'histoire puis « Commandes » avec les touches du clavier ou de la manette utilisée (`InputBadge`) ; la scène de combat se charge en arrière-plan) | `match_loading.tscn` | GAME |
 | GAME | `game/game.tscn` | Pause (hôte) · fin du combat → Écran de fin |
 | Pause (dans GAME) | `pause_menu.tscn` | Reprendre → GAME · Quitter → Sélection d'équipe (tout le monde) |
@@ -51,7 +51,10 @@ Les chemins sont regroupés dans `scripts/ui/screens.gd` (`Screens.TITLE`, `Scre
    seule zone (ronde, ou rectangulaire pour l'îlot central) est toujours active (tirée au hasard, jamais la
    même deux fois de suite). Une équipe qui y reste **seule 10 s** la capture et gagne **2 points** ;
    la zone prend la couleur de l'équipe présente et une barre de progression s'affiche sous le
-   score. Une colonne de lumière de 30 m, parcourue de vagues qui montent (plus vite pendant une
+   score. Au sol, un **disque** à la couleur de l'équipe (rectangle pour la zone rectangulaire) part du
+   centre et atteint le bord à la capture ; son aire grandit à vitesse constante (à mi-capture, la moitié
+   du sol est couverte), liseré clair sur son bord ; rayures qui défilent si la zone est disputée ; il se
+   résorbe vite si l'équipe sort (`zone_floor.gdshader`). Une colonne de lumière de 30 m, parcourue de vagues qui montent (plus vite pendant une
    capture), dorée puis à la couleur de l'équipe qui capture (
    `beacon_height`) montre la zone active de loin. Un canard compte comme dedans tant que son corps touche la zone (même centré un peu
    hors du bord). Si l'équipe sort, la barre repart à 0 ; si les deux équipes sont dedans, elle est en

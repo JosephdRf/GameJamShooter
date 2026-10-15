@@ -16,6 +16,10 @@ extends Node3D
 ## Réseau : l'hôte décide (présence, progression, capture) et envoie l'état aux
 ## autres ordinateurs ; entre deux envois, ceux-ci font avancer la barre seuls.
 ##
+## Sol (Disk, shader zone_floor) : pendant une capture, un disque (rectangle pour une zone
+## rectangulaire) à la couleur de l'équipe part du centre et atteint le bord à la capture ;
+## son aire grandit à vitesse constante. Rayures qui défilent si la zone est disputée ; il se
+## résorbe vite vers le centre si la progression retombe.
 ## Colonne de lumière (Beacon) haute de beacon_height, à la couleur de la zone : on
 ## repère la zone active de loin, au-dessus des murs et des plateformes.
 ## Montée de capture : pendant une capture, une clochette monte la gamme note après note
@@ -41,6 +45,11 @@ const WAVE_SPEED_CAPTURING := 7.0
 const BEACON_IDLE_COLOR := Color(1.0, 0.76, 0.05)
 ## Largeur du liseré au bord de la zone (m).
 const RING_WIDTH := 0.2
+## Sol : opacité au repos et pendant une capture (hors du disque), vitesse à laquelle le
+## disque se résorbe quand la progression retombe (part de la capture par seconde).
+const FLOOR_ALPHA := 0.3
+const FLOOR_ALPHA_CAPTURING := 0.2
+const FLOOR_DRAIN_SPEED := 3.0
 ## Montée de capture : note de clochette (la, 883 Hz, avec sa réverbération), transposée.
 const NOTE_SOUND := preload("res://assets/audio/sfx/capture/capture_note.wav")
 ## Tonalité de la gamme « Zone capturée » (demi-tons sous la note de l'échantillon) et
@@ -125,6 +134,8 @@ var _next_note := 0
 var _last_progress := 0.0
 var _note_players: Array[AudioStreamPlayer3D] = []
 var _note_voice := 0
+## Progression affichée au sol (0 à 1) : suit `progress`, se résorbe vite quand elle retombe.
+var _floor_progress := 0.0
 
 @onready var _disk: MeshInstance3D = $Disk
 @onready var _wall: MeshInstance3D = $Wall
@@ -221,6 +232,7 @@ func _process(delta: float) -> void:
 		_wave_offset += (WAVE_SPEED_CAPTURING if capturing_team != 0 else WAVE_SPEED) * delta
 		(_beacon.material_override as ShaderMaterial).set_shader_parameter(&"scroll_offset", fmod(_wave_offset, 900.0)) # 900 = 200 écarts de vagues : pas de saut.
 	_update_build_up()
+	_update_floor(delta)
 	# Autres ordinateurs : la barre et le décompte avancent entre deux envois de l'hôte.
 	if not active or multiplayer.is_server():
 		return
@@ -228,6 +240,19 @@ func _process(delta: float) -> void:
 		time_left = maxf(time_left - delta, 0.0)
 	elif not contested:
 		progress = minf(progress + delta, capture_time)
+
+
+## Disque de progression au sol : suit la progression ; quand elle retombe, il se résorbe vite
+## vers le centre.
+func _update_floor(delta: float) -> void:
+	var target := progress / capture_time if active and capturing_team != 0 else 0.0
+	if not active:
+		_floor_progress = 0.0 # Zone masquée : la prochaine repart de zéro.
+	elif target >= _floor_progress:
+		_floor_progress = target
+	else:
+		_floor_progress = maxf(target, _floor_progress - FLOOR_DRAIN_SPEED * delta)
+	(_disk.material_override as ShaderMaterial).set_shader_parameter(&"progress", _floor_progress)
 
 
 ## Lecteurs de la montée de capture (au centre de la zone, à hauteur de canard) et instants
@@ -306,10 +331,13 @@ func _update_visuals() -> void:
 		return
 	var color := IDLE_COLOR if capturing_team == 0 else Player.TEAM_COLORS[capturing_team - 1]
 	var lit := capturing_team != 0
-	var disk_material := _disk.material_override as StandardMaterial3D
-	disk_material.albedo_color = Color(color, 0.32 if lit else 0.3)
-	disk_material.emission = color
-	disk_material.emission_energy_multiplier = 0.7 if lit else 0.3
+	var floor_material := _disk.material_override as ShaderMaterial
+	floor_material.set_shader_parameter(&"color", color)
+	if lit:
+		floor_material.set_shader_parameter(&"fill_color", color)
+	floor_material.set_shader_parameter(&"base_alpha", FLOOR_ALPHA_CAPTURING if lit else FLOOR_ALPHA)
+	floor_material.set_shader_parameter(&"capturing", lit)
+	floor_material.set_shader_parameter(&"contested", contested)
 	var wall_material := _wall.material_override as ShaderMaterial
 	wall_material.set_shader_parameter(&"color", Color(color, 0.38 if lit else 0.3))
 	(_ring.material_override as StandardMaterial3D).albedo_color = color
@@ -349,7 +377,7 @@ func _update_shape() -> void:
 		_ring.mesh = ring
 	_wall.position.y = wall_height / 2.0
 	# Forme de la zone pour les shaders (transparents quand la caméra est dedans).
-	for material: ShaderMaterial in [_wall.material_override, _beacon.material_override]:
+	for material: ShaderMaterial in [_wall.material_override, _beacon.material_override, _disk.material_override]:
 		material.set_shader_parameter(&"zone_rect", shape == Shape.RECTANGLE)
 		material.set_shader_parameter(&"zone_radius", radius)
 		material.set_shader_parameter(&"zone_half_size", size / 2.0)

@@ -180,9 +180,6 @@ Un joueur qui tombe de la plateforme meurt.
   10 m pour la maxi-bulle : `puddle_radius`), de forme irrégulière, qui s'étale du centre vers les bords
   en 0,3 s (`spread_time`). Deux flaques proches se rejoignent
   en une seule ; tirer plusieurs fois au même endroit l'agrandit.
-- **Murs** : une bulle ou le jet qui touche un mur, le côté ou le dessous d'un objet y laisse une **tache
-  d'eau** (même rendu), qui sèche comme les flaques ; arroser le même endroit la rafraîchit
-  (`Puddles.wall_splash`, au plus 80 taches).
 - **Eau profonde** (baignoire, toilettes) : on y entre, le canard s'y enfonce de 0,5 m (sa collision est
   sous la surface), y marche normalement et c'est de l'eau (dash qui glisse, pas mouillés). On en sort d'un
   **grand saut** (`Player.water_jump_velocity`, ~4,4 m : le bord de la baignoire est 3,2 m au-dessus de

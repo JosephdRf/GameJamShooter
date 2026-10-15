@@ -19,6 +19,9 @@ extends Node3D
 const GROUP := &"hair_dryers"
 ## Hauteur (m, depuis le bas du socle) au-dessus de laquelle on n'est plus « sur le socle ».
 const PAD_TOP := 1.5
+## Visuel : la colonne d'air (cylindre) commence à cette hauteur (m) au-dessus de la buse, là où
+## le jet de la buse s'est déjà évasé.
+const COLUMN_START_ABOVE_NOZZLE := 2.5
 const HOT_AIR_SHADER := preload("res://assets/shaders/hot_air.gdshader")
 
 ## Socle rond et modèle du sèche-cheveux (faux : souffle seul, cf. en-tête).
@@ -98,9 +101,12 @@ func _ready() -> void:
 	fast.frequency = 0.012
 	fast.fractal_octaves = 3
 	_noise.noise = fast
-	# Colonne d'air chaud au-dessus de tout le socle, et jet plus marqué qui sort de la buse.
-	_add_air_cone(zone_radius, zone_radius, 0.3, column_height, 0.08, 0.6)
+	# Jet plus marqué qui sort de la buse en s'évasant, puis colonne d'air chaud qui prend le
+	# relais plus haut (elle partait du sol, sous la buse). Affichage seulement : la zone qui
+	# porte vers le haut (in_column) part toujours du socle.
 	_add_air_cone(nozzle_radius, zone_radius * 0.75, nozzle_height, 5.0, 0.25, 1.4)
+	var column_bottom := nozzle_height + COLUMN_START_ABOVE_NOZZLE
+	_add_air_cone(zone_radius * 0.6, zone_radius, column_bottom, maxf(column_height - column_bottom, 1.0), 0.08, 0.6)
 	_add_streaks()
 	_puff = _make_puff()
 	add_child(_puff)
@@ -205,8 +211,8 @@ func _add_streaks() -> void:
 	particles.preprocess = 2.0
 	particles.local_coords = false
 	particles.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
-	particles.emission_sphere_radius = zone_radius * 0.8
-	particles.position.y = nozzle_height * 0.6
+	particles.emission_sphere_radius = zone_radius * 0.5
+	particles.position.y = nozzle_height + 0.3 # Depuis la buse.
 	particles.scale_amount_min = 0.6
 	particles.scale_amount_max = 1.3
 	particles.direction = Vector3.UP
@@ -235,8 +241,8 @@ func _make_puff() -> CPUParticles3D:
 	particles.lifetime = 0.9
 	particles.local_coords = false
 	particles.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
-	particles.emission_sphere_radius = zone_radius * 0.6
-	particles.position.y = 0.5
+	particles.emission_sphere_radius = zone_radius * 0.4
+	particles.position.y = nozzle_height + 0.3 # Depuis la buse.
 	particles.direction = Vector3.UP
 	particles.spread = 12.0
 	particles.gravity = Vector3.ZERO

@@ -1,4 +1,4 @@
-[gd_resource type="Environment" format=3]
+[gd_resource type="Environment" format=3 uid="uid://npbyvsivlbmk"]
 
 [resource]
 background_mode = 1
@@ -9,23 +9,22 @@ ambient_light_energy = 0.85
 reflected_light_source = 1
 tonemap_mode = 2
 tonemap_exposure = 1.2
+ssr_enabled = true
+ssr_max_steps = 24
+ssr_fade_out = 1.8
 ssao_enabled = true
 ssao_radius = 1.4
 ssao_intensity = 0.8
 ssao_power = 1.1
-ssr_enabled = true
-ssr_max_steps = 24
-ssr_fade_in = 0.15
-ssr_fade_out = 1.8
 glow_enabled = true
 glow_intensity = 0.22
 glow_bloom = 0.015
 glow_hdr_threshold = 1.15
-adjustment_enabled = true
-adjustment_brightness = 1.05
-adjustment_contrast = 1.05
-adjustment_saturation = 1.25
 fog_light_color = Color(1, 0.95, 0.86, 1)
 fog_sun_scatter = 0.12
 fog_density = 0.0008
 fog_aerial_perspective = 0.15
+adjustment_enabled = true
+adjustment_brightness = 1.05
+adjustment_contrast = 1.05
+adjustment_saturation = 1.25

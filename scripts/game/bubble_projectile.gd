@@ -16,9 +16,8 @@ extends Node3D
 ## grande vitesse. Mesh, matériau et forme de collision sont partagés par
 ## toutes les bulles.
 ##
-## Flaque : en éclatant sur une surface (hors canard), elle émet `splashed` : Game y crée une
-## flaque d'eau sur une surface presque horizontale (sol, dessus d'un meuble), une tache d'eau
-## sur un mur, un côté ou un dessous d'objet (cf. Puddles).
+## Flaque : en éclatant sur une surface presque horizontale (sol, dessus d'un meuble),
+## elle émet `splashed` (Game y crée une flaque d'eau, cf. Puddles).
 ##
 ## Réseau : chaque ordinateur fait voler sa propre copie de la bulle (même
 ## départ, même trajectoire) ; seule celle de l'ordinateur du tireur inflige
@@ -223,8 +222,9 @@ func _on_hit(collider: Object, contact: Dictionary) -> void:
 			player.capture(capture_duration, _shooter_team)
 		else:
 			player.take_damage(damage, _shooter_id)
-	elif not player and not contact.is_empty() and puddle_radius > 0.0:
-		splashed.emit(contact.point, puddle_radius, contact.normal) # Sol : flaque ; mur : tache.
+	elif not player and not contact.is_empty() and puddle_radius > 0.0 \
+			and (contact.normal as Vector3).y > GROUND_MIN_NORMAL_Y:
+		splashed.emit(contact.point, puddle_radius, contact.normal)
 	_pop()
 
 

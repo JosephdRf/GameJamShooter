@@ -194,10 +194,6 @@ func _on_drop_hit(hit: Dictionary, shooter: Player) -> void:
 		_landed += 1
 		if _landed % PAINT_EVERY == 0:
 			_puddles.add_puddle(hit.position, puddle_radius, puddle_amount * PAINT_EVERY, false, normal)
-	elif hit.collider is not Player:
-		_landed += 1
-		if _landed % PAINT_EVERY == 0:
-			_puddles.wall_splash(hit.position, puddle_radius * 0.7, normal, false) # Mur : tache.
 	_puddles.drip(hit.position, normal)
 
 

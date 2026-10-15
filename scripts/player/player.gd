@@ -1077,7 +1077,7 @@ func _hide_capture_bubble(pop: bool) -> void:
 	_capture_tween.chain().tween_callback(_capture_bubble.hide)
 
 
-## Effet de savon du dash : deux gerbes de gouttes et de bulles de savon, projetées sur les côtés
+## Effet de savon du dash : deux gerbes de mousse blanche, projetées sur les côtés
 ## (et un peu vers le haut et l'arrière) au ras du sol, tant que le canard file en dash (sur tous
 ## les ordinateurs : l'animation du dash est déjà envoyée, cf. _play_dash).
 func _create_dash_splash() -> void:
@@ -1090,15 +1090,19 @@ func _create_dash_splash() -> void:
 	mesh.height = 0.3
 	mesh.radial_segments = 8
 	mesh.rings = 4
+	# Mousse blanche, ombrée (brillance et côté sombre) : se détache aussi bien sur le sol clair
+	# que sur une traînée d'eau.
 	var material := StandardMaterial3D.new()
-	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	material.vertex_color_use_as_albedo = true
+	material.roughness = 0.15
+	material.rim_enabled = true
+	material.rim = 0.6
 	mesh.material = material
 	var colors := Gradient.new()
-	colors.set_color(0, Color(0.3, 0.68, 1.0, 1.0))
-	colors.add_point(0.5, Color(0.2, 0.55, 0.95, 0.9))
-	colors.set_color(2, Color(0.6, 0.85, 1.0, 0.0))
+	colors.set_color(0, Color(1.0, 1.0, 1.0, 1.0))
+	colors.add_point(0.5, Color(0.9, 0.96, 1.0, 0.95))
+	colors.set_color(2, Color(0.85, 0.94, 1.0, 0.0))
 	var sizes := Curve.new()
 	sizes.add_point(Vector2(0.0, 0.6))
 	sizes.add_point(Vector2(0.25, 1.0))

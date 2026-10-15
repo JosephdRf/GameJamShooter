@@ -368,6 +368,16 @@ Un joueur qui tombe de la plateforme meurt.
 
 ### L'arène salle de bain
 
+- **Style « lilas & pistache »** de l'arène (`scripts/levels/arena_style.gd`, appelé par `arena5.gd`, dans
+  l'éditeur aussi) : murs carrelés lilas (peinture blanc-lilas au-dessus, dernière rangée plus foncée),
+  mosaïque de la douche en nuances de pistache, sol de douche en damier citron, placard, portes et panier
+  pistache, carton kraft clair, étagères en bois clair, tongs et rebords citron, serviettes pastel,
+  baignoire, toilettes et plafond blancs. Pas de bleu vif, de rouge ni de doré (eau, équipes, zones) ; la
+  marche rouge de la zone d'apparition rouge garde sa couleur. Les textures recolorées (mêmes dessins)
+  sont dans `assets/models/arene_bain/style_lilas_pistache/`, générées par
+  `tools/style/make_lilas_pistache.py` (couleur d'origine -> couleur du style, bords lissés gardés) à
+  partir des textures d'origine exportées du GLB. Le modèle Blender n'est pas modifié : retirer l'appel
+  `ArenaStyle.apply` dans `arena5.gd` rend l'ancien style.
 - **Arène du jeu : `scenes/levels/arena5.tscn`** (modèle Blender `assets/models/arene_bain/arene_bain.glb`,
   éclairage `scenes/levels/eclairage_arene.tscn`, collisions ajoutées par `scripts/levels/arena5.gd` et
   `tools/arena_glb_post_import.gd`). Zones d'apparition (bleue à l'ouest, rouge à

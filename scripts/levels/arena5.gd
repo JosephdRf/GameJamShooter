@@ -22,6 +22,7 @@ const EXACT_MAX_TRIANGLES := 150
 
 
 func _ready() -> void:
+	ArenaStyle.apply(self) # Couleurs lilas & pistache, cf. arena_style.gd.
 	_place_copies()
 	_ensure_colliders(self)
 	_setup_deep_water()

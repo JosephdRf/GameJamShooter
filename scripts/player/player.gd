@@ -10,7 +10,8 @@ extends CharacterBody3D
 ## cube vers cette position.
 ##
 ## Vie : `health` (diffusée par l'ordinateur qui a l'autorité). Dégâts via
-## take_damage() (depuis n'importe quel ordinateur) ; sans dégâts pendant
+## take_damage() (depuis n'importe quel ordinateur, avec le joueur qui a tiré : à la mort,
+## eliminated est émis partout avec lui, pour le fil des éliminations) ; sans dégâts pendant
 ## `regen_delay` s, la vie remonte de `regen_rate` PV/s. À 0 PV, le cube
 ## disparaît `respawn_delay` s puis réapparaît à son point de départ.
 ##
@@ -39,6 +40,9 @@ extends CharacterBody3D
 ## Émis sur tous les ordinateurs quand la vie change / à la mort / à la réapparition.
 signal health_changed(health: float)
 signal died
+## Émis sur tous les ordinateurs quand ce joueur est éliminé : `killer_id` = joueur (1 à 4)
+## qui l'a éclaté, 0 sans tireur (chute hors de l'arène).
+signal eliminated(killer_id: int)
 signal respawned
 ## Émis sur tous les ordinateurs quand ce joueur tire (Game crée la bulle ;
 ## `capture` : bulle de capture ; `visual_origin` : bout du canon, d'où la bulle semble partir).
@@ -52,6 +56,19 @@ const TEAM_COLORS: Array[Color] = [
 	Color("e5484d"), # Équipe 2 : rouge
 ]
 const TEAM_NAMES: Array[String] = ["bleue", "rouge"]
+## Pseudo au-dessus du canard (cf. update_name_tag) : hauteur au-dessus du centre du canard (m),
+## taille du texte et police.
+const NAME_TAG_HEIGHT := 1.6
+const NAME_TAG_FONT_SIZE := 64
+const NAME_TAG_PIXEL_SIZE := 0.005
+const NAME_TAG_FONT := preload("res://assets/fonts/titan_one/TitanOne-Regular.ttf")
+## Durée (s) d'apparition / disparition du pseudo quand le canard devient visible / caché.
+const NAME_TAG_FADE := 0.15
+## Points du canard (par rapport à son centre) vers lesquels on regarde depuis la caméra : le
+## pseudo s'affiche si l'un d'eux n'est pas caché par le décor (tête, corps, pieds, et les
+## côtés du corps vus depuis la caméra, à NAME_TAG_SIGHT_SIDE m).
+const NAME_TAG_SIGHT_POINTS: Array[Vector3] = [Vector3(0, 0.8, 0), Vector3.ZERO, Vector3(0, -0.8, 0)]
+const NAME_TAG_SIGHT_SIDE := 0.65
 ## Calques physiques des murs invisibles des zones d'apparition (ZoneSpawn) :
 ## calque 3 « spawn_blue » (valeur 4), calque 4 « spawn_red » (valeur 8). Un joueur
 ## (et ses bulles) est bloqué par la zone d'apparition de l'équipe adverse.
@@ -96,6 +113,9 @@ const TEAM_MATERIALS: Array[Material] = [
 	preload("res://assets/materials/duck_container_red.tres"),
 ]
 const DUMMY_MATERIAL := preload("res://assets/materials/duck_container_dummy.tres")
+## Couleur du plastron (pseudo, fil des éliminations), et son nom.
+const DUMMY_COLOR := Color(0.62, 0.64, 0.68)
+const DUMMY_NAME := "Plastron"
 const REMOTE_SNAP_DISTANCE := 3.0
 ## Montée des marches : en dessous de cette hauteur (m), la capsule passe d'elle-même.
 const STEP_MIN_HEIGHT := 0.01
@@ -205,6 +225,14 @@ const CAPTURE_CEILING_TEST := 0.02
 
 ## Vrai si ce cube est piloté par les entrées de cet ordinateur.
 var is_local := false
+## Pseudo du joueur, au-dessus du canard (créé dans _ready).
+var _name_tag: Label3D
+## Vrai si le pseudo doit s'afficher (cf. update_name_tag), quand le canard est en vue.
+var _name_tag_wanted := false
+var _name_tag_alpha := 0.0
+## Nom affiché à la place du pseudo s'il n'est pas vide (canard que personne ne contrôle,
+## cf. get_display_name).
+var display_name_override := ""
 ## Faux tant que la partie n'a pas commencé : le cube reste figé.
 var active := false
 ## Position diffusée sur le réseau par l'ordinateur qui contrôle ce cube.
@@ -325,6 +353,11 @@ func get_team() -> int:
 	return 0 if dummy else team_of(player_id)
 
 
+## Couleur de ce canard : celle de son équipe, gris pour un plastron.
+func get_team_color() -> Color:
+	return DUMMY_COLOR if dummy else TEAM_COLORS[team_of(player_id) - 1]
+
+
 static func color_of(id: int) -> Color:
 	return TEAM_COLORS[team_of(id) - 1]
 
@@ -338,6 +371,7 @@ func _ready() -> void:
 	_apply_color()
 	if not Engine.is_editor_hint():
 		_create_muzzle()
+		_create_name_tag()
 	# L'éditeur enregistre parfois les triangles du mélange des marches avant ses points :
 	# ils sont alors ignorés au chargement et la marche reste figée. On les recalcule.
 	var walk_space := (_animation_tree.tree_root as AnimationNodeStateMachine).get_node(&"walk") as AnimationNodeBlendSpace2D
@@ -364,6 +398,65 @@ func freeze() -> void:
 	cannon_on = false
 
 
+## Affiche le pseudo (get_display_name) au-dessus du canard : seulement sur les canards des
+## autres joueurs (pas le sien, pas ceux que personne n'a choisis ni nommés), vivants, et en
+## vue (cf. _update_name_tag_visibility).
+## Appelé par Game quand les choix des joueurs changent, et à la mort / réapparition.
+func update_name_tag() -> void:
+	if _name_tag == null:
+		return
+	_name_tag.text = get_display_name()
+	_name_tag.outline_modulate = get_team_color().darkened(0.35)
+	var controlled := dummy or NetworkManager.get_slot_owner(player_id) != 0 or not display_name_override.is_empty()
+	_name_tag_wanted = not is_local and controlled and is_alive()
+
+
+## Le pseudo est dessiné par-dessus tout (même l'air chaud ou l'eau, transparents, qui le
+## masquaient) : il ne s'affiche donc que si le canard est au moins en partie visible depuis la
+## caméra de cet ordinateur (sinon on verrait le pseudo d'un canard caché derrière un mur).
+func _update_name_tag_visibility(delta: float) -> void:
+	if _name_tag == null:
+		return
+	var seen := false
+	if _name_tag_wanted:
+		var camera_3d := get_viewport().get_camera_3d()
+		seen = camera_3d != null and _is_seen_from(camera_3d.global_position)
+	_name_tag_alpha = move_toward(_name_tag_alpha, 1.0 if seen else 0.0, delta / NAME_TAG_FADE)
+	_name_tag.visible = _name_tag_alpha > 0.0
+	_name_tag.modulate.a = _name_tag_alpha
+	_name_tag.outline_modulate.a = _name_tag_alpha
+
+
+## Vrai si l'un des NAME_TAG_SIGHT_POINTS du canard n'est pas caché par le décor depuis `eye`.
+func _is_seen_from(eye: Vector3) -> bool:
+	var space := get_world_3d().direct_space_state
+	var side := (global_position - eye).cross(Vector3.UP).normalized() * NAME_TAG_SIGHT_SIDE
+	for point: Vector3 in NAME_TAG_SIGHT_POINTS + [side, -side]:
+		var query := PhysicsRayQueryParameters3D.create(eye, global_position + point, WORLD_LAYER, [get_rid()])
+		if space.intersect_ray(query).is_empty():
+			return true
+	return false
+
+
+func _create_name_tag() -> void:
+	_name_tag = Label3D.new()
+	_name_tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_name_tag.font = NAME_TAG_FONT
+	_name_tag.font_size = NAME_TAG_FONT_SIZE
+	_name_tag.pixel_size = NAME_TAG_PIXEL_SIZE
+	_name_tag.outline_size = 14
+	_name_tag.modulate = Color.WHITE
+	# Dessiné en dernier, par-dessus tout (cf. _update_name_tag_visibility).
+	_name_tag.no_depth_test = true
+	_name_tag.render_priority = 127
+	_name_tag.outline_render_priority = 126
+	_name_tag.position.y = NAME_TAG_HEIGHT
+	_name_tag.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_name_tag.layers = Puddles.DUCK_VISUAL_LAYER # Les flaques (Decals) ne le colorent pas.
+	_name_tag.visible = false
+	add_child(_name_tag)
+
+
 ## Bout du canon, une fois le canard tourné vers sa visée (départ des bulles et du jet d'eau),
 ## jamais à moins de MIN_MUZZLE_HEIGHT au-dessus des pieds : en marchant ou en courant,
 ## l'animation balance le pistolet jusqu'à 0,2 m du sol, et une bulle partie si bas raclerait
@@ -383,6 +476,7 @@ func _physics_process(delta: float) -> void:
 		return
 	if not active:
 		_update_model(Vector3.ZERO, delta)
+		_update_name_tag_visibility(delta)
 		return
 	var previous_position := position
 	if is_multiplayer_authority():
@@ -401,6 +495,7 @@ func _physics_process(delta: float) -> void:
 		_follow_network(delta)
 	# Vitesse réelle (aussi pour les canards des autres ordinateurs, qui ne reçoivent que la position).
 	_update_model((position - previous_position) / delta, delta)
+	_update_name_tag_visibility(delta)
 
 
 ## Oriente la caméra et le canard vers `point` (sur le plan horizontal).
@@ -421,13 +516,22 @@ func is_alive() -> bool:
 	return health > 0.0
 
 
-## Inflige `amount` PV de dégâts. Appelable depuis n'importe quel ordinateur :
-## les dégâts sont appliqués par celui qui a l'autorité sur ce cube.
-func take_damage(amount: float) -> void:
+## Inflige `amount` PV de dégâts, de la part du joueur `attacker_id` (0 = personne).
+## Appelable depuis n'importe quel ordinateur : les dégâts sont appliqués par celui qui a
+## l'autorité sur ce cube.
+func take_damage(amount: float, attacker_id := 0) -> void:
 	if is_multiplayer_authority():
-		_apply_damage(amount)
+		_apply_damage(amount, attacker_id)
 	else:
-		_apply_damage.rpc_id(get_multiplayer_authority(), amount)
+		_apply_damage.rpc_id(get_multiplayer_authority(), amount, attacker_id)
+
+
+## Pseudo affiché pour ce joueur (au-dessus du canard, fil des éliminations).
+func get_display_name() -> String:
+	if not display_name_override.is_empty():
+		return display_name_override
+	# Le plastron réutilise la scène du joueur 1 : pas le pseudo de ce joueur.
+	return DUMMY_NAME if dummy else NetworkManager.get_player_name(player_id)
 
 
 ## Piège ce joueur `duration` s dans une bulle de capture de l'équipe `team`.
@@ -932,11 +1036,19 @@ func _turn_model_towards(direction: Vector3, weight: float) -> void:
 
 
 @rpc("any_peer", "call_remote", "reliable")
-func _apply_damage(amount: float) -> void:
+func _apply_damage(amount: float, attacker_id := 0) -> void:
 	if not is_alive() or amount <= 0.0:
 		return
 	_regen_cooldown_left = regen_delay
 	health = maxf(health - amount, 0.0)
+	if health <= 0.0:
+		_announce_elimination.rpc(attacker_id)
+
+
+## Sur tous les ordinateurs (appelé par celui qui contrôle ce cube) : il vient d'être éliminé.
+@rpc("authority", "call_local", "reliable")
+func _announce_elimination(killer_id: int) -> void:
+	eliminated.emit(killer_id)
 
 
 ## Sur tous les ordinateurs : le cube mort disparaît et ne bloque plus personne.
@@ -950,6 +1062,7 @@ func _on_died() -> void:
 		_hide_capture_bubble(false)
 	_model.visible = false
 	_collision_shape.set_deferred(&"disabled", true)
+	update_name_tag()
 	died.emit()
 
 
@@ -959,6 +1072,7 @@ func _on_respawned() -> void:
 	_respawn_sound.play()
 	_model.visible = true
 	_collision_shape.set_deferred(&"disabled", false)
+	update_name_tag()
 	respawned.emit()
 
 

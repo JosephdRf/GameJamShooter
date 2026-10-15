@@ -61,6 +61,8 @@ var _time_sync_cooldown := 0.0
 var _debug_mode := false
 
 @onready var _arena: Node3D = $Arena
+## Fil des éliminations (en haut à droite), créé ici.
+var _kill_feed := KillFeed.new()
 @onready var _players: Node3D = $Players
 @onready var _spawn_zones: Node3D = $SpawnZones
 @onready var _projectiles: Node3D = $Projectiles
@@ -82,11 +84,13 @@ func _ready() -> void:
 	# La souris est capturée pour que le trackpad pilote la caméra.
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	Music.play(Music.COMBAT, true) # Depuis le début à chaque partie.
+	add_child(_kill_feed)
 	_place_players_on_spawn_zones()
 	for player: Player in _players.get_children():
 		player.face(_arena.global_position) # Au départ, chaque joueur regarde le centre.
 		player.health_changed.connect(_on_player_health_changed.bind(player))
 		player.died.connect(_on_player_died.bind(player))
+		player.eliminated.connect(_on_player_eliminated.bind(player))
 		player.respawned.connect(_on_player_respawned.bind(player))
 		player.shot.connect(_on_player_shot.bind(player))
 		player.water_denied.connect(func() -> void: if player.is_local: _hud.flash_water())
@@ -160,6 +164,17 @@ func _on_player_died(player: Player) -> void:
 		_death_screen.show_death()
 
 
+## Sur tous les ordinateurs : message dans le fil des éliminations.
+func _on_player_eliminated(killer_id: int, victim: Player) -> void:
+	var killer: Player = null
+	var mine := victim.is_local
+	for player: Player in _players.get_children():
+		if player.player_id == killer_id and not player.dummy: # (Le plastron a le n° du joueur 1.)
+			killer = player
+			mine = mine or player.is_local
+	_kill_feed.add_elimination(killer, victim, mine)
+
+
 func _on_player_respawned(player: Player) -> void:
 	if player.is_local:
 		_death_screen.hide_death()
@@ -184,6 +199,7 @@ func _apply_slots() -> void:
 		player.set_multiplayer_authority(owner_id if owner_id != 0 else 1)
 		player.is_local = owner_id == my_id
 		player.camera.set_view_active(player.is_local)
+		player.update_name_tag()
 
 
 ## Sur tous les ordinateurs, au même moment (à la latence près).

@@ -81,11 +81,11 @@ par commande, avec sa touche clavier et son bouton de manette. Le code n'utilise
 | Se déplacer | `move_left/right/up/down` | Z/Q/S/D (W/A/S/D en QWERTY) ou flèches | Stick gauche | Stick gauche |
 | Tourner la caméra | `look_left/right/up/down` | Souris / trackpad | Stick droit | Stick droit |
 | Sauter | `jump` | Espace | B | Croix |
-| Dash (au sol, toutes les 2 s ; gauche / droite l'infléchissent) | `dash` | Maj | Y | Carré |
+| Dash (au sol, ~10 m, toutes les 2 s ; gauche / droite l'infléchissent) | `dash` | Maj | Y | Carré |
 | Tirer une bulle (maintenir = en continu) | `shoot` | Clic gauche / T | ZR | R2 |
 | Viser : la caméra zoome, sans aide à la visée (**désactivé pour l'instant** : aucune touche) | `aim` | — | — | — |
 | Bulle de capture (toutes les 1 s, 20 % d'eau) | `capture` | Clic molette | R | R1 |
-| Canon à eau (maintenir, prototype) | `water_cannon` | Clic droit | ZL / L | L2 / L1 |
+| Canon à eau (maintenir ; simple appui : trace droite devant) | `water_cannon` | Clic droit | ZL / L | L2 / L1 |
 | **Menus** : naviguer / choisir son joueur (4 directions) | `menu_left/right/up/down` (+ `ui_*` de Godot) | Flèches (Z/Q/S/D) | Stick gauche / croix | Stick gauche / croix |
 | **Menus** : valider | `ui_accept` | Entrée / Espace | A | Rond |
 | **Accueil** : démarrer ; **Sélection** : lancer la partie (hôte) | `start` | Entrée sur le bouton | + | Options |
@@ -162,8 +162,11 @@ Un joueur qui tombe de la plateforme meurt.
 - **Clic droit maintenu** (action `water_cannon`) : jet d'eau continu vers le viseur. Les gouttes partent un peu vers
   le haut pour que leur arc retombe sur le point visé (comme un tuyau d'arrosage) ; une sur cinq, plus lente,
   retombe un peu avant. Là où le jet touche le sol, une flaque se forme et grandit (cf. Flaques). Chaque
-  goutte qui touche un adversaire lui inflige **0,4 PV** (`damage_per_drop`), soit environ 56 PV/s si tout
-  le jet le touche ; rien aux coéquipiers.
+  goutte qui touche un adversaire lui inflige **1 PV** (`damage_per_drop`), soit environ 140 PV/s si tout
+  le jet le touche ; rien aux coéquipiers. Gouttes plus grosses et trace au sol large (rayon 2 m).
+- **Simple appui** (moins de 0,2 s) : le jet part devant le canard et balaie le sol en ligne droite, de
+  1,5 à 14 m en 0,6 s (`Player.cannon_tap_duration`, `cannon_tap_range`) : une trace d'eau droite sur
+  laquelle dasher (le dash glisse sur l'eau).
 - Code : `scripts/game/water_cannon.gd` (nœud `WaterCannon` de `game.tscn` : débit, vitesse, gravité,
   dispersion, eau laissée au sol, taille des gouttes). Toutes les gouttes sont dessinées d'un coup
   (MultiMesh). Réseau : seuls « canon en marche » et le point visé sont envoyés ; chaque ordinateur
@@ -404,7 +407,7 @@ Un joueur qui tombe de la plateforme meurt.
   de combat (pendant le tir, la visée et 0,6 s après), le canard regarde là où il vise ; il joue la
   marche qui correspond à sa direction (reculer, pas de côté), même à pleine vitesse. Sinon il regarde
   où il va : marche avant, ou `run` au-delà de `RUN_SPEED`.
-- Dash : `dash_start` est jouée en 0,2 s (timeline personnalisée de son nœud, la moitié de
+- Dash : environ 10 m à sec (0,6 s). `dash_start` est jouée en 0,3 s (timeline personnalisée de son nœud, la moitié de
   `dash_duration`), puis `dash` en boucle jusqu'à la fin du dash, puis `dash_end` avant de revenir à
   la marche. Le début du dash est envoyé aux autres ordinateurs (RPC `_play_dash`).
 

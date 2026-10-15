@@ -142,6 +142,8 @@ const MIN_MUZZLE_HEIGHT := 0.6825
 const LAND_SOUND_MIN_SPEED := 4.0
 ## Canon à eau : intervalle (s) entre deux envois du point visé aux autres ordinateurs.
 const CANNON_AIM_SYNC_INTERVAL := 0.066
+## Canon à eau : un appui plus court que ça (s) est un « simple appui » (cf. cannon_tap_duration).
+const CANNON_TAP_TIME := 0.2
 ## Sillage sur l'eau pendant une glissade : un rond et une gerbe toutes les WAKE_INTERVAL s.
 const WAKE_INTERVAL := 0.035
 ## Capture : vitesse à laquelle il rejoint sa hauteur de lévitation, vitesse du flottement.
@@ -176,9 +178,9 @@ const CAPTURE_CEILING_TEST := 0.02
 @export var dash_speed := 25.0
 ## Durée du dash (s). Courbe de vitesse : montée douce jusqu'à dash_speed
 ## (DASH_RAMP), plateau, puis ralentissement doux jusqu'à move_speed.
-## Distance ≈ 6,8 m avec les valeurs par défaut. Si on la change, ajuster aussi la durée
+## Distance ≈ 10 m avec les valeurs par défaut. Si on la change, ajuster aussi la durée
 ## de dash_start dans l'AnimationTree (timeline de son nœud, la moitié de dash_duration).
-@export var dash_duration := 0.4
+@export var dash_duration := 0.6
 ## Temps minimum entre deux dashs (s).
 @export var dash_cooldown := 2.0
 ## Sur l'eau (flaques), le dash ne s'use pas : il garde sa vitesse tant que le canard glisse
@@ -212,6 +214,11 @@ const CAPTURE_CEILING_TEST := 0.02
 @export var water_per_shot := 0.05
 @export var water_per_capture := 0.2
 @export var water_per_second := 0.2
+## Simple appui sur le jet d'eau : le jet part devant le canard et balaie le sol en ligne droite
+## (de 1,5 m à cannon_tap_range m, en cannon_tap_duration s), pour laisser une trace sur laquelle
+## dasher. Maintenu, le jet vise le viseur comme d'habitude.
+@export var cannon_tap_duration := 0.6
+@export var cannon_tap_range := 14.0
 ## Temps sans dépenser d'eau avant que la réserve se recharge (s).
 @export var water_recharge_delay := 2.0
 ## Recharge : vitesse au départ (fraction par seconde), qui double toutes les
@@ -313,6 +320,11 @@ var _puddles: Puddles
 var _wake_left := 0.0
 ## Temps restant avant le prochain envoi de cannon_target (s).
 var _cannon_sync_left := 0.0
+## Jet d'un simple appui : temps écoulé depuis l'appui (-1 hors balayage), départ (pieds) et
+## direction (horizontale) de la trace.
+var _cannon_tap_elapsed := -1.0
+var _cannon_tap_origin := Vector3.ZERO
+var _cannon_tap_forward := Vector3.FORWARD
 ## floor_snap_length hors dash (celui de la scène), cf. dash_floor_snap.
 var _floor_snap_default := 0.1
 ## Temps depuis la dernière dépense d'eau (s), pour la recharge.
@@ -598,6 +610,8 @@ func _simulate(delta: float) -> void:
 	var held := Input.is_action_pressed(&"shoot") and _since_last_shot >= auto_fire_interval
 	var capture_pressed := Input.is_action_just_pressed(&"capture") and _capture_cooldown_left == 0.0
 	var cannon := is_local and Input.is_action_pressed(&"water_cannon")
+	if is_local:
+		cannon = _update_cannon_tap(cannon, delta)
 	# Réserve d'eau : sans assez d'eau, rien ne part (et la jauge clignote au nouvel appui).
 	_recharge_water(delta)
 	if is_local and (pressed or held) and water < water_per_shot:
@@ -767,18 +781,45 @@ func _recharge_water(delta: float) -> void:
 ## le monde, et pendant qu'il arrose, suit la visée et l'envoie régulièrement aux autres.
 func _update_cannon(want: bool, delta: float) -> void:
 	if want and not cannon_on:
-		cannon_target = aim().point # Avant le premier envoi : le jet part tout de suite au bon endroit.
+		cannon_target = _cannon_aim_point() # Avant le premier envoi : le jet part tout de suite au bon endroit.
 		_sync_cannon_target.rpc(cannon_target)
 	if want != cannon_on:
 		_set_cannon.rpc(want)
 	if not cannon_on:
 		return
 	_spend_water(water_per_second * delta)
-	cannon_target = aim().point
+	cannon_target = _cannon_aim_point()
 	_cannon_sync_left -= delta
 	if _cannon_sync_left <= 0.0:
 		_cannon_sync_left = CANNON_AIM_SYNC_INTERVAL
 		_sync_cannon_target.rpc(cannon_target)
+
+
+## Jet d'un simple appui (ordinateur qui contrôle ce canard) : à l'appui, démarre le balayage ;
+## il s'arrête si la touche est encore tenue après CANNON_TAP_TIME (jet visé normal) ou au bout
+## de cannon_tap_duration. Rend vrai si le jet doit couler (touche tenue ou balayage en cours).
+func _update_cannon_tap(held: bool, delta: float) -> bool:
+	if Input.is_action_just_pressed(&"water_cannon"):
+		_cannon_tap_elapsed = 0.0
+		_cannon_tap_origin = _feet_position()
+		_cannon_tap_forward = Vector3.FORWARD.rotated(Vector3.UP, camera.get_yaw())
+	elif _cannon_tap_elapsed >= 0.0:
+		_cannon_tap_elapsed += delta
+		if (held and _cannon_tap_elapsed > CANNON_TAP_TIME) or _cannon_tap_elapsed >= cannon_tap_duration:
+			_cannon_tap_elapsed = -1.0
+	return held or _cannon_tap_elapsed >= 0.0
+
+
+## Point visé par le jet : le viseur, ou pendant le balayage d'un simple appui, le sol sur la
+## ligne droite devant le canard.
+func _cannon_aim_point() -> Vector3:
+	if _cannon_tap_elapsed < 0.0:
+		return aim().point
+	var t := clampf(_cannon_tap_elapsed / cannon_tap_duration, 0.0, 1.0)
+	var point := _cannon_tap_origin + _cannon_tap_forward * lerpf(1.5, cannon_tap_range, t)
+	var hit := get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(
+			point + Vector3.UP * 2.0, point + Vector3.DOWN * 4.0, WORLD_LAYER))
+	return hit.position if hit else point
 
 
 @rpc("authority", "call_local", "reliable")

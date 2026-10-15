@@ -40,10 +40,10 @@ collision_mask = 7
 [node name="SpawnZones" type="Node3D" parent="." unique_id=618915540]
 
 [node name="ZoneSpawnBlue" parent="SpawnZones" unique_id=850163800 instance=ExtResource("11_spawn")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -36, -0.27, 2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -40.055397, 6.2638583, -9.352676)
 
 [node name="ZoneSpawnRed" parent="SpawnZones" unique_id=1839208674 instance=ExtResource("11_spawn")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38.5, 1.86, 14.7)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38.5, 1.86, 22.178802)
 team = 2
 
 [node name="Projectiles" type="Node3D" parent="." unique_id=1331130396]
@@ -57,14 +57,53 @@ script = ExtResource("17_water_cannon")
 [node name="ZoneDefenseMode" type="Node3D" parent="." unique_id=126924625]
 script = ExtResource("9_mode")
 
-[node name="ZoneDefense1" parent="ZoneDefenseMode" unique_id=1842881901 instance=ExtResource("10_zone")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.5, 11.2, 34)
-radius = 3.5
+[node name="ZoneDefense11" parent="ZoneDefenseMode" unique_id=710039287 instance=ExtResource("10_zone")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.566682, 0.03683853, -28.132359)
+radius = 1.71
+capture_time = 5.0
 
-[node name="ZoneDefense2" parent="ZoneDefenseMode" unique_id=1765327171 instance=ExtResource("10_zone")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.75, 7.2, -6)
+[node name="ZoneDefense10" parent="ZoneDefenseMode" unique_id=1653331689 instance=ExtResource("10_zone")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.7826042, -0.24141109, 13.777085)
+radius = 1.71
+capture_time = 5.0
+
+[node name="ZoneDefense5" parent="ZoneDefenseMode" unique_id=1092074230 instance=ExtResource("10_zone")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.517822, -0.21783328, 2.7156892)
+radius = 5.0
+
+[node name="ZoneDefense9" parent="ZoneDefenseMode" unique_id=1839514157 instance=ExtResource("10_zone")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.864932, 6.262846, -28.815823)
+radius = 1.71
+capture_time = 5.0
+
+[node name="ZoneDefense8" parent="ZoneDefenseMode" unique_id=1247832157 instance=ExtResource("10_zone")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.9120502, 11.930346, 37.972176)
+radius = 1.71
+capture_time = 5.0
+
+[node name="ZoneDefense7" parent="ZoneDefenseMode" unique_id=1934377216 instance=ExtResource("10_zone")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.0139422, 12.872125, 31.160069)
+radius = 1.71
+capture_time = 5.0
+
+[node name="ZoneDefense6" parent="ZoneDefenseMode" unique_id=1155140990 instance=ExtResource("10_zone")]
+transform = Transform3D(0.99695796, 0, -0.07794084, 0, 1, 0, 0.07794084, 0, 0.99695796, -0.33627892, 8.780344, 2.1031585)
 shape = 1
 size = Vector2(6.5, 13)
+points = 5
+capture_time = 15.0
+
+[node name="ZoneDefense1" parent="ZoneDefenseMode" unique_id=1842881901 instance=ExtResource("10_zone")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.673938, 11.12749, 35.258453)
+radius = 3.5
+points = 3
+
+[node name="ZoneDefense2" parent="ZoneDefenseMode" unique_id=1765327171 instance=ExtResource("10_zone")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.70937, 7.2, -6)
+shape = 1
+size = Vector2(6.5, 13)
+points = 5
+capture_time = 15.0
 
 [node name="ZoneDefense3" parent="ZoneDefenseMode" unique_id=211882194 instance=ExtResource("10_zone")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.2, 6.2, -29.2)
@@ -73,11 +112,11 @@ radius = 5.0
 [node name="ZoneDefense4" parent="ZoneDefenseMode" unique_id=634020543 instance=ExtResource("10_zone")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30.5, 1.83, -19.3)
 
-[node name="CaptureSound" type="AudioStreamPlayer" parent="."]
+[node name="CaptureSound" type="AudioStreamPlayer" parent="." unique_id=2032905854]
 stream = ExtResource("18_capture_sound")
 volume_db = -4.0
 
-[node name="NewZoneSound" type="AudioStreamPlayer" parent="."]
+[node name="NewZoneSound" type="AudioStreamPlayer" parent="." unique_id=1923164120]
 stream = ExtResource("19_new_zone_sound")
 volume_db = -4.0
 

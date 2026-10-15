@@ -78,7 +78,7 @@ const DRIP_RING_EVERY := 3
 @export var ripple_strength := 6.0
 @export_group("Évaporation")
 ## Temps (s) après le dernier arrosage au bout duquel l'eau a disparu.
-@export var water_lifetime := 30.0
+@export var water_lifetime := 63.0
 ## Pendant ses dernières secondes (s), l'eau pâlit jusqu'à disparaître.
 @export var fade_duration := 3.0
 ## Couleur vers laquelle l'eau pâlit (de plus en plus claire avant de disparaître).
@@ -104,6 +104,8 @@ var _noise := FastNoiseLite.new()
 var _ripples: ImageTexture
 var _ring_mesh: QuadMesh
 var _drop_mesh: SphereMesh
+## Éclaboussure sur un canard touché : coque d'eau qui gonfle et s'efface (cf. duck_splash).
+var _burst_mesh: SphereMesh
 ## Gouttes du canon à eau reçues (cf. drip) : seule une sur DRIP_RING_EVERY fait un rond.
 var _drips := 0
 
@@ -131,6 +133,7 @@ func _ready() -> void:
 	_ripples = _make_ripples()
 	_ring_mesh = _make_ring_mesh()
 	_drop_mesh = _make_drop_mesh()
+	_burst_mesh = _make_burst_mesh()
 
 
 ## Vrai s'il y a de l'eau en `point` (à la surface du sol) : humidité au-dessus du seuil.
@@ -444,6 +447,27 @@ func drip(point: Vector3, normal := Vector3.UP) -> void:
 		_spawn_drops(point - Vector3.UP * 0.05, 3, (normal + Vector3.UP * 0.5).normalized(), 50.0, 1.0, 2.5, 0.05, 0.6)
 
 
+## Bulle qui éclate sur un canard (`point` sur lui, `normal` vers l'extérieur) : gerbe d'eau
+## projetée vers le tireur et vers le haut, fines gouttelettes tout autour et coque d'eau
+## qui gonfle et s'efface (on voit qu'on l'a touché).
+func duck_splash(point: Vector3, normal: Vector3) -> void:
+	if not splash_effects:
+		return
+	_spawn_drops(point, 22, (normal + Vector3.UP * 0.7).normalized(), 70.0, 3.0, 6.5, 0.2, 2.0)
+	_spawn_drops(point, 14, Vector3.UP, 180.0, 1.5, 3.5, 0.3, 0.7)
+	var burst := MeshInstance3D.new()
+	burst.mesh = _burst_mesh
+	burst.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	burst.layers = DUCK_VISUAL_LAYER
+	burst.position = point
+	burst.scale = Vector3.ONE * 0.3
+	add_child(burst)
+	var tween := burst.create_tween().set_parallel()
+	tween.tween_property(burst, ^"scale", Vector3.ONE * 1.3, 0.22).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tween.tween_property(burst, ^"transparency", 1.0, 0.22).set_ease(Tween.EASE_IN)
+	tween.chain().tween_callback(burst.queue_free)
+
+
 ## Pas d'un canard dans l'eau (`point` sous son pied, sol de normale `normal`) : petit rond et
 ## quelques gouttes.
 func step_splash(point: Vector3, normal := Vector3.UP) -> void:
@@ -547,6 +571,22 @@ func _make_ring_mesh() -> QuadMesh:
 	var mesh := QuadMesh.new()
 	mesh.orientation = PlaneMesh.FACE_Y
 	mesh.size = Vector2.ONE
+	mesh.material = material
+	return mesh
+
+
+## Coque d'éclaboussure : sphère d'eau claire et transparente, plus blanche sur les bords.
+func _make_burst_mesh() -> SphereMesh:
+	var mesh := SphereMesh.new()
+	mesh.radius = 0.5
+	mesh.height = 1.0
+	mesh.radial_segments = 16
+	mesh.rings = 8
+	var material := StandardMaterial3D.new()
+	material.albedo_color = Color(0.82, 0.94, 1.0, 0.45)
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.cull_mode = BaseMaterial3D.CULL_DISABLED
 	mesh.material = material
 	return mesh
 

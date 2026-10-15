@@ -88,6 +88,9 @@ const GROUND_MIN_NORMAL_Y := 0.7
 ## Émis quand la bulle éclate sur le sol : `point` sur la surface, rayon de la flaque (m),
 ## normale de la surface (l'éclaboussure suit une pente).
 signal splashed(point: Vector3, puddle_radius: float, normal: Vector3)
+## Émis (sur tous les ordinateurs) quand une bulle normale éclate sur un adversaire : `point`
+## sur le canard, `normal` vers l'extérieur du canard (Game y fait une grosse éclaboussure).
+signal hit_duck(point: Vector3, normal: Vector3)
 
 ## Matériau de chaque équipe (index 0 = équipe 1), partagé par toutes ses bulles :
 ## celui de la scène, teinté à la couleur de l'équipe (même transparence).
@@ -188,6 +191,9 @@ func _physics_process(delta: float) -> void:
 ## `contact` : résultat de get_rest_info ({ point, normal… }, vide si inconnu).
 func _on_hit(collider: Object, contact: Dictionary) -> void:
 	var player := collider as Player
+	if player and not capture and (friendly_fire or player.get_team() != _shooter_team):
+		var normal: Vector3 = contact.get("normal", -_direction)
+		hit_duck.emit(contact.get("point", global_position), normal if not normal.is_zero_approx() else -_direction)
 	if player and _deals_damage and (friendly_fire or player.get_team() != _shooter_team):
 		_direct_hit = player
 		if capture:

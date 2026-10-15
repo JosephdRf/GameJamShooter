@@ -1,1 +1,4 @@
-success_bell.wav : « success_bell » par MLaudio, https://freesound.org/people/MLaudio/sounds/511484/ (CC0) — aperçu Freesound, coupé à 2,5 s, amplifié de 16 dB, fondu de sortie.
+Source : « scale-c6 » (freesound_community, Pixabay, son 106131 ; licence Pixabay, utilisation libre), converti en WAV 44,1 kHz.
+zone_captured.wav : baissé de 3 demi-tons (durée conservée), réverbération ajoutée (traîne d’environ 2 s), volume normalisé.
+zone_appeared.wav : même son, baissé de 7 demi-tons (plus grave), même réverbération.
+capture_note.wav : une note du même son (début de l'échantillon, la 883 Hz), avec la même réverbération ; transposée en jeu pour la montée de capture (ZoneDefense).

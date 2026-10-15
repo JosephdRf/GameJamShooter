@@ -18,6 +18,11 @@ extends Node3D
 ##
 ## Colonne de lumière (Beacon) haute de beacon_height, à la couleur de la zone : on
 ## repère la zone active de loin, au-dessus des murs et des plateformes.
+## Montée de capture : pendant une capture, une clochette monte la gamme note après note
+## (une note par seconde au début, environ cinq à la fin), au rythme de la progression : elle se
+## fige quand la capture est en pause et repart du début quand la progression retombe à 0.
+## Son localisé au centre de la zone (plus fort dedans et tout près, discret de loin), joué
+## sur chaque ordinateur ; la gamme « Zone capturée » (Game) prend le relais à la fin.
 ## Position, forme (rayon ou taille), points et durées se règlent sur chaque
 ## instance, dans la scène de jeu (la zone est visible dans l'éditeur, masquée en jeu).
 ## Le centre de la zone se place au niveau du sol.
@@ -36,6 +41,20 @@ const WAVE_SPEED_CAPTURING := 7.0
 const BEACON_IDLE_COLOR := Color(1.0, 0.76, 0.05)
 ## Largeur du liseré au bord de la zone (m).
 const RING_WIDTH := 0.2
+## Montée de capture : note de clochette (la, 883 Hz, avec sa réverbération), transposée.
+const NOTE_SOUND := preload("res://assets/audio/sfx/capture/capture_note.wav")
+## Tonalité de la gamme « Zone capturée » (demi-tons sous la note de l'échantillon) et
+## gamme majeure ; la montée part de FIRST_DEGREE degrés sous cette tonique (2 octaves).
+const NOTE_ROOT := -3
+const MAJOR_SCALE: Array[int] = [0, 2, 4, 5, 7, 9, 11]
+const FIRST_DEGREE := -14
+## Écart entre deux notes (s) au début ; il est multiplié par NOTE_SPEED_UP à la fin.
+const FIRST_NOTE_INTERVAL := 1.0
+const NOTE_SPEED_UP := 0.17
+## Notes jouées en même temps au plus (leurs résonances se chevauchent).
+const NOTE_VOICES := 8
+## Note en retard de plus de cette durée (s) : sautée (progression reçue d'un coup).
+const NOTE_MAX_LATE := 0.25
 
 enum Shape { CIRCLE, RECTANGLE }
 
@@ -70,6 +89,15 @@ enum Shape { CIRCLE, RECTANGLE }
 @export var timeout := 20.0
 ## Temps à passer seul dans la zone pour la capturer (s).
 @export var capture_time := 10.0
+@export_group("Montée de capture")
+## Volume des notes (dB) à moins de `build_up_unit_size` m du centre ; les premières notes
+## sont 6 dB plus douces, puis le volume monte avec la progression.
+@export var build_up_volume_db := -16.0
+## Distance (m) jusqu'à laquelle le son garde tout son volume ; au-delà il diminue.
+@export var build_up_unit_size := 8.0
+## Distance (m) au-delà de laquelle on ne l'entend plus.
+@export var build_up_max_distance := 60.0
+@export_group("")
 
 var active := false
 ## Équipe en train de capturer (0 = personne).
@@ -84,6 +112,13 @@ var time_left := 0.0
 var _sync_cooldown := 0.0
 ## Position des vagues de la colonne de lumière (m), avancée chaque image.
 var _wave_offset := 0.0
+## Montée de capture : instant (s de progression) de chaque note, prochaine note à jouer,
+## progression à l'image précédente, lecteurs (joués à tour de rôle).
+var _note_times: Array[float] = []
+var _next_note := 0
+var _last_progress := 0.0
+var _note_players: Array[AudioStreamPlayer3D] = []
+var _note_voice := 0
 
 @onready var _disk: MeshInstance3D = $Disk
 @onready var _wall: MeshInstance3D = $Wall
@@ -97,6 +132,7 @@ func _ready() -> void:
 	if Engine.is_editor_hint():
 		_update_visuals()
 		return
+	_create_build_up()
 	_apply_state(false, 0, false, 0.0, 0.0)
 
 
@@ -178,6 +214,7 @@ func _process(delta: float) -> void:
 	if active:
 		_wave_offset += (WAVE_SPEED_CAPTURING if capturing_team != 0 else WAVE_SPEED) * delta
 		(_beacon.material_override as ShaderMaterial).set_shader_parameter(&"scroll_offset", fmod(_wave_offset, 900.0)) # 900 = 200 écarts de vagues : pas de saut.
+	_update_build_up()
 	# Autres ordinateurs : la barre et le décompte avancent entre deux envois de l'hôte.
 	if not active or multiplayer.is_server():
 		return
@@ -185,6 +222,54 @@ func _process(delta: float) -> void:
 		time_left = maxf(time_left - delta, 0.0)
 	elif not contested:
 		progress = minf(progress + delta, capture_time)
+
+
+## Lecteurs de la montée de capture (au centre de la zone, à hauteur de canard) et instants
+## des notes : l'écart entre deux notes fond de FIRST_NOTE_INTERVAL à
+## FIRST_NOTE_INTERVAL × NOTE_SPEED_UP au fil de capture_time.
+func _create_build_up() -> void:
+	for i in NOTE_VOICES:
+		var player := AudioStreamPlayer3D.new()
+		player.stream = NOTE_SOUND
+		player.position = Vector3.UP * 1.5
+		player.unit_size = build_up_unit_size
+		player.max_distance = build_up_max_distance
+		player.attenuation_filter_cutoff_hz = 20500.0 # Pas d'étouffement avec la distance.
+		add_child(player)
+		_note_players.append(player)
+	var t := 0.0
+	while t < capture_time - 0.05:
+		_note_times.append(t)
+		t += FIRST_NOTE_INTERVAL * pow(NOTE_SPEED_UP, t / capture_time)
+
+
+## Joue les notes que la progression vient de dépasser. Sur tous les ordinateurs (la
+## progression y avance aussi entre deux envois de l'hôte).
+func _update_build_up() -> void:
+	if not active or capturing_team == 0:
+		_next_note = 0
+		_last_progress = 0.0
+		return
+	if progress < _last_progress - NOTE_MAX_LATE:
+		# La progression a reculé (nouvelle équipe, correction de l'hôte) : on se recale.
+		_next_note = _note_times.bsearch(progress, false)
+	_last_progress = progress
+	while _next_note < _note_times.size() and progress >= _note_times[_next_note]:
+		if progress - _note_times[_next_note] <= NOTE_MAX_LATE:
+			_play_note(_next_note)
+		_next_note += 1
+
+
+## Note `index` de la montée : un degré de gamme plus haut à chaque note, plus forte au fil
+## de la capture.
+func _play_note(index: int) -> void:
+	var degree := FIRST_DEGREE + index
+	var semitones := NOTE_ROOT + 12 * floori(degree / 7.0) + MAJOR_SCALE[posmod(degree, 7)]
+	var player := _note_players[_note_voice]
+	_note_voice = (_note_voice + 1) % _note_players.size()
+	player.pitch_scale = pow(2.0, semitones / 12.0)
+	player.volume_db = build_up_volume_db + linear_to_db(0.5 + 0.5 * _note_times[index] / capture_time)
+	player.play()
 
 
 @rpc("authority", "call_remote", "reliable")

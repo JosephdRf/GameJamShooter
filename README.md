@@ -8,7 +8,7 @@ caméra à la 3e personne. Un des joueurs héberge la partie (« listen server �
 | Écran | Scène | Mène à |
 |-------|-------|--------|
 | Chargement (fictif, 3 s, jauge d'eau `WaterGauge` + pourcentage) | `loading_screen.tscn` | Accueil |
-| Accueil (titre « Duck my Life » qui flotte, bouton jaune) | `title_screen.tscn` | **Démarrer** → Hôte/IP |
+| Accueil (titre « Duck my Life » qui flotte, « Fuck My Life » une fois sur dix, bouton jaune) | `title_screen.tscn` | **Démarrer** → Hôte/IP |
 | Hôte/IP | `connect_screen.tscn` | Héberger → Sélection d'équipe · Rejoindre → connexion réussie ? oui : Sélection d'équipe, non : reste ici avec un message |
 | Sélection d'équipe | `team_select.tscn` | **Lancer la partie** (hôte) → GAME |
 | GAME | `game/game.tscn` | Pause (hôte) · fin du combat → Écran de fin |
@@ -110,6 +110,8 @@ Un joueur qui tombe de la plateforme meurt.
   du bout du canon du canard, petite, et atteint sa taille en 0,12 s.
 - La bulle éclate au premier contact : obstacle (sol, mur, objet…), joueur (**30 dégâts** à un adversaire,
   rien à un coéquipier), mur de la zone d'apparition adverse, ou au bout de **25 m**. Le nœud est alors supprimé.
+  Sur un adversaire, elle fait une **grosse éclaboussure** (coque d'eau qui gonfle, gerbe de gouttes vers le
+  tireur et gouttelettes tout autour : `Puddles.duck_splash`), pour qu'on voie qu'il a été touché.
 - **Zones d'apparition** : un mur invisible (calques 3 « spawn_blue » / 4 « spawn_red ») empêche les joueurs
   et les bulles de l'équipe adverse d'y entrer.
 - Réglages : sur `scenes/game/bubble_projectile.tscn` (`speed`, `max_distance`, `damage`, `friendly_fire`,
@@ -166,8 +168,8 @@ Un joueur qui tombe de la plateforme meurt.
   10 m pour la maxi-bulle : `puddle_radius`), de forme irrégulière, qui s'étale du centre vers les bords
   en 0,3 s (`spread_time`). Deux flaques proches se rejoignent
   en une seule ; tirer plusieurs fois au même endroit l'agrandit.
-- **Évaporation** : l'eau disparaît **30 s** après son dernier arrosage, en pâlissant pendant les 3 dernières
-  secondes ; réarroser une flaque la rafraîchit (groupe « Évaporation » du nœud `Puddles`).
+- **Évaporation** : l'eau reste **1 min** après son dernier arrosage, puis pâlit et disparaît en **3 s**
+  (`water_lifetime` = 63 s, `fade_duration`) ; réarroser une flaque la rafraîchit (groupe « Évaporation » du nœud `Puddles`).
 - **Dash sur l'eau** : il ne s'use pas. Le canard garde sa vitesse tant qu'il glisse sur une flaque, et
   la distance du dash ne compte que sur le sol sec (`dash_slides_on_water` sur le joueur). Contre un mur,
   le dash se termine normalement.
@@ -210,7 +212,14 @@ Un joueur qui tombe de la plateforme meurt.
 - Canard (nœuds `*Sound` de `player.tscn`, entendus sur tous les ordinateurs, en 3D) : tir, **pas calés sur
   l'animation** (instants où un pied se pose : `Player.FOOTSTEPS`), dash, saut (décollage) et atterrissage (après un saut ou une chute), touché (canard en
   caoutchouc), mort (coin-coin), réapparition. Bulle : éclatement (`PopSound` de `bubble_projectile.tscn`).
-- Zone capturée : cloche de réussite (`CaptureSound` de `game.tscn`, `sfx/capture/`), entendue partout.
+- Zone capturée : gamme montante (`CaptureSound` de `game.tscn`, `sfx/capture/`), entendue partout.
+- **Montée de capture** : pendant une capture, une clochette monte la gamme note après note (une note par
+  seconde au début, environ cinq à la fin, 27 notes en 10 s), au rythme de la barre : elle se fige quand la zone
+  est disputée et repart du début si l'équipe sort. Son 3D au centre de la zone : plein volume à moins de 8 m,
+  de plus en plus discret au-delà, inaudible à 60 m (`ZoneDefense`, groupe « Montée de capture » ;
+  `sfx/capture/capture_note.wav`). La gamme « Zone capturée » prend le relais.
+- Nouvelle zone (la première, ou celle qui remplace une zone expirée) : la même gamme, plus grave
+  (`NewZoneSound`, `sfx/capture/zone_appeared.wav`), entendue partout. Les deux sons ont de la réverbération.
 - Menus : autoload `UiSounds` (clic en naviguant, « plop » en validant), branché sur tous les boutons.
 - Musique : autoload `Music` (`play(...)` dans le `_ready()` de chaque écran ; changement en fondu).
   Menus : « Happy Clappy Loop » (`music/happy_clappy_loop.wav`, OwlishMedia, OpenGameArt, CC0) boucle sans
@@ -220,7 +229,7 @@ Un joueur qui tombe de la plateforme meurt.
 - Volume : `volume_db` de chaque nœud `*Sound` ; variation : `random_pitch` des `.tres`.
 - Sources : `sfx/bubble/` (Pixabay), `sfx/duck/` et `sfx/freesound/` (Freesound, CC0, voir `CREDITS.txt`),
   `sfx/jump/` et `sfx/land/` (saut sur béton : décollage et réception, La Sonothèque, voir `CREDITS.txt`),
-  `sfx/capture/` (« success_bell », MLaudio, Freesound, CC0).
+  `sfx/capture/` (« scale-c6 », freesound_community, Pixabay ; baissé de 3 et 7 demi-tons, réverbération).
 - **Testeur** : `python tools/sfx_tester/build_sfx_tester.py` puis ouvrir `tools/sfx_tester/sfx_tester.html`
   pour écouter tous les sons du jeu (et des candidats Freesound) et simuler des tirs.
 

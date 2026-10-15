@@ -72,6 +72,7 @@ var _debug_mode := false
 @onready var _death_screen: CanvasLayer = $DeathScreen
 @onready var _announcer: CanvasLayer = $Announcer
 @onready var _capture_sound: AudioStreamPlayer = $CaptureSound
+@onready var _new_zone_sound: AudioStreamPlayer = $NewZoneSound
 @onready var _crosshair: CanvasLayer = $Crosshair
 @onready var _debug_layer: CanvasLayer = $DebugHealth
 @onready var _debug_health: Label = $DebugHealth/Label
@@ -96,7 +97,7 @@ func _ready() -> void:
 	_hud.set_scores(0, 0)
 	_mode.scores_changed.connect(func() -> void: _hud.set_scores(_mode.scores[1], _mode.scores[2]))
 	_mode.zone_captured.connect(_on_zone_captured)
-	_mode.new_zone_appeared.connect(func() -> void: if not _ended: _announcer.show_new_zone(new_zone_message_duration))
+	_mode.new_zone_appeared.connect(_on_new_zone_appeared)
 	NetworkManager.slots_changed.connect(_apply_slots)
 	NetworkManager.match_started.connect(_on_match_started)
 	NetworkManager.notify_game_ready()
@@ -148,6 +149,8 @@ func _on_player_shot(origin: Vector3, direction: Vector3, capture: bool, visual_
 	# Flaque là où elle éclate sur le sol (éclaboussure orientée selon la surface).
 	bubble.splashed.connect(func(point: Vector3, radius: float, normal: Vector3) -> void:
 		_puddles.add_puddle(point, radius, 1.0, true, normal))
+	# Touché : grosse éclaboussure sur le canard, pour voir qu'on a fait des dégâts.
+	bubble.hit_duck.connect(_puddles.duck_splash)
 	_projectiles.add_child(bubble)
 	bubble.launch(player, origin, direction, player.is_multiplayer_authority(), visual_origin)
 
@@ -198,7 +201,15 @@ func _on_match_started() -> void:
 	_mode.start(players)
 
 
-## Sur tous les ordinateurs : message et cloche de réussite (entendue de partout).
+## Sur tous les ordinateurs : « Une nouvelle zone est apparue ! » et son grave (entendu de partout).
+func _on_new_zone_appeared() -> void:
+	if _ended:
+		return
+	_new_zone_sound.play()
+	_announcer.show_new_zone(new_zone_message_duration)
+
+
+## Sur tous les ordinateurs : message et son de réussite (entendu de partout).
 func _on_zone_captured(team: int) -> void:
 	_capture_sound.play()
 	var local_team := 0

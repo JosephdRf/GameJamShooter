@@ -5,9 +5,14 @@ extends Node3D
 ## in the editor and at runtime so the scene stays editable while playable.
 
 const SKIP := ["eau"]
-## Eau sur laquelle on marche malgré tout (exceptions à SKIP) : la surface de la baignoire
-## empêche de tomber au fond.
+## Eau profonde (exceptions à SKIP) : on y entre, enfoncé de WATER_SINK m (sa collision est sous
+## la surface visible : on ne tombe pas au fond), on y marche et on en sort d'un grand saut
+## (Player.DEEP_WATER_GROUP, water_jump_velocity). La baignoire ici ; les toilettes
+## (Eau_Toilettes, dans arena5.tscn) ont la même chose.
 const SOLID_WATER := ["eau_baignoire"]
+const WATER_SINK := 0.5
+## Même rendu que les flaques au sol (cf. Puddles.water_color) : bleu vif, brillant, ridé.
+const WATER_COLOR := Color(0.25, 0.66, 1.0, 0.8)
 ## Rattrapage (collision manquante : import fait avant tools/arena_glb_post_import.gd, que Godot
 ## ne refait pas tout seul quand seul le script change) : forme exacte seulement pour la
 ## structure et les objets simples, sinon une coque convexe. La forme exacte d'un objet détaillé
@@ -19,6 +24,46 @@ const EXACT_MAX_TRIANGLES := 150
 func _ready() -> void:
 	_place_copies()
 	_ensure_colliders(self)
+	_setup_deep_water()
+
+
+## Eau profonde : collision enfoncée de WATER_SINK m, groupe DEEP_WATER_GROUP, rendu des flaques.
+func _setup_deep_water() -> void:
+	if Engine.is_editor_hint():
+		return # Pas dans l'éditeur : la scène enregistrerait l'eau déjà enfoncée.
+	var material := _water_material()
+	for mi: MeshInstance3D in find_children("*", "MeshInstance3D", true, false):
+		if String(mi.name).to_lower() in SOLID_WATER:
+			mi.material_override = material
+			for body in mi.get_children():
+				if body is StaticBody3D and not body.is_in_group(Player.DEEP_WATER_GROUP):
+					body.add_to_group(Player.DEEP_WATER_GROUP)
+					body.global_position.y -= WATER_SINK
+	var toilets := get_node_or_null(^"Eau_Toilettes") as StaticBody3D
+	if toilets and not toilets.is_in_group(Player.DEEP_WATER_GROUP):
+		toilets.add_to_group(Player.DEEP_WATER_GROUP)
+		(toilets.get_node(^"Surface") as MeshInstance3D).material_override = material
+		(toilets.get_node(^"Forme") as Node3D).position.y -= WATER_SINK
+
+
+func _water_material() -> StandardMaterial3D:
+	var material := StandardMaterial3D.new()
+	material.albedo_color = WATER_COLOR
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.roughness = 0.04
+	material.metallic_specular = 0.8
+	var ripples := NoiseTexture2D.new()
+	ripples.seamless = true
+	ripples.as_normal_map = true
+	ripples.bump_strength = 3.0
+	var noise := FastNoiseLite.new()
+	noise.frequency = 0.04
+	ripples.noise = noise
+	material.normal_enabled = true
+	material.normal_texture = ripples
+	material.uv1_triplanar = true
+	material.uv1_scale = Vector3.ONE * 0.15
+	return material
 
 
 ## Copies d'objets de la carte : chaque repère (Marker3D) qui a la métadonnée `copie_de` reçoit

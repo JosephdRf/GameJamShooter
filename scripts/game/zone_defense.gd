@@ -9,8 +9,8 @@ extends Node3D
 ##   - la zone prend la couleur de l'équipe présente ;
 ##   - si l'équipe qui capture quitte la zone, la progression repart à 0 ;
 ##     un canard compte comme dedans tant que son corps touche la zone (centre
-##     jusqu'à un rayon de capsule hors du bord), à toute hauteur dans la colonne de
-##     lumière (en l'air aussi) ;
+##     jusqu'à un rayon de capsule hors du bord), jusqu'à `capture_height` m au-dessus du
+##     sol de la zone (en sautant aussi, mais pas depuis l'étage du dessus) ;
 ##   - si les deux équipes sont dans la zone, la progression est en pause.
 ## Capturée ou expirée, la zone disparaît et émet `finished`.
 ##
@@ -92,13 +92,15 @@ enum Shape { CIRCLE, RECTANGLE }
 	set(value):
 		wall_height = value
 		_update_shape()
-## Hauteur de la colonne de lumière (m), pour voir la zone de loin. Un canard compte comme
-## présent tant que son centre est dans cette colonne : en sautant, même depuis une rampe ou
-## une plateforme voisine (le mur, plus bas, coupait la détection dès qu'on le dépassait).
+## Hauteur de la colonne de lumière (m), pour voir la zone de loin.
 @export var beacon_height := 30.0:
 	set(value):
 		beacon_height = value
 		_update_shape()
+## Hauteur (m) jusqu'où un canard compte comme dans la zone (centre du canard au-dessus du sol de
+## la zone) : en sautant dedans (~3 m), mais pas depuis l'étage du dessus (le dessus du carton est
+## 8,8 m au-dessus de la zone d'en dessous).
+@export var capture_height := 4.5
 ## Points gagnés par l'équipe qui capture la zone.
 @export var points := 2
 ## Durée de vie de la zone une fois activée (s), en pause pendant une capture ; 0 = illimitée
@@ -221,7 +223,7 @@ func teams_inside(players: Array[Player]) -> Array[int]:
 ## Vrai si un corps de rayon `margin` centré en `point` touche la zone.
 func contains(point: Vector3, margin := 0.0) -> bool:
 	var offset := global_transform.affine_inverse() * point
-	if offset.y <= -1.0 or offset.y >= beacon_height:
+	if offset.y <= -1.0 or offset.y >= capture_height:
 		return false
 	if shape == Shape.RECTANGLE:
 		return absf(offset.x) <= size.x / 2.0 + margin and absf(offset.z) <= size.y / 2.0 + margin

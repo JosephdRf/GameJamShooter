@@ -60,7 +60,7 @@ Les chemins sont regroupés dans `scripts/ui/screens.gd` (`Screens.TITLE`, `Scre
    résorbe vite si l'équipe sort (`zone_floor.gdshader`). Une colonne de lumière de 30 m, parcourue de vagues qui montent (plus vite pendant une
    capture), dorée puis à la couleur de l'équipe qui capture (
    `beacon_height`) montre la zone active de loin. Un canard compte comme dedans tant que son corps touche la zone (même centré un peu
-   hors du bord). Si l'équipe sort, la barre repart à 0 ; si les deux équipes sont dedans, elle est en
+   hors du bord), jusqu'à 4,5 m au-dessus de son sol (`capture_height` : en sautant oui, depuis l'étage du dessus non). Si l'équipe sort, la barre repart à 0 ; si les deux équipes sont dedans, elle est en
    pause. Une zone reste jusqu'à sa capture (pas de limite de temps) ; **5 s** après
    une capture, une autre apparaît, annoncée par « Une nouvelle zone est apparue ! » (`next_zone_delay`). Scores : bleu à gauche du chrono, rouge à droite. À chaque prise :
    « Ton équipe a pris la zone clé ! » ou « L'adversaire a pris la zone clé ! ».
@@ -134,7 +134,9 @@ Un joueur qui tombe de la plateforme meurt.
   coéquipiers ne sont pas touchés (`explosion_radius`, `explosion_damage_max`, `explosion_damage_min`).
 - Un adversaire touché est **piégé 2 s** dans une bulle à la couleur de l'équipe qui l'a eu : il décolle de
   25 cm puis **s'élève lentement** (1 m de plus en 2 s, en flottant ; il s'arrête sous un plafond) et ne peut
-  plus bouger, sauter, dasher ni tirer (il peut toujours tourner la caméra et prendre des dégâts). Puis la bulle éclate et il retombe au sol. Rien sur un coéquipier ; un
+  plus bouger, sauter, dasher ni tirer (il peut toujours tourner la caméra et prendre des dégâts, réduits à
+  **37 %** : `Player.captured_damage_scale`, réglé pour qu'un canard arrosé de bulles sans arrêt dès sa
+  capture meure tout juste à la fin de la bulle). Puis la bulle éclate et il retombe au sol. Rien sur un coéquipier ; un
   joueur déjà piégé ne l'est pas une 2e fois. Mort dans la bulle : elle disparaît.
 - Réglages : `scenes/game/capture_bubble.tscn` (scène héritée de la bulle normale : `speed`,
   `max_distance`, `radius`, `world_radius` : rayon plus petit contre le décor pour qu'elle frôle le sol
@@ -178,6 +180,13 @@ Un joueur qui tombe de la plateforme meurt.
   10 m pour la maxi-bulle : `puddle_radius`), de forme irrégulière, qui s'étale du centre vers les bords
   en 0,3 s (`spread_time`). Deux flaques proches se rejoignent
   en une seule ; tirer plusieurs fois au même endroit l'agrandit.
+- **Eau profonde** (baignoire, toilettes) : on y entre, le canard s'y enfonce de 0,5 m (sa collision est
+  sous la surface), y marche normalement et c'est de l'eau (dash qui glisse, pas mouillés). On en sort d'un
+  **grand saut** (`Player.water_jump_velocity`, ~4,4 m : le bord de la baignoire est 3,2 m au-dessus de
+  l'eau). Même rendu que les flaques. Code : `scripts/levels/arena5.gd` (`_setup_deep_water`, groupe
+  `eau_profonde`).
+- **Rendu** : eau bleu vif bien visible sur le sol clair, cernée d'un liseré bleu plus foncé, avec un
+  léger halo bleu clair autour (`water_color`, `rim_color`, `damp_color` du nœud `Puddles`).
 - **Évaporation** : l'eau reste **1 min** après son dernier arrosage, puis pâlit et disparaît en **3 s**
   (`water_lifetime` = 63 s, `fade_duration`) ; réarroser une flaque la rafraîchit (groupe « Évaporation » du nœud `Puddles`).
 - **Dash sur l'eau** : il ne s'use pas. Le canard garde sa vitesse tant qu'il glisse sur une flaque, et
@@ -292,7 +301,7 @@ Un joueur qui tombe de la plateforme meurt.
 │   │   ├── crosshair.tscn       # Viseur (rouge sur un adversaire)
 │   │   ├── damage_overlay.tscn  # Regroupe les écrans de dégâts (instancié dans game.tscn)
 │   │   └── damage/damage_screen_1..3.tscn  # Bulles sur les bords, de plus en plus couvrantes
-│   ├── game/game.tscn       # Partie : Arena + Players/Player1..4 + SpawnZones (2) + Projectiles + ZoneDefenseMode (4 zones) + MatchHud + PauseMenu
+│   ├── game/game.tscn       # Partie : Arena + Players/Player1..4 + SpawnZones (2) + Projectiles + ZoneDefenseMode (11 zones) + MatchHud + PauseMenu
 │   ├── game/zone_defense.tscn   # Une zone à capturer (rayon, points, timeout, durée de capture)
 │   ├── game/zone_spawn.tscn     # Zone d'apparition d'une équipe (équipe, rayon)
 │   ├── game/bubble_projectile.tscn  # Bulle tirée (vitesse, portée, dégâts)
@@ -359,10 +368,12 @@ Un joueur qui tombe de la plateforme meurt.
 
 - **Arène du jeu : `scenes/levels/arena5.tscn`** (modèle Blender `assets/models/arene_bain/arene_bain.glb`,
   éclairage `scenes/levels/eclairage_arene.tscn`, collisions ajoutées par `scripts/levels/arena5.gd` et
-  `tools/arena_glb_post_import.gd`). Même plan qu'`arena4` (maquette) : zone d'apparition bleue sous la
-  planche à repasser (ouest), rouge sur la marche du placard (est) ; zones de défense sur le matelas gonflable
-  de la baignoire (11 m), le dessus du panier à linge (7,2 m, rectangle, ex-îlot central), le rebord de
-  fenêtre sous le lavabo (6,2 m) et le sol de la douche . L'ancienne arène
+  `tools/arena_glb_post_import.gd`). Zones d'apparition (bleue à l'ouest, rouge à
+  l'est) et 11 zones de défense placées par Edouard (branche `dev-equilibrage`) : grandes zones à 5 points
+  (dessus du panier à linge et du carton, 15 s de capture), petites zones rapides (rayon 1,7 m, 5 s), etc.
+  Chaque zone est posée 10 cm au-dessus du point le plus haut de la surface sous elle (sinon son disque
+  scintille avec la surface). Une étagère en plus (`Etagere_006`) est un repère qu'`arena5.gd` remplit avec
+  une copie d'`Etagere_002` (métadonnée `copie_de`). L'ancienne arène
   ci-dessous (`arena.tscn`, `arena4.tscn`) reste dans le projet.
 - Collisions d'`arena5` légères, choisies à l'import par `tools/arena_glb_post_import.gd` : forme exacte pour
   la structure (sol, murs, plafond, marches), boîtes pour les objets en pavé (serviettes, magazines…), forme
@@ -414,8 +425,8 @@ Un joueur qui tombe de la plateforme meurt.
 ### Régler les zones
 
 Dans `scenes/game/game.tscn`, les zones sont les enfants de `ZoneDefenseMode`
-(`ZoneDefense1` à `ZoneDefense4`, numérotées du côté bleu au côté rouge) : les déplacer dans la vue 3D
-(centre au niveau du sol), régler `shape` (rond : `radius`, 6 m par défaut ; rectangle : `size`),
+(`ZoneDefense1` à `ZoneDefense11`) : les déplacer dans la vue 3D (centre ~10 cm au-dessus de la surface,
+pour que le disque ne scintille pas), régler `shape` (rond : `radius`, 6 m par défaut ; rectangle : `size`),
 `points`, `timeout` et `capture_time` dans l'inspecteur, ou en ajouter / supprimer (instancier
 `zone_defense.tscn` sous `ZoneDefenseMode`). `ZoneDefense2` est un rectangle qui couvre tout le
 dessus de l'îlot central.

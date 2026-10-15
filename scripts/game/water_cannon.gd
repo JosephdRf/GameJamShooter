@@ -33,7 +33,7 @@ const SLOW_EVERY := 5
 ## Gouttes émises par seconde et par canon.
 @export var drops_per_second := 140.0
 ## Vitesse de départ (m/s) : celle des gouttes les plus rapides (le cœur du jet).
-@export var speed := 20.0
+@export var speed := 40.0
 ## Les gouttes les plus lentes partent à cette fraction de `speed` : elles retombent avant le
 ## point visé (le jet se déverse un peu sur le sol).
 @export_range(0.0, 1.0) var min_speed_ratio := 0.85

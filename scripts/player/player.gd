@@ -74,6 +74,9 @@ const NAME_TAG_SIGHT_SIDE := 0.65
 ## calque 3 « spawn_blue » (valeur 4), calque 4 « spawn_red » (valeur 8). Un joueur
 ## (et ses bulles) est bloqué par la zone d'apparition de l'équipe adverse.
 const WORLD_LAYER := 1
+## Groupe des surfaces d'eau profonde (baignoire, toilettes, cf. arena5.gd) : le canard y marche
+## un peu enfoncé, c'est de l'eau (dash qui glisse, pas mouillés) et il en sort d'un grand saut.
+const DEEP_WATER_GROUP := &"eau_profonde"
 const PLAYERS_LAYER := 2
 const SPAWN_LAYERS: Array[int] = [4, 8]
 ## Vitesse de rattrapage des cubes distants (plus élevé = plus réactif, moins lisse).
@@ -166,6 +169,9 @@ const CAPTURE_CEILING_TEST := 0.02
 ## Élevée = réponse quasi instantanée au stick / aux touches.
 @export var acceleration := 90.0
 @export var jump_velocity := 8.5
+## Saut depuis l'eau profonde (cf. DEEP_WATER_GROUP) : assez haut (~4,4 m) pour passer le bord de
+## la baignoire (3,2 m au-dessus de l'eau) ou des toilettes.
+@export var water_jump_velocity := 12.5
 ## Multiplicateur de la gravité du projet (plus élevé = saut moins flottant).
 @export var gravity_scale := 1.8
 ## Hauteur maximale d'un relief (marche, rebord…) que le canard monte en marchant, sans sauter (m).
@@ -228,6 +234,11 @@ const CAPTURE_CEILING_TEST := 0.02
 @export var water_recharge_max_rate := 0.9
 @export_group("Vie")
 @export var max_health := 100.0
+## Piégé dans une bulle de capture, le canard ne prend que cette fraction des dégâts : arrosé de
+## bulles sans arrêt dès sa capture (à 6 à 10 m), il meurt tout juste à la fin de la bulle (2 s) ;
+## au jet d'eau, il survit de justesse (mesuré : 270 à 300 PV de bulles, 220 à 240 PV de jet
+## pendant les 2 s, sans réduction).
+@export var captured_damage_scale := 0.37
 ## Vie regagnée par seconde (PV/s) quand le joueur ne prend pas de dégâts.
 @export var regen_rate := 10.0
 ## Temps sans dégâts avant que la vie commence à remonter (s).
@@ -594,7 +605,7 @@ func _simulate(delta: float) -> void:
 				velocity.y = dryer.launch_speed
 				_play_updraft.rpc()
 			else:
-				velocity.y = jump_velocity
+				velocity.y = water_jump_velocity if is_in_deep_water() else jump_velocity
 				_play_jump.rpc()
 	var direction := Vector3(input.x, 0.0, input.y).rotated(Vector3.UP, camera.get_yaw())
 
@@ -1092,6 +1103,8 @@ func _turn_model_towards(direction: Vector3, weight: float) -> void:
 func _apply_damage(amount: float, attacker_id := 0) -> void:
 	if not is_alive() or amount <= 0.0:
 		return
+	if captured:
+		amount *= captured_damage_scale
 	_regen_cooldown_left = regen_delay
 	health = maxf(health - amount, 0.0)
 	if health <= 0.0:
@@ -1178,7 +1191,16 @@ func _dash_speed_at(t: float) -> float:
 func is_on_water() -> bool:
 	if _puddles == null:
 		_puddles = get_tree().get_first_node_in_group(Puddles.GROUP) as Puddles
-	return _puddles != null and _puddles.is_wet(_feet_position())
+	return (_puddles != null and _puddles.is_wet(_feet_position())) or is_in_deep_water()
+
+
+## Vrai si le canard a les pieds dans l'eau profonde (baignoire, toilettes : DEEP_WATER_GROUP).
+func is_in_deep_water() -> bool:
+	var feet := _feet_position()
+	var query := PhysicsRayQueryParameters3D.create(feet + Vector3.UP * 0.2, feet + Vector3.DOWN * 0.3,
+			WORLD_LAYER, [get_rid()])
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	return not hit.is_empty() and (hit.collider as Node).is_in_group(DEEP_WATER_GROUP)
 
 
 ## Normale du sol sous le canard (vers le haut si on ne la connaît pas : en l'air, ou canard

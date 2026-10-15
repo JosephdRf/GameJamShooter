@@ -58,26 +58,26 @@ script = ExtResource("17_water_cannon")
 script = ExtResource("9_mode")
 
 [node name="ZoneDefense11" parent="ZoneDefenseMode" unique_id=710039287 instance=ExtResource("10_zone")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.566682, 0.03683853, -28.132359)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.566682, 0.072, -28.132359)
 radius = 1.71
 capture_time = 5.0
 
 [node name="ZoneDefense10" parent="ZoneDefenseMode" unique_id=1653331689 instance=ExtResource("10_zone")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.7826042, -0.24141109, 13.777085)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.7826042, -0.165, 13.777085)
 radius = 1.71
 capture_time = 5.0
 
 [node name="ZoneDefense5" parent="ZoneDefenseMode" unique_id=1092074230 instance=ExtResource("10_zone")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.517822, -0.21783328, 2.7156892)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.517822, -0.165, 2.7156892)
 radius = 5.0
 
 [node name="ZoneDefense9" parent="ZoneDefenseMode" unique_id=1839514157 instance=ExtResource("10_zone")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.864932, 6.262846, -28.815823)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.864932, 6.317, -28.815823)
 radius = 1.71
 capture_time = 5.0
 
 [node name="ZoneDefense8" parent="ZoneDefenseMode" unique_id=1247832157 instance=ExtResource("10_zone")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.9120502, 11.930346, 37.972176)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.9120502, 12.012, 37.972176)
 radius = 1.71
 capture_time = 5.0
 
@@ -94,23 +94,23 @@ points = 5
 capture_time = 15.0
 
 [node name="ZoneDefense1" parent="ZoneDefenseMode" unique_id=1842881901 instance=ExtResource("10_zone")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.673938, 11.12749, 35.258453)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8.673938, 11.156, 35.258453)
 radius = 3.5
 points = 3
 
 [node name="ZoneDefense2" parent="ZoneDefenseMode" unique_id=1765327171 instance=ExtResource("10_zone")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.70937, 7.2, -6)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.70937, 7.282, -6)
 shape = 1
 size = Vector2(6.5, 13)
 points = 5
 capture_time = 15.0
 
 [node name="ZoneDefense3" parent="ZoneDefenseMode" unique_id=211882194 instance=ExtResource("10_zone")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.2, 6.2, -29.2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.2, 6.303, -29.2)
 radius = 5.0
 
 [node name="ZoneDefense4" parent="ZoneDefenseMode" unique_id=634020543 instance=ExtResource("10_zone")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30.5, 1.83, -19.3)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30.5, 1.933, -19.3)
 
 [node name="CaptureSound" type="AudioStreamPlayer" parent="." unique_id=2032905854]
 stream = ExtResource("18_capture_sound")

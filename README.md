@@ -10,11 +10,14 @@ caméra à la 3e personne. Un des joueurs héberge la partie (« listen server �
 | Chargement (fictif, 3 s, jauge d'eau `WaterGauge` + pourcentage) | `loading_screen.tscn` | Accueil |
 | Accueil (titre « Duck my Life » qui flotte, « Fuck My Life » une fois sur dix, bouton jaune) | `title_screen.tscn` | **Démarrer** → Hôte/IP |
 | Hôte/IP | `connect_screen.tscn` | Héberger → Sélection d'équipe · Rejoindre → connexion réussie ? oui : Sélection d'équipe, non : reste ici avec un message |
-| Sélection d'équipe (une fois son joueur validé : fenêtre du pseudo, tout en majuscules, gardé pour la fois suivante, affiché sur le bouton à la place de « Joueur N » ; en jeu, affiché au-dessus des canards des autres joueurs) | `team_select.tscn` | **Lancer la partie** (hôte) → Préparation du combat |
+| Sélection d'équipe (une fois son joueur validé : fenêtre du pseudo, tout en majuscules, gardé pour la fois suivante, affiché sur le bouton à la place de « Joueur N » (sans pseudo, le joueur s'appelle « Joueur N », aussi au-dessus de son canard) ; en jeu, affiché au-dessus des canards des autres joueurs) | `team_select.tscn` | **Lancer la partie** (hôte) → Préparation du combat |
 | Préparation du combat (5 s, sur tous les ordinateurs : rangée de bulles `BubbleBar` à la couleur de son équipe + pourcentage, fond noir ; deux fiches de 2,5 s, « Le saviez-vous ? » sur l'histoire puis « Commandes » avec les touches du clavier ou de la manette utilisée (`InputBadge`) ; la scène de combat se charge en arrière-plan) | `match_loading.tscn` | GAME |
 | GAME | `game/game.tscn` | Pause (hôte) · fin du combat → Écran de fin |
-| Pause (dans GAME) | `pause_menu.tscn` | Reprendre → GAME · Quitter → Sélection d'équipe (tout le monde) |
+| Pause (dans GAME ; style des menus : jeu figé grisé derrière (`pause_dim.gdshader`), bulles, titre « Pause » qui flotte, bouton jaune « Reprendre », bulle « Quitter ») | `pause_menu.tscn` | Reprendre → GAME · Quitter → Sélection d'équipe (tout le monde) |
 | Écran de fin (style des menus : serviettes bleue et rouge avec scores et pseudos, badge « Gagné ! ») | `end_screen.tscn` | **Rejouer** → Sélection d'équipe · **Quitter** → ferme le jeu |
+
+Sur tous ces écrans, quelques bulles transparentes montent doucement derrière les textes et les boutons
+(`RisingBubbles`, `scripts/ui/rising_bubbles.gd`, nœud `Bubbles` juste au-dessus du fond).
 
 Chaque écran est une scène indépendante de `scenes/ui/` (script du même nom dans `scripts/ui/`).
 Les chemins sont regroupés dans `scripts/ui/screens.gd` (`Screens.TITLE`, `Screens.GAME`…).
@@ -205,8 +208,12 @@ Un joueur qui tombe de la plateforme meurt.
   bulles n'arrivent qu'avec le 3e). Les bulles restent en place, grossissent quand on perd des PV et
   rétrécissent jusqu'à disparaître quand on en regagne.
 - Sans dégâts pendant 2 s, la vie remonte de **10 PV/s**.
-- À 0 PV : l'écran passe en gris avec « You died », le canard disparaît, puis il réapparaît 2 s plus tard sur sa
+- À 0 PV : l'écran passe en gris avec « Tu es mort » ; le canard joue son animation de mort (`death` de
+  `duck_v4.glb`, état `death` de l'AnimationTree : il bascule sur le dos, pattes en l'air, et retombe au sol
+  s'il était en l'air), disparaît dans un pop de bulle, puis il réapparaît 2 s après sa mort sur sa
   zone d'apparition avec 100 PV.
+- Chez le tireur, en bas de l'écran à droite de la jauge d'eau : « Vous avez éliminé ROMEO » (« Joueur 3 » sans
+  pseudo), 2,5 s, avec un son d'élimination (pop de bulle + arpège de clochettes, `sfx/kill/kill.wav`).
 - Fil des éliminations en haut à droite (`scripts/ui/kill_feed.gd`) : « ROMEO a éclaté EDOUARD », pseudos aux
   couleurs des équipes, « Edouard est tombé » sans tireur ; entouré de jaune quand ça concerne son joueur.
   Chaque dégât porte le joueur qui a tiré (`take_damage(amount, attacker_id)`), annoncé à tous à la mort
@@ -275,7 +282,7 @@ Un joueur qui tombe de la plateforme meurt.
 │   │   ├── match_hud.tscn       # HUD en jeu : chrono et scores (Scoreboard), capture, eau (instancié dans game.tscn)
 │   │   ├── pause_menu.tscn      # Menu pause (instancié dans game.tscn)
 │   │   ├── end_screen.tscn      # Écran de fin : serviettes avec scores et pseudos, équipe gagnante, Rejouer / Quitter
-│   │   ├── death_screen.tscn    # « You died » + image grisée (instancié dans game.tscn)
+│   │   ├── death_screen.tscn    # « Tu es mort » + image grisée (instancié dans game.tscn)
 │   │   ├── announcer.tscn       # Messages de match (Attention…, C'est parti !, zone, Prolongation !, Terminé !), style Splatoon, effet au choix (`effect` : Splat, Slide, Stamp, Flash, Jelly)
 │   │   ├── crosshair.tscn       # Viseur (rouge sur un adversaire)
 │   │   ├── damage_overlay.tscn  # Regroupe les écrans de dégâts (instancié dans game.tscn)

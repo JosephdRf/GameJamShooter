@@ -1,6 +1,15 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/pause_menu.gd" id="1_pause"]
+[ext_resource type="Shader" path="res://assets/shaders/pause_dim.gdshader" id="2_dim"]
+[ext_resource type="Script" path="res://scripts/ui/rising_bubbles.gd" id="3_bubbles"]
+[ext_resource type="Texture2D" path="res://assets/ui/team_select/yellow_button.png" id="4_yellow_button"]
+[ext_resource type="Texture2D" path="res://assets/ui/team_select/bubbles_quitter.png" id="5_quitter"]
+[ext_resource type="Script" path="res://scripts/ui/button_prompt.gd" id="6_prompt"]
+[ext_resource type="FontFile" path="res://assets/fonts/titan_one/TitanOne-Regular.ttf" id="99_titan"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_dim"]
+shader = ExtResource("2_dim")
 
 [node name="PauseMenu" type="CanvasLayer"]
 process_mode = 3
@@ -9,52 +18,200 @@ visible = false
 script = ExtResource("1_pause")
 
 [node name="Dim" type="ColorRect" parent="."]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0, 0, 0, 0.75)
-
-[node name="Center" type="CenterContainer" parent="."]
+material = SubResource("ShaderMaterial_dim")
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Layout" type="VBoxContainer" parent="Center"]
-custom_minimum_size = Vector2(420, 0)
-layout_mode = 2
-theme_override_constants/separation = 20
+[node name="Bubbles" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("3_bubbles")
 
-[node name="Title" type="Label" parent="Center/Layout"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 64
+[node name="Layout" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -640.0
+offset_top = -360.0
+offset_right = 640.0
+offset_bottom = 360.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="Layout"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 140.0
+offset_top = 120.0
+offset_right = 1140.0
+offset_bottom = 270.0
+pivot_offset = Vector2(500, 75)
+theme_override_colors/font_color = Color(1, 0.82, 0.1, 1)
+theme_override_colors/font_shadow_color = Color(0.07, 0.25, 0.45, 0.6)
+theme_override_colors/font_outline_color = Color(0.1, 0.38, 0.72, 1)
+theme_override_constants/shadow_offset_x = 0
+theme_override_constants/shadow_offset_y = 7
+theme_override_constants/outline_size = 24
+theme_override_fonts/font = ExtResource("99_titan")
+theme_override_font_sizes/font_size = 120
 text = "Pause"
 horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="Message" type="Label" parent="Center/Layout"]
+[node name="Message" type="Label" parent="Layout"]
 unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/font_color = Color(0.7, 0.72, 0.78, 1)
+layout_mode = 0
+offset_left = 140.0
+offset_top = 300.0
+offset_right = 1140.0
+offset_bottom = 360.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.07, 0.25, 0.45, 1)
+theme_override_constants/outline_size = 10
+theme_override_fonts/font = ExtResource("99_titan")
+theme_override_font_sizes/font_size = 32
+text = "L'hôte a mis la partie en pause…"
 horizontal_alignment = 1
-autowrap_mode = 3
+vertical_alignment = 1
 
-[node name="Buttons" type="VBoxContainer" parent="Center/Layout"]
+[node name="Buttons" type="Control" parent="Layout"]
 unique_name_in_owner = true
-layout_mode = 2
-theme_override_constants/separation = 16
+layout_mode = 0
+offset_right = 1280.0
+offset_bottom = 720.0
+mouse_filter = 2
 
-[node name="ResumeButton" type="Button" parent="Center/Layout/Buttons"]
+[node name="ResumeButton" type="TextureButton" parent="Layout/Buttons"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 64)
-layout_mode = 2
-theme_override_font_sizes/font_size = 28
+layout_mode = 0
+offset_left = 290.0
+offset_top = 380.0
+offset_right = 620.0
+offset_bottom = 498.0
+pivot_offset = Vector2(165, 59)
+focus_neighbor_right = NodePath("../QuitButton")
+texture_normal = ExtResource("4_yellow_button")
+ignore_texture_size = true
+stretch_mode = 0
+
+[node name="Text" type="Label" parent="Layout/Buttons/ResumeButton"]
+layout_mode = 0
+offset_right = 330.0
+offset_bottom = 112.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.62, 0.38, 0, 1)
+theme_override_constants/outline_size = 14
+theme_override_fonts/font = ExtResource("99_titan")
+theme_override_font_sizes/font_size = 44
 text = "Reprendre"
+horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="QuitButton" type="Button" parent="Center/Layout/Buttons"]
+[node name="QuitButton" type="TextureButton" parent="Layout/Buttons"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(0, 64)
+layout_mode = 0
+offset_left = 670.0
+offset_top = 323.0
+offset_right = 1050.0
+offset_bottom = 555.0
+pivot_offset = Vector2(190, 116)
+focus_neighbor_left = NodePath("../ResumeButton")
+texture_normal = ExtResource("5_quitter")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="Text" type="Label" parent="Layout/Buttons/QuitButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 4.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.153, 0.514, 0.769, 1)
+theme_override_constants/outline_size = 15
+theme_override_fonts/font = ExtResource("99_titan")
+theme_override_font_sizes/font_size = 57
+text = "Quitter"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="QuitInfo" type="Label" parent="Layout/Buttons"]
+layout_mode = 0
+offset_left = 640.0
+offset_top = 555.0
+offset_right = 1080.0
+offset_bottom = 590.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.07, 0.25, 0.45, 1)
+theme_override_constants/outline_size = 8
+theme_override_fonts/font = ExtResource("99_titan")
+theme_override_font_sizes/font_size = 18
+text = "Retour à la sélection d'équipe, pour tout le monde"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="AcceptHint" type="HBoxContainer" parent="Layout/Buttons"]
+layout_mode = 0
+offset_left = 36.0
+offset_top = 600.0
+offset_right = 336.0
+offset_bottom = 644.0
+mouse_filter = 2
+theme_override_constants/separation = 14
+
+[node name="Prompt" type="Control" parent="Layout/Buttons/AcceptHint"]
+custom_minimum_size = Vector2(44, 44)
 layout_mode = 2
-text = "Quitter (sélection d'équipe)"
+mouse_filter = 2
+script = ExtResource("6_prompt")
+
+[node name="Label" type="Label" parent="Layout/Buttons/AcceptHint"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.07, 0.25, 0.45, 1)
+theme_override_constants/outline_size = 8
+theme_override_fonts/font = ExtResource("99_titan")
+theme_override_font_sizes/font_size = 22
+text = "Valider"
+vertical_alignment = 1
+
+[node name="BackHint" type="HBoxContainer" parent="Layout/Buttons"]
+layout_mode = 0
+offset_left = 36.0
+offset_top = 652.0
+offset_right = 336.0
+offset_bottom = 696.0
+mouse_filter = 2
+theme_override_constants/separation = 14
+
+[node name="Prompt" type="Control" parent="Layout/Buttons/BackHint"]
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("6_prompt")
+role = 1
+
+[node name="Label" type="Label" parent="Layout/Buttons/BackHint"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.07, 0.25, 0.45, 1)
+theme_override_constants/outline_size = 8
+theme_override_fonts/font = ExtResource("99_titan")
+theme_override_font_sizes/font_size = 22
+text = "Reprendre"
+vertical_alignment = 1

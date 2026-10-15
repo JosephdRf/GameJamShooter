@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://c7dgbrgw3jehr"
-path="res://.godot/imported/selection_equipe.png-14c937e81217160b1bd37fe169221012.ctex"
+uid="uid://ctcnkx48ele2f"
+path="res://.godot/imported/bubbles_lancer.png-222391caae7924c87f2ec6e8a514111a.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/team_select/selection_equipe.png"
-dest_files=["res://.godot/imported/selection_equipe.png-14c937e81217160b1bd37fe169221012.ctex"]
+source_file="res://assets/ui/team_select/bubbles_lancer.png"
+dest_files=["res://.godot/imported/bubbles_lancer.png-222391caae7924c87f2ec6e8a514111a.ctex"]
 
 [params]
 

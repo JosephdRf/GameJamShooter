@@ -4,6 +4,7 @@
 [ext_resource type="Script" path="res://scripts/ui/tiled_background.gd" id="bg_tiles"]
 [ext_resource type="FontFile" path="res://assets/fonts/titan_one/TitanOne-Regular.ttf" id="2_font"]
 [ext_resource type="Texture2D" path="res://assets/ui/team_select/yellow_button.png" id="3_button"]
+[ext_resource type="Script" path="res://scripts/ui/rising_bubbles.gd" id="rb_bubbles"]
 
 [node name="TitleScreen" type="Control"]
 layout_mode = 3
@@ -23,6 +24,16 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("bg_tiles")
+
+[node name="Bubbles" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("rb_bubbles")
 
 [node name="Layout" type="Control" parent="."]
 layout_mode = 1

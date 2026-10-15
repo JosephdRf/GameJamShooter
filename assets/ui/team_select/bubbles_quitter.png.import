@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://n6h4y8g0tgvd"
-path="res://.godot/imported/joueur1.png-0e8118bb76af39c8388b47ff120db6a2.ctex"
+uid="uid://1givlrmr1ypc"
+path="res://.godot/imported/bubbles_quitter.png-586c4c07992bf88384c2157685b6a298.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/ui/team_select/joueur1.png"
-dest_files=["res://.godot/imported/joueur1.png-0e8118bb76af39c8388b47ff120db6a2.ctex"]
+source_file="res://assets/ui/team_select/bubbles_quitter.png"
+dest_files=["res://.godot/imported/bubbles_quitter.png-586c4c07992bf88384c2157685b6a298.ctex"]
 
 [params]
 

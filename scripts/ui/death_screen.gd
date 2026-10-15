@@ -1,6 +1,6 @@
 extends CanvasLayer
 ## Écran de mort du joueur local (instancié dans scenes/game/game.tscn) :
-## l'image passe en gris et « You died » s'affiche jusqu'à la réapparition.
+## l'image passe en gris et « Tu es mort » s'affiche jusqu'à la réapparition.
 ## Au-dessus du HUD (grisé lui aussi), sous le menu pause.
 
 @onready var _title: Label = %Title

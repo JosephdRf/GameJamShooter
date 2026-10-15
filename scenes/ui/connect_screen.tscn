@@ -6,9 +6,10 @@
 [ext_resource type="Texture2D" uid="uid://kune4s0iy0rr" path="res://assets/ui/team_select/red_towel.png" id="4_red_towel"]
 [ext_resource type="Texture2D" uid="uid://bro22np6hixv0" path="res://assets/ui/team_select/blue_button.png" id="5_blue_button"]
 [ext_resource type="Texture2D" uid="uid://dkti2fgepfr8i" path="res://assets/ui/team_select/red_button.png" id="6_red_button"]
-[ext_resource type="Texture2D" uid="uid://dd5tgv82yhfqk" path="res://assets/ui/team_select/quitter.png" id="7_quitter"]
+[ext_resource type="Texture2D" path="res://assets/ui/team_select/bubbles_quitter.png" id="7_quitter"]
 [ext_resource type="Script" uid="uid://bua0hknfs70nn" path="res://scripts/ui/button_prompt.gd" id="8_prompt"]
 [ext_resource type="FontFile" path="res://assets/fonts/titan_one/TitanOne-Regular.ttf" id="99_titan"]
+[ext_resource type="Script" path="res://scripts/ui/rising_bubbles.gd" id="rb_bubbles"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_field"]
 content_margin_left = 16.0
@@ -58,6 +59,16 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("2_bg")
+
+[node name="Bubbles" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("rb_bubbles")
 
 [node name="Layout" type="Control" parent="." unique_id=147043763]
 layout_mode = 1
@@ -304,3 +315,21 @@ focus_neighbor_top = NodePath("../Towel2/JoinButton")
 texture_normal = ExtResource("7_quitter")
 ignore_texture_size = true
 stretch_mode = 5
+
+[node name="Text" type="Label" parent="Layout/LeaveButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 4.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.153, 0.514, 0.769, 1)
+theme_override_constants/outline_size = 15
+theme_override_fonts/font = ExtResource("99_titan")
+theme_override_font_sizes/font_size = 57
+text = "Quitter"
+horizontal_alignment = 1
+vertical_alignment = 1

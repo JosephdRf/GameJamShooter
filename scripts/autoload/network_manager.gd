@@ -146,7 +146,7 @@ func set_my_name(player_name: String) -> void:
 		_request_name.rpc_id(1, player_name)
 
 
-## Pseudo du joueur `player_id` (1 à 4) : celui choisi par son ordinateur, sinon « JOUEUR N ».
+## Pseudo du joueur `player_id` (1 à 4) : celui choisi par son ordinateur, sinon « Joueur N ».
 func get_player_name(player_id: int) -> String:
 	var player_name: String = names.get(get_slot_owner(player_id), "")
 	return player_name if not player_name.is_empty() else default_name(player_id)
@@ -154,7 +154,7 @@ func get_player_name(player_id: int) -> String:
 
 ## Pseudo par défaut du joueur `player_id` (1 à 4).
 static func default_name(player_id: int) -> String:
-	return "JOUEUR %d" % player_id
+	return "Joueur %d" % player_id
 
 
 ## Pseudo tel qu'il sera gardé : tout en majuscules, sans espaces autour ni retours à la

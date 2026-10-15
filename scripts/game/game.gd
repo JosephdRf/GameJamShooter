@@ -173,6 +173,8 @@ func _on_player_eliminated(killer_id: int, victim: Player) -> void:
 			killer = player
 			mine = mine or player.is_local
 	_kill_feed.add_elimination(killer, victim, mine)
+	if killer and killer.is_local and killer != victim:
+		_kill_feed.show_my_elimination(victim)
 
 
 func _on_player_respawned(player: Player) -> void:

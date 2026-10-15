@@ -12,8 +12,8 @@ extends Control
 ## avec Start ou la bulle « Lancer ».
 ## Une fois le choix validé, une fenêtre demande son pseudo (pré-rempli avec le dernier
 ## utilisé, gardé dans NAME_FILE) : Entrée (ou A, Échap, un clic à côté) le valide, vide =
-## « JOUEUR N ». Pseudos tout en majuscules. Un pseudo choisi remplace l'image « Joueur N » du
-## bouton (même style : blanc, gros contour à la couleur de l'équipe), pour tous (NetworkManager.names). Échap / bulle « Quitter » -> écran hôte/IP.
+## « Joueur N ». Pseudos tout en majuscules. Sur chaque bouton : « Joueur N », ou le pseudo choisi
+## (police Titan One blanche, gros contour à la couleur de l'équipe), pour tous (NetworkManager.names). Échap / bulle « Quitter » -> écran hôte/IP.
 ## Les boutons grossissent au survol (et au focus clavier / manette).
 ## Joueur choisi par cet ordinateur : un peu plus gros, entouré d'un contour jaune qui
 ## pulse (fixe une fois le choix validé). Joueur pris par un autre ordinateur : grisé.
@@ -43,8 +43,8 @@ const NAME_FILE := "user://profil.cfg"
 const TITAN_FONT := preload("res://assets/fonts/titan_one/TitanOne-Regular.ttf")
 ## Couleur de la fenêtre du pseudo (bleu des boutons de l'équipe bleue).
 const NAME_BLUE := Color(0.16, 0.42, 0.82)
-## Pseudo sur le bouton d'un joueur : contour de chaque équipe (celui des images « Joueur N »),
-## taille de police maximale et minimale, largeur disponible (px).
+## Nom sur le bouton d'un joueur : contour de chaque équipe, taille de police maximale et
+## minimale, largeur disponible (px).
 const PSEUDO_OUTLINES: Array[Color] = [Color("2a84c3"), Color("ef3240")]
 const PSEUDO_MAX_FONT_SIZE := 46
 const PSEUDO_MIN_FONT_SIZE := 20
@@ -54,7 +54,7 @@ const PSEUDO_WIDTH := 290.0
 var _hovered := {}
 ## Contour jaune de chaque joueur (visible sur celui de cet ordinateur).
 var _frames: Array[Panel] = []
-## Pseudo de chaque joueur, à la place de l'image « Joueur N » quand il en a choisi un.
+## Nom affiché sur chaque bouton : « Joueur N », ou son pseudo.
 var _pseudos: Array[Label] = []
 ## Fenêtre du pseudo (fond assombri + carte) et son champ de saisie.
 var _name_entry: Control
@@ -307,20 +307,18 @@ func _make_frame(button: Control) -> Panel:
 	return frame
 
 
-## Pseudo posé sur le bouton `button`, à la place de l'image « Joueur N » (masqué au départ).
+## Nom posé sur le bouton `button` (dans sa partie haute, au-dessus de la ligne d'état).
 func _make_pseudo(button: TextureButton, team: int) -> Label:
 	var label := Label.new()
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var image := button.get_node(^"Name") as Control
-	label.position = Vector2((button.size.x - PSEUDO_WIDTH) / 2.0, image.position.y - 6.0)
-	label.size = Vector2(PSEUDO_WIDTH, image.size.y + 12.0)
+	label.position = Vector2((button.size.x - PSEUDO_WIDTH) / 2.0, 24.0)
+	label.size = Vector2(PSEUDO_WIDTH, 64.0)
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.add_theme_font_override(&"font", TITAN_FONT)
 	label.add_theme_color_override(&"font_color", Color.WHITE)
 	label.add_theme_color_override(&"font_outline_color", PSEUDO_OUTLINES[team - 1])
 	label.add_theme_constant_override(&"outline_size", 14)
-	label.visible = false
 	button.add_child(label)
 	return label
 
@@ -355,13 +353,10 @@ func _refresh() -> void:
 		var taken := owner_id != 0 and owner_id != my_id
 		_players[i].modulate = TAKEN_MODULATE if taken else Color.WHITE
 		_frames[i].visible = owner_id == my_id
-		# Pseudo choisi : à la place de l'image « Joueur N ». Dessous : qui l'a pris (sans
-		# pseudo), puis « prêt » une fois validé.
+		# Pseudo choisi, sinon « Joueur N ». Dessous : qui l'a pris (sans pseudo), puis
+		# « prêt » une fois validé.
 		var has_pseudo := owner_id != 0 and not str(NetworkManager.names.get(owner_id, "")).is_empty()
-		_players[i].get_node(^"Name").visible = not has_pseudo
-		_pseudos[i].visible = has_pseudo
-		if has_pseudo:
-			_set_pseudo(_pseudos[i], NetworkManager.get_player_name(player_id))
+		_set_pseudo(_pseudos[i], NetworkManager.get_player_name(player_id))
 		var parts := PackedStringArray()
 		if not has_pseudo and taken:
 			parts.append("Pris par l'hôte" if owner_id == 1 else "Pris")

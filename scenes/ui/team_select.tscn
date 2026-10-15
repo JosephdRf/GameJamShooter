@@ -2,19 +2,15 @@
 
 [ext_resource type="Script" path="res://scripts/ui/team_select.gd" id="1_script"]
 [ext_resource type="Script" path="res://scripts/ui/tiled_background.gd" id="2_bg"]
-[ext_resource type="Texture2D" path="res://assets/ui/team_select/selection_equipe.png" id="3_title"]
 [ext_resource type="Texture2D" path="res://assets/ui/team_select/blue_towel.png" id="4_blue_towel"]
 [ext_resource type="Texture2D" path="res://assets/ui/team_select/red_towel.png" id="5_red_towel"]
 [ext_resource type="Texture2D" path="res://assets/ui/team_select/blue_button.png" id="6_blue_button"]
 [ext_resource type="Texture2D" path="res://assets/ui/team_select/red_button.png" id="7_red_button"]
-[ext_resource type="Texture2D" path="res://assets/ui/team_select/joueur1.png" id="8_j1"]
-[ext_resource type="Texture2D" path="res://assets/ui/team_select/joueur2.png" id="9_j2"]
-[ext_resource type="Texture2D" path="res://assets/ui/team_select/joueur3.png" id="10_j3"]
-[ext_resource type="Texture2D" path="res://assets/ui/team_select/joueur4.png" id="11_j4"]
-[ext_resource type="Texture2D" path="res://assets/ui/team_select/lancer.png" id="12_lancer"]
-[ext_resource type="Texture2D" path="res://assets/ui/team_select/quitter.png" id="13_quitter"]
+[ext_resource type="Texture2D" path="res://assets/ui/team_select/bubbles_lancer.png" id="12_lancer"]
+[ext_resource type="Texture2D" path="res://assets/ui/team_select/bubbles_quitter.png" id="13_quitter"]
 [ext_resource type="Script" path="res://scripts/ui/button_prompt.gd" id="16_prompt"]
 [ext_resource type="FontFile" path="res://assets/fonts/titan_one/TitanOne-Regular.ttf" id="99_titan"]
+[ext_resource type="Script" path="res://scripts/ui/rising_bubbles.gd" id="rb_bubbles"]
 
 [node name="TeamSelect" type="Control"]
 layout_mode = 3
@@ -35,6 +31,16 @@ grow_vertical = 2
 mouse_filter = 2
 script = ExtResource("2_bg")
 
+[node name="Bubbles" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("rb_bubbles")
+
 [node name="Layout" type="Control" parent="."]
 layout_mode = 1
 anchors_preset = 8
@@ -50,16 +56,23 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="Title" type="TextureRect" parent="Layout"]
+[node name="Title" type="Label" parent="Layout"]
 layout_mode = 0
-offset_left = 365
-offset_top = 18
-offset_right = 916
-offset_bottom = 103
-mouse_filter = 2
-texture = ExtResource("3_title")
-expand_mode = 1
-stretch_mode = 5
+offset_left = 140.0
+offset_top = 14.0
+offset_right = 1140.0
+offset_bottom = 108.0
+theme_override_colors/font_color = Color(1, 0.82, 0.1, 1)
+theme_override_colors/font_shadow_color = Color(0.07, 0.25, 0.45, 0.6)
+theme_override_colors/font_outline_color = Color(0.1, 0.38, 0.72, 1)
+theme_override_constants/shadow_offset_x = 0
+theme_override_constants/shadow_offset_y = 5
+theme_override_constants/outline_size = 18
+theme_override_fonts/font = ExtResource("99_titan")
+theme_override_font_sizes/font_size = 64
+text = "Sélection d'équipe"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Info" type="Label" parent="Layout"]
 layout_mode = 0
@@ -102,17 +115,6 @@ texture_normal = ExtResource("6_blue_button")
 ignore_texture_size = true
 stretch_mode = 0
 
-[node name="Name" type="TextureRect" parent="Layout/Towel1/Player1"]
-layout_mode = 0
-offset_left = 55
-offset_top = 30
-offset_right = 275
-offset_bottom = 82
-mouse_filter = 2
-texture = ExtResource("8_j1")
-expand_mode = 1
-stretch_mode = 5
-
 [node name="State" type="Label" parent="Layout/Towel1/Player1"]
 layout_mode = 0
 offset_left = 0
@@ -139,17 +141,6 @@ focus_mode = 0
 texture_normal = ExtResource("6_blue_button")
 ignore_texture_size = true
 stretch_mode = 0
-
-[node name="Name" type="TextureRect" parent="Layout/Towel1/Player2"]
-layout_mode = 0
-offset_left = 55
-offset_top = 30
-offset_right = 275
-offset_bottom = 82
-mouse_filter = 2
-texture = ExtResource("9_j2")
-expand_mode = 1
-stretch_mode = 5
 
 [node name="State" type="Label" parent="Layout/Towel1/Player2"]
 layout_mode = 0
@@ -189,17 +180,6 @@ texture_normal = ExtResource("7_red_button")
 ignore_texture_size = true
 stretch_mode = 0
 
-[node name="Name" type="TextureRect" parent="Layout/Towel2/Player3"]
-layout_mode = 0
-offset_left = 55
-offset_top = 30
-offset_right = 275
-offset_bottom = 82
-mouse_filter = 2
-texture = ExtResource("10_j3")
-expand_mode = 1
-stretch_mode = 5
-
 [node name="State" type="Label" parent="Layout/Towel2/Player3"]
 layout_mode = 0
 offset_left = 0
@@ -226,17 +206,6 @@ focus_mode = 0
 texture_normal = ExtResource("7_red_button")
 ignore_texture_size = true
 stretch_mode = 0
-
-[node name="Name" type="TextureRect" parent="Layout/Towel2/Player4"]
-layout_mode = 0
-offset_left = 55
-offset_top = 30
-offset_right = 275
-offset_bottom = 82
-mouse_filter = 2
-texture = ExtResource("11_j4")
-expand_mode = 1
-stretch_mode = 5
 
 [node name="State" type="Label" parent="Layout/Towel2/Player4"]
 layout_mode = 0
@@ -318,6 +287,24 @@ texture_normal = ExtResource("12_lancer")
 ignore_texture_size = true
 stretch_mode = 5
 
+[node name="Text" type="Label" parent="Layout/StartButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 4.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.153, 0.514, 0.769, 1)
+theme_override_constants/outline_size = 15
+theme_override_fonts/font = ExtResource("99_titan")
+theme_override_font_sizes/font_size = 60
+text = "Lancer"
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="LeaveButton" type="TextureButton" parent="Layout"]
 layout_mode = 0
 offset_left = 820
@@ -329,3 +316,21 @@ pivot_offset = Vector2(190, 116)
 texture_normal = ExtResource("13_quitter")
 ignore_texture_size = true
 stretch_mode = 5
+
+[node name="Text" type="Label" parent="Layout/LeaveButton"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 4.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.153, 0.514, 0.769, 1)
+theme_override_constants/outline_size = 15
+theme_override_fonts/font = ExtResource("99_titan")
+theme_override_font_sizes/font_size = 57
+text = "Quitter"
+horizontal_alignment = 1
+vertical_alignment = 1

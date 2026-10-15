@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://scripts/ui/loading_screen.gd" id="1_loading"]
 [ext_resource type="FontFile" path="res://assets/fonts/titan_one/TitanOne-Regular.ttf" id="2_font"]
 [ext_resource type="Script" path="res://scripts/ui/water_gauge.gd" id="3_gauge"]
+[ext_resource type="Script" path="res://scripts/ui/rising_bubbles.gd" id="rb_bubbles"]
 
 [node name="LoadingScreen" type="Control"]
 layout_mode = 3
@@ -21,6 +22,16 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.08, 0.09, 0.12, 1)
+
+[node name="Bubbles" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("rb_bubbles")
 
 [node name="Layout" type="VBoxContainer" parent="."]
 layout_mode = 1

@@ -1,0 +1,1 @@
+kill.wav : son d'élimination composé pour le jeu, à partir de pop/pop_03.wav (sons de bulle du projet, voir le README) et de capture/capture_note.wav (« scale-c6 », freesound_community, Pixabay ; voir sfx/capture/CREDITS.txt) : pop de bulle puis arpège montant de trois notes (fa#6, la#6, do#7) avec réverbération.

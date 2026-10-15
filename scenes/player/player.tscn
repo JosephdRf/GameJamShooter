@@ -29,6 +29,14 @@ stretch_time_scale = true
 start_offset = 0.0
 loop_mode = 0
 
+[sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_death"]
+animation = &"death"
+use_custom_timeline = true
+timeline_length = 1.4
+stretch_time_scale = false
+start_offset = 0.0
+loop_mode = 0
+
 [sub_resource type="AnimationNodeAnimation" id="AnimationNodeAnimation_75vfm"]
 animation = &"idle"
 
@@ -145,6 +153,8 @@ advance_condition = &"dash_over"
 states/End/position = Vector2(980, 300)
 states/Start/position = Vector2(40, 60)
 states/dash/node = SubResource("AnimationNodeAnimation_gmlin")
+states/death/node = SubResource("AnimationNodeAnimation_death")
+states/death/position = Vector2(980, 60)
 states/dash/position = Vector2(500, 300)
 states/dash_end/node = SubResource("AnimationNodeAnimation_lvxji")
 states/dash_end/position = Vector2(740, 300)

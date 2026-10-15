@@ -12,8 +12,9 @@ extends CharacterBody3D
 ## Vie : `health` (diffusée par l'ordinateur qui a l'autorité). Dégâts via
 ## take_damage() (depuis n'importe quel ordinateur, avec le joueur qui a tiré : à la mort,
 ## eliminated est émis partout avec lui, pour le fil des éliminations) ; sans dégâts pendant
-## `regen_delay` s, la vie remonte de `regen_rate` PV/s. À 0 PV, le cube
-## disparaît `respawn_delay` s puis réapparaît à son point de départ.
+## `regen_delay` s, la vie remonte de `regen_rate` PV/s. À 0 PV, le canard joue
+## l'animation de mort (sur le dos, pattes en l'air), disparaît dans un pop de bulle, puis
+## réapparaît à son point de départ `respawn_delay` s après sa mort.
 ##
 ## Sons (nœuds *Sound, joués sur tous les ordinateurs) : tir, pas calés sur
 ## l'animation (cf. FOOTSTEPS), dash, saut, touché, mort et réapparition.
@@ -121,6 +122,13 @@ const REMOTE_SNAP_DISTANCE := 3.0
 const STEP_MIN_HEIGHT := 0.01
 ## Vitesse à laquelle le modèle et la caméra rattrapent une marche montée d'un coup.
 const STEP_SMOOTHING := 18.0
+## Mort : le canard joue l'animation « death » (il bascule sur le dos, pattes en l'air), retombe
+## au sol s'il était en l'air (DEATH_FALL_TIME s, jusqu'à DEATH_FLOOR_SEARCH m plus bas), puis
+## disparaît dans un pop de bulle (DEATH_POP_TIME s) juste avant de réapparaître.
+const DEATH_FALL_TIME := 0.35
+const DEATH_FLOOR_SEARCH := 8.0
+const DEATH_POP_TIME := 0.18
+const DEATH_POP_SOUND := preload("res://assets/audio/sfx/bubble_pop.tres")
 ## Bruits de pas : instants (fractions de l'animation) où un pied se pose, relevés sur
 ## les pistes foot_ik_L / foot_ik_R de walk et run (assets/models/duck_v4.glb).
 const FOOTSTEPS := {
@@ -290,7 +298,11 @@ var _respawn_left := 0.0
 ## Décalage vertical du modèle et de la caméra après une marche montée d'un coup,
 ## ramené en douceur à 0 (cf. _step_up).
 var _step_offset := 0.0
+## Mort : descente du modèle jusqu'au sol (m, négatif) et animation de la mort en cours.
+var _death_drop := 0.0
+var _death_tween: Tween
 var _model_base_y: float
+var _model_base_scale: Vector3
 var _camera_base_y: float
 ## Animation et position (fraction) à l'image précédente, pour les bruits de pas.
 var _footstep_animation: StringName
@@ -379,6 +391,7 @@ func _ready() -> void:
 		walk_space.auto_triangles = false
 		walk_space.auto_triangles = true
 	_model_base_y = _model.position.y
+	_model_base_scale = _model.scale
 	_floor_snap_default = floor_snap_length
 	_camera_base_y = camera.position.y
 	_spawn_position = global_position
@@ -398,17 +411,16 @@ func freeze() -> void:
 	cannon_on = false
 
 
-## Affiche le pseudo (get_display_name) au-dessus du canard : seulement sur les canards des
-## autres joueurs (pas le sien, pas ceux que personne n'a choisis ni nommés), vivants, et en
-## vue (cf. _update_name_tag_visibility).
+## Affiche le pseudo (get_display_name, « Joueur N » sans pseudo choisi) au-dessus du canard :
+## sur les canards des autres joueurs (pas le sien), vivants, et en vue
+## (cf. _update_name_tag_visibility).
 ## Appelé par Game quand les choix des joueurs changent, et à la mort / réapparition.
 func update_name_tag() -> void:
 	if _name_tag == null:
 		return
 	_name_tag.text = get_display_name()
 	_name_tag.outline_modulate = get_team_color().darkened(0.35)
-	var controlled := dummy or NetworkManager.get_slot_owner(player_id) != 0 or not display_name_override.is_empty()
-	_name_tag_wanted = not is_local and controlled and is_alive()
+	_name_tag_wanted = not is_local and is_alive()
 
 
 ## Le pseudo est dessiné par-dessus tout (même l'air chaud ou l'eau, transparents, qui le
@@ -967,7 +979,7 @@ func _create_muzzle() -> void:
 ## et le dash en cours.
 func _update_model(velocity_now: Vector3, delta: float) -> void:
 	_step_offset *= exp(-STEP_SMOOTHING * delta)
-	_model.position.y = _model_base_y + _step_offset
+	_model.position.y = _model_base_y + _step_offset + _death_drop
 	camera.position.y = _camera_base_y + _step_offset
 	var horizontal := Vector3(velocity_now.x, 0.0, velocity_now.z)
 	var speed := horizontal.length()
@@ -1051,7 +1063,7 @@ func _announce_elimination(killer_id: int) -> void:
 	eliminated.emit(killer_id)
 
 
-## Sur tous les ordinateurs : le cube mort disparaît et ne bloque plus personne.
+## Sur tous les ordinateurs : le canard mort ne bloque plus personne et joue sa mort.
 func _on_died() -> void:
 	_respawn_left = respawn_delay
 	_death_sound.play()
@@ -1060,8 +1072,8 @@ func _on_died() -> void:
 		captured = false
 		_captured_left = 0.0
 		_hide_capture_bubble(false)
-	_model.visible = false
 	_collision_shape.set_deferred(&"disabled", true)
+	_play_death()
 	update_name_tag()
 	died.emit()
 
@@ -1070,10 +1082,49 @@ func _on_respawned() -> void:
 	_dash_animation_left = 0.0
 	_animation_playback.start(&"idle") # Repart de l'arrêt, pas de l'animation au moment de la mort.
 	_respawn_sound.play()
+	if _death_tween:
+		_death_tween.kill()
+	_death_drop = 0.0
+	_model.scale = _model_base_scale
 	_model.visible = true
 	_collision_shape.set_deferred(&"disabled", false)
 	update_name_tag()
 	respawned.emit()
+
+
+## Mort (sur tous les ordinateurs) : animation « death », chute jusqu'au sol s'il était en
+## l'air, puis pop de bulle (gonfle, disparaît, éclaboussure) juste avant la réapparition.
+func _play_death() -> void:
+	_animation_playback.start(&"death")
+	var drop := 0.0
+	var feet := _feet_position()
+	var query := PhysicsRayQueryParameters3D.create(feet + Vector3.UP * 0.1, feet + Vector3.DOWN * DEATH_FLOOR_SEARCH, WORLD_LAYER)
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	if not hit.is_empty():
+		drop = minf(hit.position.y - feet.y, 0.0)
+	if _death_tween:
+		_death_tween.kill()
+	_death_tween = create_tween()
+	_death_tween.tween_property(self, ^"_death_drop", drop, DEATH_FALL_TIME).set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
+	_death_tween.tween_interval(maxf(respawn_delay - DEATH_FALL_TIME - DEATH_POP_TIME - 0.15, 0.0))
+	_death_tween.tween_callback(_death_pop_effects)
+	_death_tween.tween_property(_model, ^"scale", _model_base_scale * 1.25, DEATH_POP_TIME * 0.6).set_trans(Tween.TRANS_SINE)
+	_death_tween.tween_property(_model, ^"scale", _model_base_scale * 0.01, DEATH_POP_TIME * 0.4)
+	_death_tween.tween_callback(_model.hide)
+
+
+func _death_pop_effects() -> void:
+	var pop := AudioStreamPlayer3D.new()
+	pop.stream = DEATH_POP_SOUND
+	pop.max_distance = 40.0
+	add_child(pop)
+	pop.global_position = _model.global_position + Vector3.UP * 0.4
+	pop.play()
+	pop.finished.connect(pop.queue_free)
+	if _puddles == null:
+		_puddles = get_tree().get_first_node_in_group(Puddles.GROUP) as Puddles
+	if _puddles:
+		_puddles.duck_splash(_model.global_position + Vector3.UP * 0.4, Vector3.UP)
 
 
 ## Vitesse du dash à l'instant `t` (0 = début, 1 = fin).

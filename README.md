@@ -10,10 +10,10 @@ caméra à la 3e personne. Un des joueurs héberge la partie (« listen server �
 | Chargement (fictif, 3 s, jauge d'eau `WaterGauge` + pourcentage) | `loading_screen.tscn` | Accueil |
 | Accueil (titre « Duck my Life » qui flotte, bouton jaune) | `title_screen.tscn` | **Démarrer** → Hôte/IP |
 | Hôte/IP | `connect_screen.tscn` | Héberger → Sélection d'équipe · Rejoindre → connexion réussie ? oui : Sélection d'équipe, non : reste ici avec un message |
-| Sélection d'équipe | `team_select.tscn` | **Lancer la partie** (hôte) → GAME |
+| Sélection d'équipe (une fois son joueur validé : fenêtre du pseudo, gardé pour la fois suivante ; en jeu, affiché au-dessus des canards des autres joueurs) | `team_select.tscn` | **Lancer la partie** (hôte) → GAME |
 | GAME | `game/game.tscn` | Pause (hôte) · fin du combat → Écran de fin |
 | Pause (dans GAME) | `pause_menu.tscn` | Reprendre → GAME · Quitter → Sélection d'équipe (tout le monde) |
-| Écran de fin | `end_screen.tscn` | **Rejouer** → Sélection d'équipe · **Quitter** → ferme le jeu |
+| Écran de fin (style des menus : serviettes bleue et rouge avec scores et pseudos, badge « Gagné ! ») | `end_screen.tscn` | **Rejouer** → Sélection d'équipe · **Quitter** → ferme le jeu |
 
 Chaque écran est une scène indépendante de `scenes/ui/` (script du même nom dans `scripts/ui/`).
 Les chemins sont regroupés dans `scripts/ui/screens.gd` (`Screens.TITLE`, `Screens.GAME`…).
@@ -184,7 +184,10 @@ Un joueur qui tombe de la plateforme meurt.
   Le jet est toujours actif : tout canard en l'air dans la colonne d'air chaud est porté vers le haut et
   flotte vers 13 m (en montant et descendant un peu : la puissance du souffle oscille) tant qu'il y reste ; il retombe en en sortant par le côté. Sauter
   depuis le socle lance l'envol (au lieu d'un saut de 2 m).
-- Air chaud visible (jet, colonne qui fait onduler l'arrière-plan, filets d'air, lueur de la buse) et audible.
+- Les bulles et les gouttes d'eau (canon à eau, éclaboussures) qui traversent la colonne d'air chaud
+  montent (≈ 1 m pour une bulle qui la traverse ; les gouttes remontent au lieu de retomber) :
+  `projectile_lift_speed`, `projectile_lift_acceleration` (`HairDryer.lift_projectile`).
+- Air chaud visible (jet, colonne en voile transparent qui laisse voir les bulles, filets d'air, lueur de la buse) et audible.
   L'air est blanc neutre (`air_color`) pour ne pas être confondu avec les zones à défendre, colorées.
 - Scène `scenes/game/hair_dryer.tscn` (à poser n'importe où), script `scripts/game/hair_dryer.gd` : `zone_radius`,
   `launch_speed`, `updraft_speed`, `lift_acceleration`, `lift_gravity`, `column_height`, `hover_height`, `power_variation`, `power_period`, `air_color`. Shader : `assets/shaders/hot_air.gdshader`.
@@ -198,6 +201,10 @@ Un joueur qui tombe de la plateforme meurt.
 - Sans dégâts pendant 2 s, la vie remonte de **10 PV/s**.
 - À 0 PV : l'écran passe en gris avec « You died », le canard disparaît, puis il réapparaît 2 s plus tard sur sa
   zone d'apparition avec 100 PV.
+- Fil des éliminations en haut à droite (`scripts/ui/kill_feed.gd`) : « Romeo a éclaté Edouard », pseudos aux
+  couleurs des équipes, « Edouard est tombé » sans tireur ; entouré de jaune quand ça concerne son joueur.
+  Chaque dégât porte le joueur qui a tiré (`take_damage(amount, attacker_id)`), annoncé à tous à la mort
+  (signal `Player.eliminated`).
 - Pour infliger des dégâts (futures armes) : `player.take_damage(montant)`, depuis n'importe quel ordinateur.
 - Réglages (inspecteur du joueur, groupe « Vie ») : `max_health`, `regen_rate`, `regen_delay`, `respawn_delay`.
 
@@ -254,7 +261,7 @@ Un joueur qui tombe de la plateforme meurt.
 │   │   ├── team_select.tscn     # Sélection d'équipe (choix des joueurs)
 │   │   ├── match_hud.tscn       # HUD en jeu : chrono et scores (Scoreboard), capture, eau (instancié dans game.tscn)
 │   │   ├── pause_menu.tscn      # Menu pause (instancié dans game.tscn)
-│   │   ├── end_screen.tscn      # Écran de fin : scores, équipe gagnante, Rejouer / Quitter
+│   │   ├── end_screen.tscn      # Écran de fin : serviettes avec scores et pseudos, équipe gagnante, Rejouer / Quitter
 │   │   ├── death_screen.tscn    # « You died » + image grisée (instancié dans game.tscn)
 │   │   ├── announcer.tscn       # Messages de match (Attention…, C'est parti !, zone, Prolongation !, Terminé !), style Splatoon, effet au choix (`effect` : Splat, Slide, Stamp, Flash, Jelly)
 │   │   ├── crosshair.tscn       # Viseur (rouge sur un adversaire)

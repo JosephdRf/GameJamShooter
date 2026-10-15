@@ -7,8 +7,8 @@ extends Node3D
 ## monte et descend un peu (cf. power). Sauter depuis le socle lance en plus l'envol (`launch_speed` au lieu du
 ## saut normal).
 ##
-## Le courant d'air chaud se voit : un jet conique qui sort de la buse et une colonne qui
-## fait onduler ce qu'il y a derrière (shader assets/shaders/hot_air.gdshader), des filets
+## Le courant d'air chaud se voit : un jet conique qui sort de la buse et une colonne en voile
+## transparent (shader assets/shaders/hot_air.gdshader, qui laisse voir les bulles), des filets
 ## d'air qui montent, une lueur orange dans la buse. Il s'entend aussi (souffle généré).
 ## Colonne, jet et filets sont créés dans _ready d'après les réglages ci-dessous.
 
@@ -44,6 +44,13 @@ const HOT_AIR_SHADER := preload("res://assets/shaders/hot_air.gdshader")
 @export_range(0.0, 0.5) var power_variation := 0.15
 ## Durée (s) d'une oscillation de la puissance.
 @export var power_period := 3.0
+@export_group("Bulles et gouttes")
+## Vitesse de montée (m/s) que l'air donne aux petits objets qui traversent la colonne
+## (bulles, gouttes du canon à eau, gouttes des éclaboussures), atteinte avec
+## `projectile_lift_acceleration` (m/s²) au lieu de leur gravité (cf. lift_projectile).
+## Constante (pas de variation de puissance) : ils montent pareil sur tous les ordinateurs.
+@export var projectile_lift_speed := 6.0
+@export var projectile_lift_acceleration := 30.0
 @export_group("Air chaud")
 ## Blanc neutre : l'air ne doit pas ressembler à une zone à défendre (colonnes colorées).
 @export var air_color := Color(0.96, 0.98, 1.0)
@@ -80,8 +87,8 @@ func _ready() -> void:
 	fast.fractal_octaves = 3
 	_noise.noise = fast
 	# Colonne d'air chaud au-dessus de tout le socle, et jet plus marqué qui sort de la buse.
-	_add_air_cone(zone_radius, zone_radius, 0.3, column_height, 0.08, 0.004, 0.6)
-	_add_air_cone(NOZZLE_RADIUS, zone_radius * 0.75, NOZZLE_HEIGHT, 5.0, 0.25, 0.012, 1.4)
+	_add_air_cone(zone_radius, zone_radius, 0.3, column_height, 0.08, 0.6)
+	_add_air_cone(NOZZLE_RADIUS, zone_radius * 0.75, NOZZLE_HEIGHT, 5.0, 0.25, 1.4)
 	_add_streaks()
 	_puff = _make_puff()
 	add_child(_puff)
@@ -105,6 +112,26 @@ static func column_at(tree: SceneTree, point: Vector3) -> HairDryer:
 		if dryer.in_column(point):
 			return dryer
 	return null
+
+
+## Vitesse verticale (m/s), après `delta` s, d'un petit objet (bulle, goutte) à `point` qui
+## monte ou tombe à `vertical_speed` : dans la colonne d'un des sèche-cheveux `dryers`, l'air le
+## pousse vers projectile_lift_speed ; ailleurs, sa gravité `gravity` (m/s²) s'applique.
+## `dryers` : get_tree().get_nodes_in_group(GROUP), lu une fois par image pour tous les objets.
+static func lift_projectile(dryers: Array[Node], point: Vector3, vertical_speed: float, gravity: float,
+		delta: float) -> float:
+	for dryer: HairDryer in dryers:
+		if dryer.in_column(point):
+			return move_toward(vertical_speed, dryer.projectile_lift_speed,
+					dryer.projectile_lift_acceleration * delta)
+	return vertical_speed - gravity * delta
+
+
+## Accélération verticale (m/s²) d'un petit objet immobile à `point` : vers le haut dans une
+## colonne d'air chaud, `-gravity` ailleurs (gouttes en particules, qui ont une gravité fixe).
+static func projectile_gravity_at(tree: SceneTree, point: Vector3, gravity: float) -> float:
+	var dryer := column_at(tree, point)
+	return dryer.projectile_lift_acceleration * 0.5 if dryer else -gravity
 
 
 ## Vitesse verticale (m/s) d'un canard en l'air à `point` dans la colonne, après `delta` s
@@ -132,9 +159,9 @@ func puff() -> void:
 
 
 ## Cône d'air (cylindre sans fond ni couvercle) de rayon `bottom` à `bottom_y` jusqu'à `top`
-## à `bottom_y + height`, teinté de `tint` et déformant ce qui est derrière de `distortion`.
+## à `bottom_y + height`, voile d'opacité `tint`.
 func _add_air_cone(bottom: float, top: float, bottom_y: float, height: float, tint: float,
-		distortion: float, speed: float) -> void:
+		speed: float) -> void:
 	var mesh := CylinderMesh.new()
 	mesh.bottom_radius = bottom
 	mesh.top_radius = top
@@ -148,7 +175,6 @@ func _add_air_cone(bottom: float, top: float, bottom_y: float, height: float, ti
 	material.set_shader_parameter(&"noise_tex", _noise)
 	material.set_shader_parameter(&"tint", air_color)
 	material.set_shader_parameter(&"tint_strength", tint)
-	material.set_shader_parameter(&"distortion", distortion)
 	material.set_shader_parameter(&"speed", speed)
 	material.set_shader_parameter(&"half_height", height * 0.5)
 	mesh.material = material

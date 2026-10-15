@@ -9,7 +9,10 @@ extends Control
 ## Les aides en bas à gauche montrent les touches de l'appareil utilisé (ButtonPrompt).
 ## A (ou Entrée, ou un clic sur son propre joueur) valide le choix et place le curseur
 ## sur « Lancer » ; B (ou Retour arrière) annule la validation. L'hôte lance la partie
-## avec Start ou la bulle « Lancer ». Échap / bulle « Quitter » -> écran hôte/IP.
+## avec Start ou la bulle « Lancer ».
+## Une fois le choix validé, une fenêtre demande son pseudo (pré-rempli avec le dernier
+## utilisé, gardé dans NAME_FILE) : Entrée (ou A, Échap, un clic à côté) le valide, vide =
+## « Joueur N ». Les pseudos s'affichent sous les joueurs, pour tous (NetworkManager.names). Échap / bulle « Quitter » -> écran hôte/IP.
 ## Les boutons grossissent au survol (et au focus clavier / manette).
 ## Joueur choisi par cet ordinateur : un peu plus gros, entouré d'un contour jaune qui
 ## pulse (fixe une fois le choix validé). Joueur pris par un autre ordinateur : grisé.
@@ -34,11 +37,19 @@ const TAKEN_MODULATE := Color(0.5, 0.52, 0.58)
 const MINE_FRAME_COLOR := Color(1, 0.82, 0.1)
 const MINE_FRAME_WIDTH := 6
 const MINE_FRAME_PULSE := 1.2
+## Dernier pseudo utilisé sur cet ordinateur.
+const NAME_FILE := "user://profil.cfg"
+const TITAN_FONT := preload("res://assets/fonts/titan_one/TitanOne-Regular.ttf")
+## Couleur de la fenêtre du pseudo (bleu des boutons de l'équipe bleue).
+const NAME_BLUE := Color(0.16, 0.42, 0.82)
 
 ## Bouton -> vrai tant que la souris le survole.
 var _hovered := {}
 ## Contour jaune de chaque joueur (visible sur celui de cet ordinateur).
 var _frames: Array[Panel] = []
+## Fenêtre du pseudo (fond assombri + carte) et son champ de saisie.
+var _name_entry: Control
+var _name_edit: LineEdit
 
 @onready var _info: Label = %Info
 @onready var _players: Array[TextureButton] = [%Player1, %Player2, %Player3, %Player4]
@@ -62,6 +73,8 @@ func _ready() -> void:
 	_leave_button.pressed.connect(_leave)
 	_start_button.pressed.connect(NetworkManager.start_match)
 	_start_button.visible = multiplayer.is_server()
+	_name_entry = _make_name_entry()
+	add_child(_name_entry)
 	NetworkManager.slots_changed.connect(_refresh)
 	_refresh()
 
@@ -95,7 +108,7 @@ func _unhandled_input(event: InputEvent) -> void:
 ## (Le son de validation est joué par UiSounds, branché sur tous les boutons.)
 func _on_player_pressed(player_id: int) -> void:
 	if NetworkManager.get_my_slot() == player_id:
-		NetworkManager.set_my_slot_locked(not NetworkManager.is_my_slot_locked())
+		_set_locked(not NetworkManager.is_my_slot_locked(), false)
 	elif not NetworkManager.is_my_slot_locked():
 		NetworkManager.choose_slot(player_id)
 
@@ -109,16 +122,130 @@ func _move_choice(direction: Vector2i) -> void:
 		NetworkManager.choose_slot(target)
 
 
-func _set_locked(value: bool) -> void:
-	if value:
-		UiSounds.play_confirm()
-	else:
-		UiSounds.play_click()
+## `sound` : faux si le son est déjà joué (clic sur un bouton, cf. UiSounds).
+func _set_locked(value: bool, sound := true) -> void:
+	if sound:
+		if value:
+			UiSounds.play_confirm()
+		else:
+			UiSounds.play_click()
 	NetworkManager.set_my_slot_locked(value)
-	if value and multiplayer.is_server():
+	if value:
+		_open_name_entry()
+	else:
+		_close_name_entry()
+		get_viewport().gui_release_focus() # ← → servent à choisir le joueur, pas à naviguer.
+
+
+## Fenêtre du pseudo, masquée au départ : fond assombri et carte au centre avec le champ.
+func _make_name_entry() -> Control:
+	var entry := ColorRect.new()
+	entry.color = Color(0.02, 0.1, 0.2, 0.45)
+	entry.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	entry.visible = false
+	# Clic à côté de la carte : valide le pseudo.
+	entry.gui_input.connect(func(event: InputEvent) -> void:
+		if event is InputEventMouseButton and event.pressed:
+			_submit_name())
+	var card := PanelContainer.new()
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(1, 1, 1, 0.97)
+	style.border_color = NAME_BLUE
+	style.set_border_width_all(6)
+	style.set_corner_radius_all(28)
+	style.content_margin_left = 34
+	style.content_margin_right = 34
+	style.content_margin_top = 18
+	style.content_margin_bottom = 18
+	style.shadow_color = Color(0, 0, 0, 0.25)
+	style.shadow_size = 10
+	card.add_theme_stylebox_override(&"panel", style)
+	card.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	card.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	card.grow_vertical = Control.GROW_DIRECTION_BOTH
+	entry.add_child(card)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override(&"separation", 10)
+	card.add_child(column)
+	var title := _name_label("Ton pseudo", 30, Color(1, 0.82, 0.1))
+	title.add_theme_color_override(&"font_outline_color", NAME_BLUE)
+	title.add_theme_constant_override(&"outline_size", 10)
+	column.add_child(title)
+	_name_edit = LineEdit.new()
+	_name_edit.max_length = NetworkManager.MAX_NAME_LENGTH
+	_name_edit.alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_name_edit.custom_minimum_size = Vector2(360, 58)
+	_name_edit.add_theme_font_override(&"font", TITAN_FONT)
+	_name_edit.add_theme_font_size_override(&"font_size", 28)
+	_name_edit.add_theme_color_override(&"font_color", NAME_BLUE)
+	_name_edit.add_theme_color_override(&"font_placeholder_color", Color(NAME_BLUE, 0.35))
+	_name_edit.add_theme_color_override(&"caret_color", NAME_BLUE)
+	var field := StyleBoxFlat.new()
+	field.bg_color = Color(0.9, 0.95, 1.0)
+	field.border_color = Color(NAME_BLUE, 0.5)
+	field.set_border_width_all(3)
+	field.set_corner_radius_all(18)
+	field.content_margin_left = 14
+	field.content_margin_right = 14
+	_name_edit.add_theme_stylebox_override(&"normal", field)
+	_name_edit.add_theme_stylebox_override(&"focus", StyleBoxEmpty.new())
+	_name_edit.text_submitted.connect(_submit_name.unbind(1))
+	_name_edit.focus_exited.connect(_submit_name)
+	_name_edit.gui_input.connect(_on_name_input)
+	column.add_child(_name_edit)
+	column.add_child(_name_label("Entrée pour valider", 16, Color(NAME_BLUE, 0.7)))
+	return entry
+
+
+func _name_label(text: String, size: int, color: Color) -> Label:
+	var label := Label.new()
+	label.text = text
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	label.add_theme_font_override(&"font", TITAN_FONT)
+	label.add_theme_font_size_override(&"font_size", size)
+	label.add_theme_color_override(&"font_color", color)
+	return label
+
+
+## Échap ou A (manette) dans le champ : valide le pseudo (Échap ne quitte pas le salon).
+func _on_name_input(event: InputEvent) -> void:
+	if event.is_action_pressed(&"ui_cancel") \
+			or (event is InputEventJoypadButton and event.is_action_pressed(&"ui_accept")):
+		_name_edit.accept_event()
+		_submit_name()
+
+
+func _open_name_entry() -> void:
+	var config := ConfigFile.new()
+	config.load(NAME_FILE)
+	_name_edit.text = config.get_value("profil", "pseudo", "")
+	_name_edit.placeholder_text = "Joueur %d" % NetworkManager.get_my_slot()
+	_name_entry.visible = true
+	_name_edit.grab_focus()
+	_name_edit.select_all()
+
+
+## Masque la fenêtre sans rien valider (le champ masqué perd le focus : _submit_name ne
+## fait alors plus rien).
+func _close_name_entry() -> void:
+	_name_entry.visible = false
+
+
+func _submit_name() -> void:
+	if not _name_entry.visible:
+		return
+	var player_name := NetworkManager.clean_name(_name_edit.text)
+	_name_entry.visible = false
+	NetworkManager.set_my_name(player_name)
+	var config := ConfigFile.new()
+	config.load(NAME_FILE)
+	config.set_value("profil", "pseudo", player_name)
+	config.save(NAME_FILE)
+	UiSounds.play_confirm()
+	if multiplayer.is_server():
 		_start_button.grab_focus()
 	else:
-		get_viewport().gui_release_focus() # ← → servent à choisir le joueur, pas à naviguer.
+		get_viewport().gui_release_focus()
 
 
 func _leave() -> void:
@@ -178,12 +305,15 @@ func _refresh() -> void:
 		var taken := owner_id != 0 and owner_id != my_id
 		_players[i].modulate = TAKEN_MODULATE if taken else Color.WHITE
 		_frames[i].visible = owner_id == my_id
-		if owner_id == 0:
-			state.text = ""
-		elif owner_id == my_id:
-			state.text = "✔ prêt" if is_locked else ""
-		else:
-			state.text = ("Pris par l'hôte" if owner_id == 1 else "Pris") + ("  ✔ prêt" if is_locked else "")
+		# Pseudo s'il en a choisi un, sinon qui l'a pris ; puis « prêt » une fois validé.
+		var parts := PackedStringArray()
+		if owner_id != 0 and not str(NetworkManager.names.get(owner_id, "")).is_empty():
+			parts.append(NetworkManager.get_player_name(player_id))
+		elif taken:
+			parts.append("Pris par l'hôte" if owner_id == 1 else "Pris")
+		if owner_id != 0 and is_locked:
+			parts.append("✔ prêt")
+		state.text = "  ".join(parts)
 
 	var count := NetworkManager.get_connected_count()
 	if multiplayer.is_server():

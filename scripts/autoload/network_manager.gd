@@ -25,11 +25,16 @@ const PORT := 7777
 const MAX_PLAYERS := 4
 ## Au-delà, on abandonne la tentative de connexion (hôte injoignable).
 const CONNECT_TIMEOUT := 6.0
+## Longueur maximale d'un pseudo (caractères).
+const MAX_NAME_LENGTH := 14
 
 ## Joueur (1 à 4) -> id réseau de l'ordinateur qui le contrôle (0 = libre).
 var slots := {}
 ## Joueur (1 à 4) -> vrai si l'ordinateur a validé ce choix (bouton A).
 var locked := {}
+## Id réseau d'un ordinateur -> pseudo choisi par son joueur (cf. set_my_name). Lié à
+## l'ordinateur et non au joueur 1-4 : il le garde s'il change de joueur.
+var names := {}
 ## Message affiché par l'écran hôte/IP au retour d'une partie interrompue.
 var last_error := ""
 ## Scores de la dernière partie (équipe 1 ou 2 -> points), lus par l'écran de fin.
@@ -133,6 +138,26 @@ func choose_slot(player_id: int) -> void:
 		_request_choose_slot.rpc_id(1, player_id)
 
 
+## Choisit le pseudo du joueur de cet ordinateur (vide = « Joueur N »).
+func set_my_name(player_name: String) -> void:
+	if multiplayer.is_server():
+		_set_name(1, player_name)
+	else:
+		_request_name.rpc_id(1, player_name)
+
+
+## Pseudo du joueur `player_id` (1 à 4) : celui choisi par son ordinateur, sinon « Joueur N ».
+func get_player_name(player_id: int) -> String:
+	var player_name: String = names.get(get_slot_owner(player_id), "")
+	return player_name if not player_name.is_empty() else "Joueur %d" % player_id
+
+
+## Pseudo tel qu'il sera gardé : sans espaces autour ni retours à la ligne, MAX_NAME_LENGTH
+## caractères au plus.
+static func clean_name(player_name: String) -> String:
+	return player_name.replace("\n", " ").strip_edges().left(MAX_NAME_LENGTH).strip_edges()
+
+
 ## Hôte uniquement : lance la partie pour tous les ordinateurs connectés.
 func start_match() -> void:
 	if not multiplayer.is_server() or _in_game:
@@ -207,10 +232,17 @@ func _request_lock(value: bool) -> void:
 		_set_locked(multiplayer.get_remote_sender_id(), value)
 
 
+@rpc("any_peer", "reliable")
+func _request_name(player_name: String) -> void:
+	if multiplayer.is_server():
+		_set_name(multiplayer.get_remote_sender_id(), player_name)
+
+
 @rpc("authority", "call_local", "reliable")
-func _sync_slots(new_slots: Dictionary, new_locked: Dictionary) -> void:
+func _sync_slots(new_slots: Dictionary, new_locked: Dictionary, new_names: Dictionary) -> void:
 	slots = new_slots
 	locked = new_locked
+	names = new_names
 	slots_changed.emit()
 
 
@@ -284,6 +316,11 @@ func _set_locked(peer_id: int, value: bool) -> void:
 		_broadcast_slots()
 
 
+func _set_name(peer_id: int, player_name: String) -> void:
+	names[peer_id] = clean_name(player_name)
+	_broadcast_slots()
+
+
 func _assign_free_slot(peer_id: int) -> void:
 	for player_id in range(1, MAX_PLAYERS + 1):
 		if slots[player_id] == 0:
@@ -292,7 +329,7 @@ func _assign_free_slot(peer_id: int) -> void:
 
 
 func _broadcast_slots() -> void:
-	_sync_slots.rpc(slots, locked)
+	_sync_slots.rpc(slots, locked, names)
 
 
 func _set_peer_ready(peer_id: int) -> void:
@@ -322,6 +359,7 @@ func _slot_of(peer_id: int) -> int:
 func _reset_session() -> void:
 	slots = {}
 	locked = {}
+	names = {}
 	for player_id in range(1, MAX_PLAYERS + 1):
 		slots[player_id] = 0
 		locked[player_id] = false
@@ -371,6 +409,7 @@ func _on_peer_disconnected(peer_id: int) -> void:
 	if player_id != 0:
 		slots[player_id] = 0
 		locked[player_id] = false
+	names.erase(peer_id)
 	_ready_peers.erase(peer_id)
 	_broadcast_slots()
 	if _in_game:

@@ -1,7 +1,15 @@
 [gd_scene format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/end_screen.gd" id="1_end"]
-[ext_resource type="Script" path="res://scripts/ui/tiled_background.gd" id="bg_tiles"]
+[ext_resource type="Script" path="res://scripts/ui/tiled_background.gd" id="2_bg"]
+[ext_resource type="Texture2D" path="res://assets/ui/team_select/blue_towel.png" id="3_blue_towel"]
+[ext_resource type="Texture2D" path="res://assets/ui/team_select/red_towel.png" id="4_red_towel"]
+[ext_resource type="Texture2D" path="res://assets/ui/team_select/blue_button.png" id="5_blue_button"]
+[ext_resource type="Texture2D" path="res://assets/ui/team_select/red_button.png" id="6_red_button"]
+[ext_resource type="Texture2D" path="res://assets/ui/team_select/yellow_button.png" id="7_yellow_button"]
+[ext_resource type="Texture2D" path="res://assets/ui/team_select/quitter.png" id="8_quitter"]
+[ext_resource type="Script" path="res://scripts/ui/button_prompt.gd" id="9_prompt"]
+[ext_resource type="FontFile" path="res://assets/fonts/titan_one/TitanOne-Regular.ttf" id="99_titan"]
 
 [node name="EndScreen" type="Control"]
 layout_mode = 3
@@ -20,108 +28,271 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-script = ExtResource("bg_tiles")
+script = ExtResource("2_bg")
 
-[node name="Margin" type="MarginContainer" parent="."]
+[node name="Layout" type="Control" parent="."]
 layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -640.0
+offset_top = -360.0
+offset_right = 640.0
+offset_bottom = 360.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 64
-theme_override_constants/margin_top = 32
-theme_override_constants/margin_right = 64
-theme_override_constants/margin_bottom = 32
+mouse_filter = 2
 
-[node name="Layout" type="VBoxContainer" parent="Margin"]
-layout_mode = 2
-theme_override_constants/separation = 24
-
-[node name="Title" type="Label" parent="Margin/Layout"]
-theme_override_colors/font_outline_color = Color(0.07, 0.25, 0.45, 1)
-theme_override_constants/outline_size = 14
-layout_mode = 2
-theme_override_font_sizes/font_size = 48
+[node name="Title" type="Label" parent="Layout"]
+layout_mode = 0
+offset_left = 140.0
+offset_top = 14.0
+offset_right = 1140.0
+offset_bottom = 108.0
+theme_override_colors/font_color = Color(1, 0.82, 0.1, 1)
+theme_override_colors/font_shadow_color = Color(0.07, 0.25, 0.45, 0.6)
+theme_override_colors/font_outline_color = Color(0.1, 0.38, 0.72, 1)
+theme_override_constants/shadow_offset_x = 0
+theme_override_constants/shadow_offset_y = 5
+theme_override_constants/outline_size = 18
+theme_override_fonts/font = ExtResource("99_titan")
+theme_override_font_sizes/font_size = 64
 text = "Fin du combat"
 horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="Winner" type="Label" parent="Margin/Layout"]
+[node name="Winner" type="Label" parent="Layout"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 40.0
+offset_top = 108.0
+offset_right = 1240.0
+offset_bottom = 174.0
+pivot_offset = Vector2(600, 33)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_outline_color = Color(0.07, 0.25, 0.45, 1)
+theme_override_constants/outline_size = 12
+theme_override_fonts/font = ExtResource("99_titan")
+theme_override_font_sizes/font_size = 36
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Towel1" type="TextureRect" parent="Layout"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 100.0
+offset_top = 182.0
+offset_right = 608.0
+offset_bottom = 502.0
+pivot_offset = Vector2(254, 160)
+mouse_filter = 2
+texture = ExtResource("3_blue_towel")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Score" type="TextureRect" parent="Layout/Towel1"]
+layout_mode = 0
+offset_left = 76.0
+offset_top = 34.0
+offset_right = 406.0
+offset_bottom = 152.0
+mouse_filter = 2
+texture = ExtResource("5_blue_button")
+expand_mode = 1
+
+[node name="Text" type="Label" parent="Layout/Towel1/Score"]
+layout_mode = 0
+offset_right = 330.0
+offset_bottom = 112.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.1, 0.38, 0.72, 1)
 theme_override_constants/outline_size = 14
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 40
-horizontal_alignment = 1
-
-[node name="Teams" type="HBoxContainer" parent="Margin/Layout"]
-layout_mode = 2
-size_flags_vertical = 3
-theme_override_constants/separation = 64
-alignment = 1
-
-[node name="Team1" type="PanelContainer" parent="Margin/Layout/Teams"]
-custom_minimum_size = Vector2(380, 0)
-layout_mode = 2
-
-[node name="Content" type="VBoxContainer" parent="Margin/Layout/Teams/Team1"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="Name" type="Label" parent="Margin/Layout/Teams/Team1/Content"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 30
-text = "Équipe bleue"
-horizontal_alignment = 1
-
-[node name="Total" type="Label" parent="Margin/Layout/Teams/Team1/Content"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 56
+theme_override_fonts/font = ExtResource("99_titan")
+theme_override_font_sizes/font_size = 64
 text = "0"
 horizontal_alignment = 1
+vertical_alignment = 1
 
-[node name="Players" type="VBoxContainer" parent="Margin/Layout/Teams/Team1/Content"]
-layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="Team2" type="PanelContainer" parent="Margin/Layout/Teams"]
-custom_minimum_size = Vector2(380, 0)
-layout_mode = 2
-
-[node name="Content" type="VBoxContainer" parent="Margin/Layout/Teams/Team2"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="Name" type="Label" parent="Margin/Layout/Teams/Team2/Content"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 30
-text = "Équipe rouge"
-horizontal_alignment = 1
-
-[node name="Total" type="Label" parent="Margin/Layout/Teams/Team2/Content"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 56
-text = "0"
-horizontal_alignment = 1
-
-[node name="Players" type="VBoxContainer" parent="Margin/Layout/Teams/Team2/Content"]
-layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="Buttons" type="HBoxContainer" parent="Margin/Layout"]
-layout_mode = 2
-theme_override_constants/separation = 24
-alignment = 1
-
-[node name="QuitButton" type="Button" parent="Margin/Layout/Buttons"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(240, 64)
-layout_mode = 2
-text = "Quitter"
-
-[node name="ReplayButton" type="Button" parent="Margin/Layout/Buttons"]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(320, 64)
-layout_mode = 2
+[node name="Players" type="Label" parent="Layout/Towel1"]
+layout_mode = 0
+offset_left = 76.0
+offset_top = 162.0
+offset_right = 406.0
+offset_bottom = 280.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.07, 0.25, 0.45, 1)
+theme_override_constants/outline_size = 8
+theme_override_constants/line_spacing = 4
+theme_override_fonts/font = ExtResource("99_titan")
 theme_override_font_sizes/font_size = 28
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="Towel2" type="TextureRect" parent="Layout"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 672.0
+offset_top = 182.0
+offset_right = 1180.0
+offset_bottom = 502.0
+pivot_offset = Vector2(254, 160)
+mouse_filter = 2
+texture = ExtResource("4_red_towel")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Score" type="TextureRect" parent="Layout/Towel2"]
+layout_mode = 0
+offset_left = 76.0
+offset_top = 34.0
+offset_right = 406.0
+offset_bottom = 152.0
+mouse_filter = 2
+texture = ExtResource("6_red_button")
+expand_mode = 1
+
+[node name="Text" type="Label" parent="Layout/Towel2/Score"]
+layout_mode = 0
+offset_right = 330.0
+offset_bottom = 112.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.72, 0.1, 0.16, 1)
+theme_override_constants/outline_size = 14
+theme_override_fonts/font = ExtResource("99_titan")
+theme_override_font_sizes/font_size = 64
+text = "0"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Players" type="Label" parent="Layout/Towel2"]
+layout_mode = 0
+offset_left = 76.0
+offset_top = 162.0
+offset_right = 406.0
+offset_bottom = 280.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.45, 0.06, 0.1, 1)
+theme_override_constants/outline_size = 8
+theme_override_constants/line_spacing = 4
+theme_override_fonts/font = ExtResource("99_titan")
+theme_override_font_sizes/font_size = 28
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="Badge" type="TextureRect" parent="Layout"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+offset_right = 220.0
+offset_bottom = 79.0
+pivot_offset = Vector2(110, 39)
+mouse_filter = 2
+texture = ExtResource("7_yellow_button")
+expand_mode = 1
+
+[node name="Text" type="Label" parent="Layout/Badge"]
+layout_mode = 0
+offset_right = 220.0
+offset_bottom = 75.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.62, 0.38, 0, 1)
+theme_override_constants/outline_size = 12
+theme_override_fonts/font = ExtResource("99_titan")
+theme_override_font_sizes/font_size = 34
+text = "Gagné !"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ReplayButton" type="TextureButton" parent="Layout"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 475.0
+offset_top = 548.0
+offset_right = 805.0
+offset_bottom = 666.0
+pivot_offset = Vector2(165, 59)
+focus_neighbor_right = NodePath("../QuitButton")
+texture_normal = ExtResource("7_yellow_button")
+ignore_texture_size = true
+stretch_mode = 0
+
+[node name="Text" type="Label" parent="Layout/ReplayButton"]
+layout_mode = 0
+offset_right = 330.0
+offset_bottom = 112.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.62, 0.38, 0, 1)
+theme_override_constants/outline_size = 14
+theme_override_fonts/font = ExtResource("99_titan")
+theme_override_font_sizes/font_size = 44
 text = "Rejouer"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="QuitButton" type="TextureButton" parent="Layout"]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 820.0
+offset_top = 535.0
+offset_right = 1200.0
+offset_bottom = 767.0
+pivot_offset = Vector2(190, 116)
+focus_neighbor_left = NodePath("../ReplayButton")
+texture_normal = ExtResource("8_quitter")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="AcceptHint" type="HBoxContainer" parent="Layout"]
+layout_mode = 0
+offset_left = 36.0
+offset_top = 600.0
+offset_right = 336.0
+offset_bottom = 644.0
+mouse_filter = 2
+theme_override_constants/separation = 14
+
+[node name="Prompt" type="Control" parent="Layout/AcceptHint"]
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("9_prompt")
+
+[node name="Label" type="Label" parent="Layout/AcceptHint"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.07, 0.25, 0.45, 1)
+theme_override_constants/outline_size = 8
+theme_override_fonts/font = ExtResource("99_titan")
+theme_override_font_sizes/font_size = 22
+text = "Valider"
+vertical_alignment = 1
+
+[node name="BackHint" type="HBoxContainer" parent="Layout"]
+layout_mode = 0
+offset_left = 36.0
+offset_top = 652.0
+offset_right = 336.0
+offset_bottom = 696.0
+mouse_filter = 2
+theme_override_constants/separation = 14
+
+[node name="Prompt" type="Control" parent="Layout/BackHint"]
+custom_minimum_size = Vector2(44, 44)
+layout_mode = 2
+mouse_filter = 2
+script = ExtResource("9_prompt")
+role = 1
+
+[node name="Label" type="Label" parent="Layout/BackHint"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.07, 0.25, 0.45, 1)
+theme_override_constants/outline_size = 8
+theme_override_fonts/font = ExtResource("99_titan")
+theme_override_font_sizes/font_size = 22
+text = "Quitter"
+vertical_alignment = 1

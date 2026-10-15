@@ -501,7 +501,8 @@ func _spawn_drops(point: Vector3, amount: int, direction: Vector3, spread: float
 	drops.spread = spread
 	drops.initial_velocity_min = min_speed
 	drops.initial_velocity_max = max_speed
-	drops.gravity = Vector3(0, -14, 0)
+	# Dans l'air chaud d'un sèche-cheveux, les gouttes s'envolent au lieu de retomber.
+	drops.gravity = Vector3(0, HairDryer.projectile_gravity_at(get_tree(), point, 14.0), 0)
 	drops.scale_amount_min = 0.6 * size
 	drops.scale_amount_max = 1.3 * size
 	drops.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE

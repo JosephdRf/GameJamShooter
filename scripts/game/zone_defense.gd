@@ -55,6 +55,11 @@ const NOTE_SPEED_UP := 0.17
 const NOTE_VOICES := 8
 ## Note en retard de plus de cette durée (s) : sautée (progression reçue d'un coup).
 const NOTE_MAX_LATE := 0.25
+## Transposée vers le grave, la clochette s'entend moins (jusqu'à 8 dB de moins deux octaves
+## sous la tonique) : sous LOW_NOTE_FROM demi-tons, chaque demi-ton de plus est remonté de
+## LOW_NOTE_BOOST dB.
+const LOW_NOTE_FROM := -15
+const LOW_NOTE_BOOST := 0.6
 
 enum Shape { CIRCLE, RECTANGLE }
 
@@ -91,7 +96,8 @@ enum Shape { CIRCLE, RECTANGLE }
 @export var capture_time := 10.0
 @export_group("Montée de capture")
 ## Volume des notes (dB) à moins de `build_up_unit_size` m du centre ; les premières notes
-## sont 6 dB plus douces, puis le volume monte avec la progression.
+## sont 2 dB plus douces, puis le volume monte avec la progression (les notes graves sont
+## remontées pour s'entendre autant que les autres, cf. LOW_NOTE_BOOST).
 @export var build_up_volume_db := -16.0
 ## Distance (m) jusqu'à laquelle le son garde tout son volume ; au-delà il diminue.
 @export var build_up_unit_size := 8.0
@@ -268,7 +274,8 @@ func _play_note(index: int) -> void:
 	var player := _note_players[_note_voice]
 	_note_voice = (_note_voice + 1) % _note_players.size()
 	player.pitch_scale = pow(2.0, semitones / 12.0)
-	player.volume_db = build_up_volume_db + linear_to_db(0.5 + 0.5 * _note_times[index] / capture_time)
+	var low_boost := maxf(0.0, LOW_NOTE_FROM - semitones) * LOW_NOTE_BOOST
+	player.volume_db = build_up_volume_db + low_boost + linear_to_db(lerpf(0.8, 1.0, _note_times[index] / capture_time))
 	player.play()
 
 

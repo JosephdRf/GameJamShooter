@@ -10,7 +10,7 @@ caméra à la 3e personne. Un des joueurs héberge la partie (« listen server �
 | Chargement (fictif, 3 s, jauge d'eau `WaterGauge` + pourcentage) | `loading_screen.tscn` | Accueil |
 | Accueil (titre « Duck my Life » qui flotte, « Fuck My Life » une fois sur dix, bouton jaune) | `title_screen.tscn` | **Démarrer** → Hôte/IP |
 | Hôte/IP | `connect_screen.tscn` | Héberger → Sélection d'équipe · Rejoindre → connexion réussie ? oui : Sélection d'équipe, non : reste ici avec un message |
-| Sélection d'équipe (une fois son joueur validé : fenêtre du pseudo, gardé pour la fois suivante ; en jeu, affiché au-dessus des canards des autres joueurs) | `team_select.tscn` | **Lancer la partie** (hôte) → GAME |
+| Sélection d'équipe (une fois son joueur validé : fenêtre du pseudo, tout en majuscules, gardé pour la fois suivante ; en jeu, affiché au-dessus des canards des autres joueurs) | `team_select.tscn` | **Lancer la partie** (hôte) → GAME |
 | GAME | `game/game.tscn` | Pause (hôte) · fin du combat → Écran de fin |
 | Pause (dans GAME) | `pause_menu.tscn` | Reprendre → GAME · Quitter → Sélection d'équipe (tout le monde) |
 | Écran de fin (style des menus : serviettes bleue et rouge avec scores et pseudos, badge « Gagné ! ») | `end_screen.tscn` | **Rejouer** → Sélection d'équipe · **Quitter** → ferme le jeu |
@@ -203,7 +203,7 @@ Un joueur qui tombe de la plateforme meurt.
 - Sans dégâts pendant 2 s, la vie remonte de **10 PV/s**.
 - À 0 PV : l'écran passe en gris avec « You died », le canard disparaît, puis il réapparaît 2 s plus tard sur sa
   zone d'apparition avec 100 PV.
-- Fil des éliminations en haut à droite (`scripts/ui/kill_feed.gd`) : « Romeo a éclaté Edouard », pseudos aux
+- Fil des éliminations en haut à droite (`scripts/ui/kill_feed.gd`) : « ROMEO a éclaté EDOUARD », pseudos aux
   couleurs des équipes, « Edouard est tombé » sans tireur ; entouré de jaune quand ça concerne son joueur.
   Chaque dégât porte le joueur qui a tiré (`take_damage(amount, attacker_id)`), annoncé à tous à la mort
   (signal `Player.eliminated`).

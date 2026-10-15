@@ -12,7 +12,7 @@ extends Control
 ## avec Start ou la bulle « Lancer ».
 ## Une fois le choix validé, une fenêtre demande son pseudo (pré-rempli avec le dernier
 ## utilisé, gardé dans NAME_FILE) : Entrée (ou A, Échap, un clic à côté) le valide, vide =
-## « Joueur N ». Les pseudos s'affichent sous les joueurs, pour tous (NetworkManager.names). Échap / bulle « Quitter » -> écran hôte/IP.
+## « JOUEUR N ». Pseudos tout en majuscules. Les pseudos s'affichent sous les joueurs, pour tous (NetworkManager.names). Échap / bulle « Quitter » -> écran hôte/IP.
 ## Les boutons grossissent au survol (et au focus clavier / manette).
 ## Joueur choisi par cet ordinateur : un peu plus gros, entouré d'un contour jaune qui
 ## pulse (fixe une fois le choix validé). Joueur pris par un autre ordinateur : grisé.
@@ -189,6 +189,7 @@ func _make_name_entry() -> Control:
 	field.content_margin_right = 14
 	_name_edit.add_theme_stylebox_override(&"normal", field)
 	_name_edit.add_theme_stylebox_override(&"focus", StyleBoxEmpty.new())
+	_name_edit.text_changed.connect(_on_name_changed)
 	_name_edit.text_submitted.connect(_submit_name.unbind(1))
 	_name_edit.focus_exited.connect(_submit_name)
 	_name_edit.gui_input.connect(_on_name_input)
@@ -207,6 +208,15 @@ func _name_label(text: String, size: int, color: Color) -> Label:
 	return label
 
 
+## Pseudos tout en majuscules : chaque lettre tapée passe en majuscule (le curseur ne bouge pas).
+func _on_name_changed(text: String) -> void:
+	var upper := text.to_upper()
+	if upper != text:
+		var caret := _name_edit.caret_column
+		_name_edit.text = upper
+		_name_edit.caret_column = caret
+
+
 ## Échap ou A (manette) dans le champ : valide le pseudo (Échap ne quitte pas le salon).
 func _on_name_input(event: InputEvent) -> void:
 	if event.is_action_pressed(&"ui_cancel") \
@@ -218,8 +228,8 @@ func _on_name_input(event: InputEvent) -> void:
 func _open_name_entry() -> void:
 	var config := ConfigFile.new()
 	config.load(NAME_FILE)
-	_name_edit.text = config.get_value("profil", "pseudo", "")
-	_name_edit.placeholder_text = "Joueur %d" % NetworkManager.get_my_slot()
+	_name_edit.text = NetworkManager.clean_name(config.get_value("profil", "pseudo", ""))
+	_name_edit.placeholder_text = NetworkManager.default_name(NetworkManager.get_my_slot())
 	_name_entry.visible = true
 	_name_edit.grab_focus()
 	_name_edit.select_all()

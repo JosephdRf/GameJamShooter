@@ -6,16 +6,26 @@ extends Control
 ## Au centre, deux fiches se succèdent (NOTE_TIME s chacune) : l'histoire des canards,
 ## puis les commandes, avec les touches de l'appareil utilisé (clavier, manette Nintendo,
 ## PlayStation ou Xbox, cf. InputManager.device_type ; elles changent si le joueur en change).
+## Décor : en haut, deux planches « carnet d'inventeur » (le canard et son pistolet à bulles,
+## de face et de profil, assets/ui/plates) posées de travers, avec une ombre et du ruban
+## adhésif ; les fiches s'affichent en dessous.
 ## La scène de combat se charge pour de vrai en arrière-plan ; l'écran dure DURATION s
 ## (plus longtemps seulement si le chargement n'est pas fini), puis le combat s'affiche.
 
-const DURATION := 5.0
+const DURATION := 8.0
 ## Temps passé à 100 % avant de changer d'écran (compris dans DURATION).
 const FINAL_HOLD := 0.35
 ## Durée d'affichage de chaque fiche (s) et de leur fondu d'entrée / de sortie.
-const NOTE_TIME := 2.5
+const NOTE_TIME := 4.0
 const NOTE_FADE := 0.25
-const NOTE_WIDTH := 780.0
+const NOTE_WIDTH := 720.0
+const CONTROLS_WIDTH := 920.0
+## Planches du décor : image, centre (fraction de l'écran), largeur (px), inclinaison (deg).
+const PLATES := [
+	[preload("res://assets/ui/plates/plate_duck.jpg"), Vector2(0.27, 0.235), 480.0, -3.0],
+	[preload("res://assets/ui/plates/plate_gun.jpg"), Vector2(0.73, 0.235), 480.0, 2.5],
+]
+const TAPE_COLOR := Color(0.93, 0.9, 0.78, 0.75)
 const FONT := preload("res://assets/fonts/titan_one/TitanOne-Regular.ttf")
 const PAPER := Color(0.97, 0.97, 0.94)
 const INK := Color(0.12, 0.2, 0.3)
@@ -83,6 +93,7 @@ func _ready() -> void:
 	for label in [_label, _percent]:
 		label.add_theme_color_override(&"font_shadow_color", _team_color)
 		label.add_theme_color_override(&"font_outline_color", _team_color.darkened(0.45))
+	_build_decor()
 	_build_notes()
 	InputManager.device_type_changed.connect(_update_badges)
 	_update_badges()
@@ -125,26 +136,71 @@ func _process(_delta: float) -> void:
 			get_tree().change_scene_to_file(Screens.GAME)
 
 
-## Les deux fiches, centrées au-dessus de la barre, masquées au départ.
+## Planches du décor, juste au-dessus du fond et des bulles (sous la barre et les fiches).
+func _build_decor() -> void:
+	var index := get_node(^"Bubbles").get_index() + 1
+	for spec: Array in PLATES:
+		var texture: Texture2D = spec[0]
+		var plate_size := Vector2(spec[2], spec[2] * texture.get_height() / texture.get_width())
+		var holder := Control.new()
+		holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		holder.anchor_left = spec[1].x
+		holder.anchor_right = spec[1].x
+		holder.anchor_top = spec[1].y
+		holder.anchor_bottom = spec[1].y
+		holder.rotation = deg_to_rad(spec[3])
+		add_child(holder)
+		move_child(holder, index)
+		index += 1
+		var shadow := ColorRect.new()
+		shadow.color = Color(0, 0, 0, 0.45)
+		shadow.size = plate_size
+		shadow.position = -plate_size / 2.0 + Vector2(10, 12)
+		shadow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		holder.add_child(shadow)
+		var image := TextureRect.new()
+		image.texture = texture
+		image.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		image.stretch_mode = TextureRect.STRETCH_SCALE
+		image.size = plate_size
+		image.position = -plate_size / 2.0
+		image.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		holder.add_child(image)
+		# Deux bouts de ruban adhésif en haut.
+		for side in [-1, 1]:
+			var tape := ColorRect.new()
+			tape.color = TAPE_COLOR
+			tape.size = Vector2(70, 22)
+			tape.pivot_offset = tape.size / 2.0
+			tape.position = Vector2(side * plate_size.x * 0.36, -plate_size.y / 2.0) - tape.size / 2.0
+			tape.rotation = deg_to_rad(side * 28.0)
+			tape.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			holder.add_child(tape)
+
+
+## Les deux fiches, sous les planches et au-dessus de la barre, masquées au départ.
 func _build_notes() -> void:
-	var lore_body := _text(LORE_TEXT, 25, INK)
+	var lore_body := _text(LORE_TEXT, 22, INK)
 	lore_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	lore_body.custom_minimum_size.x = NOTE_WIDTH - 60.0 # Largeur du texte (sinon sa hauteur est calculée sur une largeur nulle).
 	_notes.append(_note("?", LORE_TITLE, LORE_COLOR, lore_body, -1.2))
-	var rows := VBoxContainer.new()
-	rows.add_theme_constant_override(&"separation", 12)
+	# Commandes sur deux colonnes : la fiche reste assez basse pour ne pas cacher la barre.
+	var rows := GridContainer.new()
+	rows.columns = 2
+	rows.add_theme_constant_override(&"h_separation", 28)
+	rows.add_theme_constant_override(&"v_separation", 8)
 	for control: Array in CONTROLS:
 		var row := HBoxContainer.new()
-		row.add_theme_constant_override(&"separation", 18)
+		row.add_theme_constant_override(&"separation", 12)
 		var slot := CenterContainer.new()
-		slot.custom_minimum_size = Vector2(190, 44)
+		slot.custom_minimum_size = Vector2(140, 38)
 		row.add_child(slot)
 		_badge_slots[control[0]] = slot
-		var text := _text(control[1], 25, INK)
+		var text := _text(control[1], 20, INK)
 		text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(text)
 		rows.add_child(row)
-	_notes.append(_note("!", CONTROLS_TITLE, _team_color, rows, 1.0))
+	_notes.append(_note("!", CONTROLS_TITLE, _team_color, rows, 1.0, CONTROLS_WIDTH))
 	for note in _notes:
 		note.modulate.a = 0.0
 		note.hide()
@@ -152,7 +208,7 @@ func _build_notes() -> void:
 
 ## Fiche : carte claire légèrement penchée, onglet de couleur avec une pastille (`icon`) et
 ## le titre, puis `body`.
-func _note(icon: String, title: String, color: Color, body: Control, tilt_degrees: float) -> Control:
+func _note(icon: String, title: String, color: Color, body: Control, tilt_degrees: float, width := NOTE_WIDTH) -> Control:
 	var card := PanelContainer.new()
 	card.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var paper := StyleBoxFlat.new()
@@ -166,8 +222,8 @@ func _note(icon: String, title: String, color: Color, body: Control, tilt_degree
 	paper.shadow_offset = Vector2(0, 8)
 	paper.content_margin_left = 30
 	paper.content_margin_right = 30
-	paper.content_margin_top = 20
-	paper.content_margin_bottom = 26
+	paper.content_margin_top = 16
+	paper.content_margin_bottom = 20
 	card.add_theme_stylebox_override(&"panel", paper)
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override(&"separation", 14)
@@ -188,19 +244,19 @@ func _note(icon: String, title: String, color: Color, body: Control, tilt_degree
 	mark.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	badge.add_child(mark)
 	header.add_child(badge)
-	var heading := _text(title, 34, color.darkened(0.25))
+	var heading := _text(title, 30, color.darkened(0.25))
 	heading.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	header.add_child(heading)
 	column.add_child(body)
-	card.custom_minimum_size.x = NOTE_WIDTH
+	card.custom_minimum_size.x = width
 	card.rotation = deg_to_rad(tilt_degrees)
 	card.resized.connect(func() -> void: card.pivot_offset = card.size / 2.0)
 	# Centrée au-dessus de la barre (le conteneur calcule la hauteur du texte sur plusieurs lignes).
 	var holder := CenterContainer.new()
 	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	holder.set_anchors_preset(Control.PRESET_FULL_RECT)
-	holder.anchor_top = 0.06
-	holder.anchor_bottom = 0.68
+	holder.anchor_top = 0.42
+	holder.anchor_bottom = 0.7
 	holder.add_child(card)
 	add_child(holder)
 	return holder
@@ -224,7 +280,7 @@ func _update_badges() -> void:
 			child.queue_free()
 		var spec: Array = badges[action]
 		var badge := InputBadge.new()
-		badge.badge_height = 44.0
+		badge.badge_height = 38.0
 		slot.add_child(badge.setup(spec[0], spec[1],
 				spec[2] if spec.size() > 2 else Color.WHITE,
 				spec[3] if spec.size() > 3 else InputBadge.Symbol.NONE))

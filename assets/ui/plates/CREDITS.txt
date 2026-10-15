@@ -1,0 +1,4 @@
+plate_duck.jpg, plate_gun.jpg : planches « carnet d'inventeur » faites pour le jeu, à partir de rendus du
+modèle duck_v4.glb (face, profil) posés sur un parchemin généré.
+Polices utilisées dans les images : Caveat (Impallari Type, SIL Open Font License 1.1) et Homemade Apple
+(Font Diner, Apache License 2.0), via Google Fonts.

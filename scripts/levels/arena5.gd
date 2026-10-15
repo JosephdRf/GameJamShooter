@@ -4,7 +4,7 @@ extends Node3D
 ## Inherited map root (scene_v*.glb). Ensures every mesh has a StaticBody collider
 ## in the editor and at runtime so the scene stays editable while playable.
 
-const SKIP := ["eau"]
+const SKIP := ["eau", "socle_seche_cheveux"] # Le tuyau du tunnel d'eau : cf. WaterTunnel.
 ## Eau profonde (exceptions à SKIP) : on y entre, enfoncé de WATER_SINK m (sa collision est sous
 ## la surface visible : on ne tombe pas au fond), on y marche et on en sort d'un grand saut
 ## (Player.DEEP_WATER_GROUP, water_jump_velocity). La baignoire ici ; les toilettes

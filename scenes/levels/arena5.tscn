@@ -25,6 +25,10 @@ radius = 3.4
 [node name="Arena5" instance=ExtResource("1_arena")]
 script = ExtResource("2_script")
 
+[node name="Etagere_006" type="Marker3D" parent="Arene"]
+transform = Transform3D(0.83532894, -0.05805813, 0.5466762, 0.09697337, 0.99437624, -0.042571645, -0.5411301, 0.08857457, 0.83626133, -28.99327, 5.780689, -21.305122)
+metadata/copie_de = "Etagere_002"
+
 [node name="Eclairage" parent="." instance=ExtResource("3_eclairage")]
 
 [node name="Eau_Toilettes" type="StaticBody3D" parent="."]

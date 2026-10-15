@@ -17,7 +17,23 @@ const EXACT_MAX_TRIANGLES := 150
 
 
 func _ready() -> void:
+	_place_copies()
 	_ensure_colliders(self)
+
+
+## Copies d'objets de la carte : chaque repère (Marker3D) qui a la métadonnée `copie_de` reçoit
+## une copie de l'objet de ce nom (maillage et collision), à sa place. Évite d'enregistrer le
+## maillage et ses textures dans la scène (une étagère copiée dans l'éditeur pesait 134 Mo).
+func _place_copies() -> void:
+	for marker: Node in find_children("*", "Marker3D", true, false):
+		if not marker.has_meta(&"copie_de") or marker.get_child_count() > 0:
+			continue
+		var source := find_child(String(marker.get_meta(&"copie_de")), true, false) as Node3D
+		if source == null:
+			continue
+		var copy := source.duplicate() as Node3D
+		copy.transform = Transform3D.IDENTITY
+		marker.add_child(copy)
 
 
 func _ensure_colliders(node: Node) -> void:

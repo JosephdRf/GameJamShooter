@@ -343,8 +343,8 @@ func _note(icon: String, title: String, color: Color, body: Control, tilt_degree
 	var holder := CenterContainer.new()
 	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	holder.set_anchors_preset(Control.PRESET_FULL_RECT)
-	holder.anchor_top = 0.42
-	holder.anchor_bottom = 0.7
+	holder.anchor_top = 0.48
+	holder.anchor_bottom = 0.77
 	holder.add_child(card)
 	add_child(holder)
 	return holder

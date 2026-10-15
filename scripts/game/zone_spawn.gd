@@ -4,7 +4,7 @@ extends Node3D
 ## Zone d'apparition d'une équipe : disque au sol à la couleur de l'équipe.
 ##
 ## Au début de la partie, Game place chaque joueur de l'équipe `team` sur un
-## des emplacements de cette zone (répartis en cercle autour du centre) ; un
+## des emplacements de cette zone (côte à côte au centre) ; un
 ## joueur qui tombe de l'arène réapparaît à son emplacement.
 ## Position, rayon et équipe se règlent sur chaque instance, dans la scène de jeu.
 ##
@@ -21,6 +21,8 @@ extends Node3D
 		_update_shape()
 ## Hauteur du centre des joueurs au-dessus du sol à l'apparition (m) : moitié du canard.
 @export var spawn_height := 1.05625
+## Distance entre les centres de deux joueurs voisins à l'apparition (m).
+@export var spawn_spacing := 3.0
 
 @onready var _disk: MeshInstance3D = $Disk
 @onready var _ring: MeshInstance3D = $Ring
@@ -34,13 +36,13 @@ func _ready() -> void:
 
 
 ## Emplacement (position globale) du joueur n° `index` (0, 1…) parmi `count` joueurs.
-## Les joueurs sont répartis à mi-rayon, côte à côte (le long de l'axe X local).
+## Les joueurs sont côte à côte, sur une ligne perpendiculaire à la direction du centre de
+## l'arène (origine) : tous à la même distance du centre.
 func get_spawn_position(index: int, count: int) -> Vector3:
-	var offset := Vector3.ZERO
-	if count > 1:
-		var angle := PI + TAU * index / count
-		offset = Vector3(cos(angle), 0.0, sin(angle)) * radius * 0.5
-	return global_transform * (offset + Vector3.UP * spawn_height)
+	var to_center := Vector3(-global_position.x, 0.0, -global_position.z).normalized()
+	var side := to_center.cross(Vector3.UP) if not to_center.is_zero_approx() else Vector3.RIGHT
+	var offset := side * (index - (count - 1) / 2.0) * spawn_spacing
+	return global_position + offset + Vector3.UP * spawn_height
 
 
 func _update_visuals() -> void:

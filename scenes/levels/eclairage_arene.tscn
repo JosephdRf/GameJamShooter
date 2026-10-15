@@ -9,8 +9,8 @@ environment = ExtResource("1_env")
 
 [node name="Soleil" type="DirectionalLight3D" parent="."]
 transform = Transform3D(-0.933346, 0.19735, -0.299865, 0, 0.835327, 0.549753, 0.358979, 0.513109, -0.779649, -15.7, 40, -60)
-light_color = Color(1, 0.86, 0.66, 1)
-light_energy = 1.55
+light_color = Color(1, 0.95, 0.84, 1)
+light_energy = 1.75
 shadow_enabled = true
 shadow_blur = 1.4
 directional_shadow_mode = 1
@@ -21,14 +21,14 @@ directional_shadow_max_distance = 160.0
 [node name="Appoint" type="DirectionalLight3D" parent="."]
 transform = Transform3D(0.843661, -0.405197, 0.352208, 0, 0.656033, 0.754732, -0.536875, -0.636738, 0.55347, 0, 60, 40)
 light_color = Color(0.85, 0.92, 1, 1)
-light_energy = 0.22
+light_energy = 0.45
 light_specular = 0.25
 light_volumetric_fog_energy = 0.0
 
 [node name="Plafonnier" type="OmniLight3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 30, 5)
-light_color = Color(1, 0.88, 0.72, 1)
-light_energy = 1.15
+light_color = Color(1, 0.96, 0.88, 1)
+light_energy = 1.5
 shadow_enabled = true
 shadow_blur = 1.2
 omni_range = 75.0

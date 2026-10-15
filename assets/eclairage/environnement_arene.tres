@@ -2,17 +2,17 @@
 
 [resource]
 background_mode = 1
-background_color = Color(0.95, 0.84, 0.68, 1)
+background_color = Color(1, 0.95, 0.86, 1)
 ambient_light_source = 2
-ambient_light_color = Color(1, 0.88, 0.74, 1)
-ambient_light_energy = 0.42
+ambient_light_color = Color(1, 0.96, 0.9, 1)
+ambient_light_energy = 0.85
 reflected_light_source = 1
 tonemap_mode = 2
-tonemap_exposure = 1.05
+tonemap_exposure = 1.2
 ssao_enabled = true
 ssao_radius = 1.4
-ssao_intensity = 1.45
-ssao_power = 1.5
+ssao_intensity = 0.8
+ssao_power = 1.1
 ssr_enabled = true
 ssr_max_steps = 24
 ssr_fade_in = 0.15
@@ -22,8 +22,10 @@ glow_intensity = 0.22
 glow_bloom = 0.015
 glow_hdr_threshold = 1.15
 adjustment_enabled = true
-adjustment_saturation = 1.08
-fog_light_color = Color(0.95, 0.84, 0.68, 1)
+adjustment_brightness = 1.05
+adjustment_contrast = 1.05
+adjustment_saturation = 1.25
+fog_light_color = Color(1, 0.95, 0.86, 1)
 fog_sun_scatter = 0.12
 fog_density = 0.0008
 fog_aerial_perspective = 0.15

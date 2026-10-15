@@ -7,10 +7,13 @@ extends EditorScenePostImport
 ##     buter dessus ;
 ##   - forme exacte (trimesh) : la structure (sol, murs, plafond, marches)
 ##     et les objets déjà simples (au plus TRIMESH_MAX_TRIANGLES triangles) ;
+##   - coque convexe prolongée jusqu'au sol (RAMPS) : la serviette pliée en pente, sur laquelle on
+##     monte ;
 ##   - boîte : les objets « en pavé » (BOX_PREFIXES : serviettes, magazines, étagères…) ;
 ##   - forme exacte simplifiée (au plus CONCAVE_TRIANGLES triangles, cf. SurfaceTool.generate_lod) :
 ##     les objets creux ou sur pieds dont la forme compte pour se déplacer (CONCAVE_PREFIXES :
-##     baignoire, placard ouvert sous le lavabo, matelas, planche à repasser, toilettes, carton…) ;
+##     baignoire, placard ouvert sous le lavabo, matelas, bouée oiseau, planche à repasser,
+##     toilettes, carton…) ;
 ##     certains gardent plus de triangles (CONCAVE_DETAILED : le panier à linge, renversé, pour
 ##     garder les trous par lesquels on entre dessous : le grand trou d'un côté et les poignées) ;
 ##   - une coque convexe simplifiée : tout le reste.
@@ -24,9 +27,18 @@ const TRIMESH_PREFIXES := ["sol", "murs", "plafond", "marche"]
 const BOX_PREFIXES := ["serviette", "magazine", "rebord", "etagere", "machine_a_laver",
 		"socle_seche_cheveux", "cadre", "vitre", "porte"]
 const CONCAVE_PREFIXES := ["cuve", "placard", "tabouret", "bouee_matelas", "pieds_baignoire", "toilettes", "table_repassage",
-		"bateau_coque", "carton", "vasque", "tuyaux", "panier_linge"]
+		"bateau_coque", "carton", "vasque", "tuyaux", "panier_linge",
+		"bouee_detail"]
 const CONCAVE_TRIANGLES := 400
 const CONCAVE_DETAILED := {"panier_linge": 3000}
+## Coques convexes prolongées jusqu'au sol : nom de l'objet -> points ajoutés à sa coque (dans la
+## scène). Serviette_005, pliée en pente contre la pile de serviettes, a un bord bas arrondi de
+## 0,6 à 0,8 m, plus haut que la marche que le canard franchit seul (Player.max_step_height) : sa
+## coque, étendue jusqu'à une arête au sol, devient une pente lisse (environ 30°) du sol au haut de
+## la pile, sans sauter.
+const RAMPS := {
+	"serviette_005": [Vector3(-27.45, -0.27, -17.3), Vector3(-27.8, -0.27, -10.8)],
+}
 ## Hauteur (m) du bas de l'objet sans collision : le rebord du panier posé au sol, sur lequel le
 ## canard bute à l'entrée des poignées.
 const COLLISION_BOTTOM_CUT := {"panier_linge": 0.2}
@@ -78,6 +90,16 @@ func _collider_for(mi: MeshInstance3D) -> String:
 	if _starts(name, TRIMESH_PREFIXES) or _triangles(mi.mesh) <= TRIMESH_MAX_TRIANGLES:
 		mi.create_trimesh_collision()
 		return "trimesh"
+	for prefix: String in RAMPS:
+		if name.begins_with(prefix):
+			mi.create_convex_collision(true, false)
+			var hull: ConvexPolygonShape3D = mi.find_children("*", "CollisionShape3D", true, false)[0].shape
+			var points := hull.points
+			var to_mesh := _scene_transform(mi).affine_inverse()
+			for point: Vector3 in RAMPS[prefix]:
+				points.append(to_mesh * point)
+			hull.points = points
+			return "coque + rampe"
 	if _starts(name, BOX_PREFIXES):
 		var body := StaticBody3D.new()
 		body.name = "StaticBody3D"

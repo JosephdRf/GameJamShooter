@@ -430,6 +430,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.9859962, 4.010378, 6.785328
 size = Vector3(6, 4.5, 10)
 material = SubResource("StandardMaterial3D_702kj")
 
+[node name="SecheCheveux_centre" parent="Props" unique_id=1841689228 instance=ExtResource("2_dryer")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 0, 9)
+
 [node name="Echelles" type="Node3D" parent="." unique_id=804322161]
 
 [node name="Echelle_sol_fenetre1" type="Node3D" parent="Echelles" unique_id=911802009]
@@ -1088,6 +1091,3 @@ size = Vector3(50.60264, 4.4243164, 17.889652)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.9666486, 6.899135, -7.8585434)
 operation = 2
 size = Vector3(29.401031, 4.310608, 9.668457)
-
-[node name="SecheCheveux_centre" parent="Props" instance=ExtResource("2_dryer")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 0, 9)

@@ -33,6 +33,10 @@ window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 window/vsync/vsync_mode=2
 
+[dotnet]
+
+project/assembly_name="Duck my Life"
+
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/godot_ai_mcp/plugin.cfg")

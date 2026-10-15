@@ -16,6 +16,10 @@ extends EditorScenePostImport
 ##     toilettes, carton…) ;
 ##     certains gardent plus de triangles (CONCAVE_DETAILED : le panier à linge, renversé, pour
 ##     garder les trous par lesquels on entre dessous : le grand trou d'un côté et les poignées) ;
+##     dessus duquel on marche (MULTICONVEX_PREFIXES : le panier à linge), plusieurs coques
+##     convexes (décomposition VHACD) à la place d'une seule forme concave : un personnage qui
+##     marche sur une forme concave accroche sur les arêtes internes des triangles (tremble,
+##     n'avance plus) ; plusieurs coques convexes n'ont pas ce problème ;
 ##   - une coque convexe simplifiée : tout le reste.
 ## Les objets sans collision reçoivent la métadonnée `sans_collision` (arena5.gd n'en ajoute pas).
 ## Préfixes : « Bateau_* » garde ses collisions ; noms comparés en minuscules.
@@ -39,6 +43,11 @@ const CONCAVE_DETAILED := {"panier_linge": 3000}
 const RAMPS := {
 	"serviette_005": [Vector3(-27.45, -0.27, -17.3), Vector3(-27.8, -0.27, -10.8)],
 }
+## Parmi CONCAVE_PREFIXES, ceux sur lesquels on marche directement : décomposés en coques
+## convexes (cf. ci-dessus) plutôt qu'une seule forme concave.
+const MULTICONVEX_PREFIXES := ["panier_linge"]
+## Nombre de coques convexes au plus (plus = forme plus fidèle, mais plus de calcul).
+const MULTICONVEX_MAX_HULLS := 24
 ## Hauteur (m) du bas de l'objet sans collision : le rebord du panier posé au sol, sur lequel le
 ## canard bute à l'entrée des poignées.
 const COLLISION_BOTTOM_CUT := {"panier_linge": 0.2}
@@ -126,6 +135,12 @@ func _collider_for(mi: MeshInstance3D) -> String:
 		if faces.is_empty():
 			mi.create_trimesh_collision()
 			return "trimesh"
+		if _starts(name, MULTICONVEX_PREFIXES):
+			var multi := _build_multiconvex(faces)
+			if multi:
+				mi.add_child(multi)
+				_own_recursive(multi, mi.owner)
+				return "coques multiples"
 		var body := StaticBody3D.new()
 		body.name = "StaticBody3D"
 		var shape := CollisionShape3D.new()
@@ -140,6 +155,37 @@ func _collider_for(mi: MeshInstance3D) -> String:
 		return "simplifiée"
 	mi.create_convex_collision(true, true)
 	return "coque"
+
+
+## Décomposition convexe (VHACD) des triangles `faces` : StaticBody3D avec une ConvexPolygonShape3D
+## par morceau, null si ça échoue.
+static func _build_multiconvex(faces: PackedVector3Array) -> StaticBody3D:
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = faces
+	var temp_mesh := ArrayMesh.new()
+	temp_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	var temp_mi := MeshInstance3D.new()
+	temp_mi.mesh = temp_mesh
+	var settings := MeshConvexDecompositionSettings.new()
+	settings.max_convex_hulls = MULTICONVEX_MAX_HULLS
+	temp_mi.create_multiple_convex_collisions(settings)
+	var body: StaticBody3D = null
+	for child in temp_mi.get_children():
+		if child is StaticBody3D:
+			body = child
+			temp_mi.remove_child(child)
+			break
+	temp_mi.free()
+	return body
+
+
+## Donne `owner` à `node` et, récursivement, à tous ses enfants (nécessaire pour qu'ils soient
+## sauvegardés avec la scène importée).
+static func _own_recursive(node: Node, owner: Node) -> void:
+	node.owner = owner
+	for child in node.get_children():
+		_own_recursive(child, owner)
 
 
 ## Triangles de `faces` sans ceux qui sont entièrement à moins de `height` m (dans la scène,

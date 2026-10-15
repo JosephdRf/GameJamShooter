@@ -62,12 +62,13 @@ script = ExtResource("17_water_cannon")
 script = ExtResource("9_mode")
 
 [node name="ZoneDefense1" parent="ZoneDefenseMode" unique_id=1842881901 instance=ExtResource("10_zone")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 10.97, 34.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.5, 11.2, 34)
+radius = 3.5
 
 [node name="ZoneDefense2" parent="ZoneDefenseMode" unique_id=1765327171 instance=ExtResource("10_zone")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11, 7.18, -6.25)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.75, 7.2, -6)
 shape = 1
-size = Vector2(10, 15.5)
+size = Vector2(6.5, 13)
 
 [node name="ZoneDefense3" parent="ZoneDefenseMode" unique_id=211882194 instance=ExtResource("10_zone")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.2, 6.2, -29.2)

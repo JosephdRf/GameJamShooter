@@ -8,6 +8,12 @@ const SKIP := ["eau"]
 ## Eau sur laquelle on marche malgré tout (exceptions à SKIP) : la surface de la baignoire
 ## empêche de tomber au fond.
 const SOLID_WATER := ["eau_baignoire"]
+## Rattrapage (collision manquante : import fait avant tools/arena_glb_post_import.gd, que Godot
+## ne refait pas tout seul quand seul le script change) : forme exacte seulement pour la
+## structure et les objets simples, sinon une coque convexe. La forme exacte d'un objet détaillé
+## (toilettes, tongs, serviettes : des dizaines de milliers de triangles) fait ramer le jeu.
+const EXACT_PREFIXES := ["sol", "murs", "plafond", "marche", "eau_baignoire"]
+const EXACT_MAX_TRIANGLES := 150
 
 
 func _ready() -> void:
@@ -63,6 +69,20 @@ func _collide_both_sides(mi: MeshInstance3D) -> void:
 					shape.backface_collision = true
 
 
+## Vrai si `mi` peut garder sa forme exacte (cf. EXACT_PREFIXES).
+func _is_exact(mi: MeshInstance3D) -> bool:
+	var name := String(mi.name).to_lower()
+	for prefix: String in EXACT_PREFIXES:
+		if name.begins_with(prefix):
+			return true
+	var triangles := 0
+	for s in mi.mesh.get_surface_count():
+		var arrays := mi.mesh.surface_get_arrays(s)
+		var indices = arrays[Mesh.ARRAY_INDEX]
+		triangles += (indices.size() if indices != null else arrays[Mesh.ARRAY_VERTEX].size()) / 3
+	return triangles <= EXACT_MAX_TRIANGLES
+
+
 func _ensure_mesh_collider(mi: MeshInstance3D) -> void:
 	# sans_collision : choisi à l'import (eau, petits objets), cf. tools/arena_glb_post_import.gd.
 	# L'eau de SOLID_WATER reste solide malgré tout.
@@ -73,14 +93,15 @@ func _ensure_mesh_collider(mi: MeshInstance3D) -> void:
 		return
 
 	_clear_static_bodies(mi)
-	mi.create_trimesh_collision()
-	if _has_valid_collider(mi):
-		if String(mi.name).to_lower() in SOLID_WATER:
-			_collide_both_sides(mi) # Plan d'eau sans épaisseur : solide quelle que soit sa face.
-		return
+	if _is_exact(mi):
+		mi.create_trimesh_collision()
+		if _has_valid_collider(mi):
+			if String(mi.name).to_lower() in SOLID_WATER:
+				_collide_both_sides(mi) # Plan d'eau sans épaisseur : solide quelle que soit sa face.
+			return
+		_clear_static_bodies(mi)
 
-	_clear_static_bodies(mi)
-	mi.create_convex_collision(true, false)
+	mi.create_convex_collision(true, true)
 	if _has_valid_collider(mi):
 		return
 

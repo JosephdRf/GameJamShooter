@@ -51,6 +51,11 @@ var ends: Array[Dictionary] = []
 
 func _ready() -> void:
 	add_to_group(GROUP)
+	# Collision laissée par un ancien import de l'arène (boîte sur tout le tuyau, qui en bouche
+	# l'entrée) : Godot ne réimporte pas le GLB quand seul son script d'import change.
+	for child in _pipe.get_children():
+		if child is StaticBody3D:
+			child.queue_free()
 	curve = _build_curve(_pipe)
 	radius = _measure_radius(_pipe)
 	ends = [

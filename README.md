@@ -11,7 +11,7 @@ caméra à la 3e personne. Un des joueurs héberge la partie (« listen server �
 | Accueil (titre « Duck my Life » qui flotte, « Fuck My Life » une fois sur dix, bouton jaune) | `title_screen.tscn` | **Démarrer** → Hôte/IP |
 | Hôte/IP | `connect_screen.tscn` | Héberger → Sélection d'équipe · Rejoindre → connexion réussie ? oui : Sélection d'équipe, non : reste ici avec un message |
 | Sélection d'équipe (une fois son joueur validé : fenêtre du pseudo, tout en majuscules, gardé pour la fois suivante, affiché sur le bouton à la place de « Joueur N » (sans pseudo, le joueur s'appelle « Joueur N », aussi au-dessus de son canard) ; en jeu, affiché au-dessus des canards des autres joueurs) | `team_select.tscn` | **Lancer la partie** (hôte) → Préparation du combat |
-| Préparation du combat (8 s, sur tous les ordinateurs : rangée de bulles `BubbleBar` à la couleur de son équipe + pourcentage, fond noir ; en haut, deux planches « carnet d'inventeur » sur parchemin, le canard et son pistolet à bulles de face et de profil (`assets/ui/plates`) ; dessous, deux fiches de 4 s, « Le saviez-vous ? » sur l'histoire puis « Commandes » avec les touches du clavier ou de la manette utilisée (`InputBadge`) ; la scène de combat se charge en arrière-plan) | `match_loading.tscn` | GAME |
+| Préparation du combat (8 s, sur tous les ordinateurs : rangée de bulles `BubbleBar` à la couleur de son équipe + pourcentage, fond noir ; en haut, deux planches « carnet d'inventeur » sur parchemin, le canard et son pistolet à bulles de face et de profil (`assets/ui/plates`) ; dessous, deux fiches de 4 s, « Le saviez-vous ? » sur l'histoire puis « Commandes » avec les touches du clavier ou de la manette utilisée (`InputBadge`) ; la scène de combat se charge en arrière-plan, est créée sur un autre fil, et l'arène est rendue une fois dans une vue cachée pour compiler ses shaders) | `match_loading.tscn` | GAME |
 | GAME | `game/game.tscn` | Pause (hôte) · fin du combat → Écran de fin |
 | Pause (dans GAME ; style des menus : jeu figé grisé derrière (`pause_dim.gdshader`), bulles, titre « Pause » qui flotte, bouton jaune « Reprendre », bulle « Quitter ») | `pause_menu.tscn` | Reprendre → GAME · Quitter → Sélection d'équipe (tout le monde) |
 | Écran de fin (style des menus : serviettes bleue et rouge avec scores et pseudos, badge « Gagné ! ») | `end_screen.tscn` | **Rejouer** → Sélection d'équipe · **Quitter** → ferme le jeu |
@@ -240,9 +240,10 @@ Un joueur qui tombe de la plateforme meurt.
   (`NewZoneSound`, `sfx/capture/zone_appeared.wav`), entendue partout. Les deux sons ont de la réverbération.
 - Menus : autoload `UiSounds` (clic en naviguant, « plop » en validant), branché sur tous les boutons.
 - Musique : autoload `Music` (`play(...)` dans le `_ready()` de chaque écran ; changement en fondu).
-  Menus : « Happy Clappy Loop » (`music/happy_clappy_loop.wav`, OwlishMedia, OpenGameArt, CC0) boucle sans
-  coupure, sans se relancer d'un écran à l'autre, et reprend là où elle s'était arrêtée après un combat.
-  Combat : pas de musique (`Music.stop()`, la musique des menus s'éteint en fondu au début du combat).
+  Menus : `music/musique_menus.mp3` (1 min 17, en boucle), sans se relancer d'un écran à l'autre, et reprend
+  là où elle s'était arrêtée après un combat.
+  Combat : `music/musique_combat.mp3` (4 min 48, en boucle), depuis le début à chaque partie, à -19 dB car
+  mixée bien plus fort (`Music.VOLUMES_DB`).
 - Volume : `volume_db` de chaque nœud `*Sound` ; variation : `random_pitch` des `.tres`.
 - Sources : `sfx/bubble/` (Pixabay), `sfx/duck/` et `sfx/freesound/` (Freesound, CC0, voir `CREDITS.txt`),
   `sfx/jump/` et `sfx/land/` (saut sur béton : décollage et réception, La Sonothèque, voir `CREDITS.txt`),
@@ -359,6 +360,11 @@ Un joueur qui tombe de la plateforme meurt.
   de la baignoire (11 m), le dessus du panier à linge (7,2 m, rectangle, ex-îlot central), le rebord de
   fenêtre sous le lavabo (6,2 m) et le sol de la douche ; plastron au sol, au centre. L'ancienne arène
   ci-dessous (`arena.tscn`, `arena4.tscn`) reste dans le projet.
+- Collisions d'`arena5` légères, choisies à l'import par `tools/arena_glb_post_import.gd` : forme exacte pour
+  la structure (sol, murs, plafond, marches), boîtes pour les objets en pavé (serviettes, magazines…), forme
+  simplifiée (~400 triangles) pour les objets creux (baignoire, placard, matelas, planche à repasser,
+  tabouret…), coque convexe pour le reste, rien pour l'eau et les petits objets (< 1 m). Environ 10 000
+  triangles au total (370 000 avant). Après modification du script : réimporter `arene_bain.glb`.
 
 - Source : `assets/models/bain-de-coin-coin.blend`. Godot l'importe avec **Blender**
   (Éditeur › Paramètres › Système de fichiers › Import › chemin de Blender) : chaque coéquipier qui

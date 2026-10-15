@@ -46,7 +46,8 @@ func _clear_static_bodies(mi: MeshInstance3D) -> void:
 
 
 func _ensure_mesh_collider(mi: MeshInstance3D) -> void:
-	if mi.mesh == null or _should_skip(mi):
+	# sans_collision : choisi à l'import (eau, petits objets), cf. tools/arena_glb_post_import.gd.
+	if mi.mesh == null or _should_skip(mi) or mi.has_meta(&"sans_collision"):
 		return
 	if _has_valid_collider(mi):
 		return

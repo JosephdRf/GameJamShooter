@@ -9,7 +9,9 @@ extends Control
 ## Décor : en haut, deux planches « carnet d'inventeur » (le canard et son pistolet à bulles,
 ## de face et de profil, assets/ui/plates) posées de travers, avec une ombre et du ruban
 ## adhésif ; les fiches s'affichent en dessous.
-## La scène de combat se charge pour de vrai en arrière-plan ; l'écran dure DURATION s
+## La scène de combat (avec l'arène) se charge pour de vrai en arrière-plan, puis elle est créée
+## sur un autre fil (WorkerThreadPool) et l'arène est rendue une première fois dans une vue cachée
+## (compilation de ses shaders) : le passage au combat ne fige plus l'image. l'écran dure DURATION s
 ## (plus longtemps seulement si le chargement n'est pas fini), puis le combat s'affiche.
 
 const DURATION := 8.0
@@ -78,6 +80,15 @@ const BADGES := {
 ## Progression (%), animée par le tween.
 var _value := 0.0
 var _done := false
+## Combat préparé pendant l'écran : scène chargée, instance créée sur un autre fil, et vue cachée
+## qui rend l'arène pour compiler ses shaders d'avance.
+var _game_scene: PackedScene
+var _game: Node
+var _instancing_task := -1
+var _warmup: SubViewport
+var _warmup_arena: Node
+var _warmup_camera: Camera3D
+var _warmup_time := 0.0
 var _team_color := Player.TEAM_COLORS[0]
 var _notes: Array[Control] = []
 ## Lignes de la fiche des commandes : action -> conteneur de sa pastille.
@@ -124,16 +135,93 @@ func _ready() -> void:
 			notes_tween.tween_callback(note.hide)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	_bar.ratio = _value / 100.0
 	_percent.text = "%d %%" % roundi(_value)
-	if _done and ResourceLoader.load_threaded_get_status(Screens.GAME) != ResourceLoader.THREAD_LOAD_IN_PROGRESS:
-		_done = false
-		var game := ResourceLoader.load_threaded_get(Screens.GAME) as PackedScene
-		if game:
-			get_tree().change_scene_to_packed(game)
-		else:
-			get_tree().change_scene_to_file(Screens.GAME)
+	_prepare_game(delta)
+	if not _done:
+		return
+	if _instancing_task != -1 and not WorkerThreadPool.is_task_completed(_instancing_task):
+		return # Encore en création : on attend sur l'écran (la barre reste à 100 %).
+	if _game_scene == null and ResourceLoader.load_threaded_get_status(Screens.GAME) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+		return
+	_done = false
+	if _instancing_task != -1:
+		WorkerThreadPool.wait_for_task_completion(_instancing_task)
+		_instancing_task = -1
+	_free_warmup()
+	if _game:
+		var game := _game
+		_game = null
+		get_tree().change_scene_to_node(game)
+	else:
+		get_tree().change_scene_to_file(Screens.GAME)
+
+
+func _exit_tree() -> void:
+	if _instancing_task != -1:
+		WorkerThreadPool.wait_for_task_completion(_instancing_task)
+		_instancing_task = -1
+	if _game: # Écran quitté sans lancer le combat (déconnexion…).
+		_game.free()
+		_game = null
+	if _warmup_arena and not _warmup_arena.is_inside_tree():
+		_warmup_arena.free()
+	_warmup_arena = null
+
+
+## Dès que la scène de combat est chargée : création sur un autre fil, et rendu de l'arène dans
+## une vue cachée (caméra qui tourne au centre) jusqu'à la fin de l'écran.
+func _prepare_game(delta: float) -> void:
+	if _game_scene == null:
+		if ResourceLoader.load_threaded_get_status(Screens.GAME) != ResourceLoader.THREAD_LOAD_LOADED:
+			return
+		_game_scene = ResourceLoader.load_threaded_get(Screens.GAME) as PackedScene
+		if _game_scene == null:
+			return
+		var arena_scene := _arena_scene()
+		_instancing_task = WorkerThreadPool.add_task(func() -> void:
+			_game = _game_scene.instantiate()
+			if arena_scene:
+				_warmup_arena = arena_scene.instantiate())
+	if _warmup == null and _warmup_arena and WorkerThreadPool.is_task_completed(_instancing_task):
+		_start_warmup()
+	if _warmup_camera:
+		_warmup_time += delta
+		_warmup_camera.rotation.y = _warmup_time * 1.5
+
+
+## Scène de l'arène (nœud Arena de la scène de combat).
+func _arena_scene() -> PackedScene:
+	var state := _game_scene.get_state()
+	for i in state.get_node_count():
+		if state.get_node_name(i) == &"Arena" and state.get_node_instance(i):
+			return state.get_node_instance(i)
+	return null
+
+
+func _start_warmup() -> void:
+	_warmup = SubViewport.new()
+	_warmup.size = Vector2i(320, 180)
+	_warmup.own_world_3d = true
+	_warmup.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	add_child(_warmup)
+	_warmup.add_child(_warmup_arena)
+	_warmup_camera = Camera3D.new()
+	_warmup_camera.position = Vector3(0, 8, 0)
+	_warmup_camera.far = 300.0
+	_warmup.add_child(_warmup_camera)
+	_warmup_camera.current = true
+
+
+func _free_warmup() -> void:
+	if _warmup:
+		_warmup.queue_free()
+		_warmup = null
+		_warmup_camera = null
+	elif _warmup_arena:
+		_warmup_arena.free()
+	_warmup_arena = null
 
 
 ## Planches du décor, juste au-dessus du fond et des bulles (sous la barre et les fiches).

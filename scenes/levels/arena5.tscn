@@ -39,8 +39,16 @@ mesh = SubResource("Mesh_eau_toilettes")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.2, 0)
 shape = SubResource("Shape_eau_toilettes")
 
-[node name="Souffle_Seche_Cheveux" parent="." instance=ExtResource("4_dryer")]
+[node name="Souffle_Seche_Cheveux_A" parent="." instance=ExtResource("4_dryer")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.35, -0.3, 22.95)
+show_model = false
+nozzle_height = 4.8
+nozzle_radius = 0.7
+column_height = 22.0
+hover_height = 19.0
+
+[node name="Souffle_Seche_Cheveux_B" parent="." instance=ExtResource("4_dryer")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -12.36, -0.3, 21.57)
 show_model = false
 nozzle_height = 4.8
 nozzle_radius = 0.7

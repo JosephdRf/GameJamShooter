@@ -11,16 +11,22 @@ extends Node3D
 ## transparent (shader assets/shaders/hot_air.gdshader, qui laisse voir les bulles), des filets
 ## d'air qui montent, une lueur orange dans la buse. Il s'entend aussi (souffle généré).
 ## Colonne, jet et filets sont créés dans _ready d'après les réglages ci-dessous.
+##
+## Sans `show_model`, seul le souffle reste (pas de socle ni de modèle) : on le pose sous la
+## buse d'un sèche-cheveux modélisé dans la carte, l'origine au sol, `nozzle_height` /
+## `nozzle_radius` réglés sur sa buse (cf. arena5.tscn).
 
 const GROUP := &"hair_dryers"
 ## Hauteur (m, depuis le bas du socle) au-dessus de laquelle on n'est plus « sur le socle ».
 const PAD_TOP := 1.5
-## Hauteur (m) de la sortie de la buse, cf. le modèle de hair_dryer.tscn.
-const NOZZLE_HEIGHT := 2.55
-## Rayon (m) de la sortie de la buse.
-const NOZZLE_RADIUS := 0.42
 const HOT_AIR_SHADER := preload("res://assets/shaders/hot_air.gdshader")
 
+## Socle rond et modèle du sèche-cheveux (faux : souffle seul, cf. en-tête).
+@export var show_model := true
+## Hauteur (m, depuis le sol) et rayon (m) de la sortie de la buse (modèle de hair_dryer.tscn :
+## 2,55 et 0,42).
+@export var nozzle_height := 2.55
+@export var nozzle_radius := 0.42
 @export_group("Envol")
 ## Rayon (m) de la zone d'envol : sauter à moins de cette distance du centre fait s'envoler.
 @export var zone_radius := 3.2
@@ -78,6 +84,12 @@ static func under(tree: SceneTree, feet: Vector3) -> HairDryer:
 
 func _ready() -> void:
 	add_to_group(GROUP)
+	if not show_model:
+		var pad := $Socle as CSGCombiner3D
+		pad.use_collision = false
+		pad.visible = false
+		($SecheCheveux as Node3D).visible = false
+		$SecheCheveux/Collision.queue_free()
 	_noise = NoiseTexture2D.new()
 	_noise.seamless = true
 	_noise.width = 256
@@ -88,7 +100,7 @@ func _ready() -> void:
 	_noise.noise = fast
 	# Colonne d'air chaud au-dessus de tout le socle, et jet plus marqué qui sort de la buse.
 	_add_air_cone(zone_radius, zone_radius, 0.3, column_height, 0.08, 0.6)
-	_add_air_cone(NOZZLE_RADIUS, zone_radius * 0.75, NOZZLE_HEIGHT, 5.0, 0.25, 1.4)
+	_add_air_cone(nozzle_radius, zone_radius * 0.75, nozzle_height, 5.0, 0.25, 1.4)
 	_add_streaks()
 	_puff = _make_puff()
 	add_child(_puff)
@@ -194,7 +206,7 @@ func _add_streaks() -> void:
 	particles.local_coords = false
 	particles.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
 	particles.emission_sphere_radius = zone_radius * 0.8
-	particles.position.y = NOZZLE_HEIGHT * 0.6
+	particles.position.y = nozzle_height * 0.6
 	particles.scale_amount_min = 0.6
 	particles.scale_amount_max = 1.3
 	particles.direction = Vector3.UP
@@ -282,7 +294,7 @@ func _add_hum() -> void:
 	_hum.volume_db = hum_volume_db
 	_hum.unit_size = 6.0
 	_hum.max_distance = 40.0
-	_hum.position.y = NOZZLE_HEIGHT
+	_hum.position.y = nozzle_height
 	_hum.autoplay = false
 	add_child(_hum)
 	if DisplayServer.get_name() == "headless":

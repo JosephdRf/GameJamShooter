@@ -468,6 +468,28 @@ func duck_splash(point: Vector3, normal: Vector3) -> void:
 	tween.chain().tween_callback(burst.queue_free)
 
 
+## Bulle qui éclate en l'air au bout de sa portée (`point` = son centre, `direction` = sa
+## direction, `size` = son rayon, m) : coque d'eau qui gonfle et s'efface, gouttes projetées
+## dans le sens de la bulle et tout autour, qui retombent.
+func air_burst(point: Vector3, direction: Vector3, size: float) -> void:
+	if not splash_effects:
+		return
+	var scale_factor := clampf(size / 0.3, 1.0, 3.0) # Plus de gouttes pour la grosse bulle.
+	_spawn_drops(point, roundi(16 * scale_factor), direction, 40.0, 3.0, 6.0, size * 0.6, 1.4)
+	_spawn_drops(point, roundi(18 * scale_factor), Vector3.UP, 180.0, 1.5, 4.0, size * 0.8, 1.0)
+	var burst := MeshInstance3D.new()
+	burst.mesh = _burst_mesh
+	burst.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	burst.layers = DUCK_VISUAL_LAYER
+	burst.position = point
+	burst.scale = Vector3.ONE * size * 2.0
+	add_child(burst)
+	var tween := burst.create_tween().set_parallel()
+	tween.tween_property(burst, ^"scale", Vector3.ONE * size * 5.0, 0.25).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	tween.tween_property(burst, ^"transparency", 1.0, 0.25).set_ease(Tween.EASE_IN)
+	tween.chain().tween_callback(burst.queue_free)
+
+
 ## Pas d'un canard dans l'eau (`point` sous son pied, sol de normale `normal`) : petit rond et
 ## quelques gouttes.
 func step_splash(point: Vector3, normal := Vector3.UP) -> void:

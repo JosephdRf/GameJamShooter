@@ -93,6 +93,10 @@ signal splashed(point: Vector3, puddle_radius: float, normal: Vector3)
 ## Émis (sur tous les ordinateurs) quand une bulle normale éclate sur un adversaire : `point`
 ## sur le canard, `normal` vers l'extérieur du canard (Game y fait une grosse éclaboussure).
 signal hit_duck(point: Vector3, normal: Vector3)
+## Émis (sur tous les ordinateurs) quand la bulle éclate en l'air au bout de sa portée :
+## `point` = son centre, `direction` = sa direction, `size` = son rayon visible (m). Game y
+## fait une éclaboussure en l'air (gouttes qui partent dans le sens de la bulle et retombent).
+signal burst_in_air(point: Vector3, direction: Vector3, size: float)
 
 ## Matériau de chaque équipe (index 0 = équipe 1), partagé par toutes ses bulles :
 ## celui de la scène, teinté à la couleur de l'équipe (même transparence).
@@ -192,6 +196,8 @@ func _physics_process(delta: float) -> void:
 	global_position += motion
 	_travelled += step
 	if _travelled >= max_distance:
+		burst_in_air.emit(($Mesh as Node3D).global_position, _direction,
+				(visual_radius if visual_radius >= 0.0 else radius) * scale.x)
 		_pop()
 
 

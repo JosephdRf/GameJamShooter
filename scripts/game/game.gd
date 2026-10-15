@@ -155,6 +155,8 @@ func _on_player_shot(origin: Vector3, direction: Vector3, capture: bool, visual_
 		_puddles.add_puddle(point, radius, 1.0, true, normal))
 	# Touché : grosse éclaboussure sur le canard, pour voir qu'on a fait des dégâts.
 	bubble.hit_duck.connect(_puddles.duck_splash)
+	# Au bout de sa portée : elle éclate en l'air en projetant des gouttes.
+	bubble.burst_in_air.connect(_puddles.air_burst)
 	_projectiles.add_child(bubble)
 	bubble.launch(player, origin, direction, player.is_multiplayer_authority(), visual_origin)
 

@@ -807,6 +807,11 @@ func is_water_recharging() -> bool:
 	return water < 1.0 and _water_idle >= water_recharge_delay
 
 
+## Réserve d'eau pleine d'un coup (récompense d'une élimination, cf. Game).
+func refill_water() -> void:
+	water = 1.0
+
+
 func _spend_water(amount: float) -> void:
 	water = maxf(water - amount, 0.0)
 	_water_idle = 0.0

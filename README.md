@@ -52,7 +52,10 @@ Les chemins sont regroupés dans `scripts/ui/screens.gd` (`Screens.TITLE`, `Scre
 8. **Défense de zone** : aucune zone au début ; la première apparaît **5 s** après « C'est parti ! »
    (`first_zone_delay` sur `ZoneDefenseMode`), avec « Une nouvelle zone est apparue ! ». Ensuite, une
    seule zone (ronde, ou rectangulaire pour l'îlot central) est toujours active (tirée au hasard, jamais la
-   même deux fois de suite). Une équipe qui y reste **seule 10 s** la capture et gagne **2 points** ;
+   même deux fois de suite, ni deux fois sur 5 zones consécutives tant que l'écart est sous 10 points :
+   `NO_REPEAT_SPAN`). Une équipe menée de **10 points** ou plus voit la zone suivante apparaître
+   **3 fois plus souvent de son côté** (`comeback_gap`, `comeback_weight` sur `ZoneDefenseMode` ; côté de
+   chaque zone : `side` sur l'instance, Neutre / Bleus à l'ouest / Rouges à l'est, avec la douche). Une équipe qui y reste **seule 10 s** la capture et gagne **2 points** ;
    la zone prend la couleur de l'équipe présente et une barre de progression s'affiche sous le
    score. Au sol, un **disque** à la couleur de l'équipe (rectangle pour la zone rectangulaire) part du
    centre et atteint le bord à la capture ; son aire grandit à vitesse constante (à mi-capture, la moitié
@@ -155,7 +158,8 @@ Un joueur qui tombe de la plateforme meurt.
   des bulles, plus claire pendant la recharge ; pas de pourcentage). Un tir coûte **5 %**, une grosse bulle **20 %**,
   le jet **20 % par seconde**. Sans assez d'eau, rien ne part et la jauge clignote en rouge.
 - Après **2 s** sans dépenser d'eau, elle se recharge de plus en plus vite (la vitesse double toutes les
-  0,6 s) : pleine environ 4,5 s après le dernier tir, même vide. Pleine à la réapparition.
+  0,6 s) : pleine environ 4,5 s après le dernier tir, même vide. Pleine à la réapparition, et
+  **pleine d'un coup quand on élimine un adversaire**.
 - Réglages : groupe « Eau » du joueur (`water_per_shot`, `water_per_capture`, `water_per_second`,
   `water_recharge_delay`, `water_recharge_rate`, `water_recharge_doubling`, `water_recharge_max_rate`).
 

@@ -108,6 +108,10 @@ enum Shape { CIRCLE, RECTANGLE }
 @export var timeout := 0.0
 ## Temps à passer seul dans la zone pour la capturer (s).
 @export var capture_time := 10.0
+## Côté de la carte : celui d'une équipe (près de sa zone d'apparition ; la douche est chez les
+## rouges) ou neutre (au milieu). Une équipe menée apparaît plus souvent de son côté (cf.
+## ZoneDefenseMode.comeback_gap).
+@export_enum("Neutre", "Bleus", "Rouges") var side := 0
 @export_group("Montée de capture")
 ## Volume des notes (dB) à moins de `build_up_unit_size` m du centre ; les premières notes
 ## sont 2 dB plus douces, puis le volume monte avec la progression (les notes graves sont

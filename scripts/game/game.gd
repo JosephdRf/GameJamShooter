@@ -177,6 +177,8 @@ func _on_player_eliminated(killer_id: int, victim: Player) -> void:
 		_mode.add_kill(killer.get_team())
 	if kill and killer.is_local:
 		_kill_feed.show_my_elimination(victim, _mode.kill_points)
+	if kill and killer.is_multiplayer_authority():
+		killer.refill_water() # Toute son eau d'un coup (tenue par l'ordinateur qui le contrôle).
 
 
 func _on_player_respawned(player: Player) -> void:

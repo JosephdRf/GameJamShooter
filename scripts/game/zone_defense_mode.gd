@@ -7,6 +7,10 @@ extends Node3D
 ## reste jusqu'à sa capture (pas de limite de temps, cf. ZoneDefense.timeout) ; capturer une
 ## zone rapporte ses `points` à l'équipe, puis une autre zone, forcément différente, apparaît
 ## next_zone_delay secondes plus tard (« Une nouvelle zone est apparue ! »).
+## Équipe menée de comeback_gap points ou plus : la zone suivante a comeback_weight fois plus
+## de chances d'apparaître de son côté (ZoneDefense.side) que chacune des autres. Sinon, pas de
+## répétition : une zone ne revient pas avant que NO_REPEAT_SPAN - 1 autres soient passées (jamais
+## deux fois la même sur NO_REPEAT_SPAN zones de suite), s'il y a assez de zones.
 ## Pour ajouter / déplacer / régler les zones : modifier les instances
 ## ZoneDefense sous ce nœud dans scenes/game/game.tscn.
 ##
@@ -20,6 +24,9 @@ signal zone_captured(team: int)
 ## suit une capture (après next_zone_delay) ou celle qui remplace une zone expirée.
 signal new_zone_appeared
 
+## Hors rattrapage, pas deux fois la même zone sur ce nombre de zones consécutives.
+const NO_REPEAT_SPAN := 5
+
 ## Délai (s) entre « C'est parti ! » et l'apparition de la première zone (figé pendant la pause).
 @export var first_zone_delay := 5.0
 ## Délai (s) entre la capture d'une zone et l'apparition de la suivante (figé pendant la pause).
@@ -27,6 +34,10 @@ signal new_zone_appeared
 
 ## Points rapportés par une élimination (cf. add_kill).
 @export var kill_points := 1
+## Écart de points à partir duquel la zone suivante apparaît plus souvent du côté de l'équipe
+## menée, et combien de fois plus (une zone de son côté compte pour `comeback_weight` tirages).
+@export var comeback_gap := 10
+@export var comeback_weight := 3.0
 
 ## Équipe (1 ou 2) -> points.
 var scores := {1: 0, 2: 0}
@@ -34,6 +45,8 @@ var scores := {1: 0, 2: 0}
 var _zones: Array[ZoneDefense] = []
 var _players: Array[Player] = []
 var _active_index := -1
+## Dernières zones activées (indices), de la plus ancienne à la plus récente.
+var _history: Array[int] = []
 
 
 func _ready() -> void:
@@ -83,20 +96,17 @@ func _physics_process(delta: float) -> void:
 
 func _activate(index: int) -> void:
 	_active_index = index
+	_history.append(index)
+	if _history.size() > NO_REPEAT_SPAN:
+		_history.pop_front()
 	_zones[index].activate()
 
 
 func _on_zone_finished(team: int) -> void:
 	var previous := _active_index
-	# Prochaine zone : au hasard parmi les autres (la même s'il n'y en a qu'une).
-	var next := previous
-	if _zones.size() > 1:
-		next = randi() % (_zones.size() - 1)
-		if next >= previous:
-			next += 1
 	if team == 0: # Zone expirée (timeout > 0) : la suivante tout de suite.
 		_announce_new_zone.rpc()
-		_activate(next)
+		_activate(_pick_next_zone(previous))
 		return
 	scores[team] += _zones[previous].points
 	_sync_scores.rpc(scores)
@@ -106,8 +116,32 @@ func _on_zone_finished(team: int) -> void:
 	# Partie finie entre-temps (mode figé) : pas de zone.
 	if not is_inside_tree() or not can_process():
 		return
-	_activate(next)
+	# Tirée maintenant : avec l'écart de points d'après les éliminations de l'attente.
+	_activate(_pick_next_zone(previous))
 	_announce_new_zone.rpc()
+
+
+## Prochaine zone : au hasard parmi les autres (la même s'il n'y en a qu'une). Équipe menée de
+## comeback_gap points ou plus : celles de son côté comptent comeback_weight fois. Sinon, aucune
+## des NO_REPEAT_SPAN - 1 dernières (si toutes y sont, seulement pas la précédente).
+func _pick_next_zone(previous: int) -> int:
+	if _zones.size() <= 1:
+		return previous
+	var trailing := 0
+	if scores[2] - scores[1] >= comeback_gap:
+		trailing = 1
+	elif scores[1] - scores[2] >= comeback_gap:
+		trailing = 2
+	var recent: Array[int] = [previous]
+	if trailing == 0 and _zones.size() >= NO_REPEAT_SPAN:
+		recent = _history.slice(-(NO_REPEAT_SPAN - 1))
+	var weights := PackedFloat32Array()
+	for i in _zones.size():
+		var weight := 0.0 if i in recent else 1.0
+		if trailing != 0 and _zones[i].side == trailing:
+			weight *= comeback_weight
+		weights.append(weight)
+	return RandomNumberGenerator.new().rand_weighted(weights)
 
 
 @rpc("authority", "call_local", "reliable")

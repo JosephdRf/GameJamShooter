@@ -192,9 +192,6 @@ Un joueur qui tombe de la plateforme meurt.
   (`water_lifetime` = 63 s, `fade_duration`) ; réarroser une flaque la rafraîchit (groupe « Évaporation » du nœud `Puddles`).
 - **Effet de savon du dash** : deux gerbes de gouttes bleues projetées sur les côtés du canard pendant
   tout le dash (`Player._create_dash_splash`).
-- **Anneau autour de chaque canard** : cercle au sol à la couleur de son équipe, avec une flèche dorée
-  qui dépasse de son bord vers la zone à défendre (masquée sans zone active ou une fois dedans) :
-  tout le monde sait où aller (`Player._create_zone_ring`, shader `duck_ring.gdshader`).
 - Jauge **Dash** en bas à droite (`MatchHud`, nœud `Dash` : bulle de `DashGauge`) : elle se remplit
   d'eau pendant les 2 s de recharge (plus claire), puis devient pleine et vive, avec deux chevrons, quand
   le dash est prêt ; elle gonfle avec un éclat blanc à cet instant.

@@ -35,8 +35,6 @@ extends Node3D
 ## Émis sur l'hôte : `team` = équipe qui a capturé (1 ou 2), 0 si temps écoulé.
 signal finished(team: int)
 
-## Groupe des zones (cf. Player : flèche vers la zone active).
-const GROUP := &"defense_zones"
 ## Intervalle (s) entre deux envois de l'état par l'hôte.
 const SYNC_INTERVAL := 0.1
 const IDLE_COLOR := Color(1, 0.95, 0.7) # Jaune pâle : visible sur le sol clair.
@@ -158,7 +156,6 @@ func _ready() -> void:
 	if Engine.is_editor_hint():
 		_update_visuals()
 		return
-	add_to_group(GROUP)
 	_create_build_up()
 	_apply_state(false, 0, false, 0.0, 0.0)
 

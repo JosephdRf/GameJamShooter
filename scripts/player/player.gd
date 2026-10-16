@@ -6,10 +6,8 @@ extends CharacterBody3D
 ## joueurs 1-2 = équipe bleue, joueurs 3-4 = équipe rouge.
 ##
 ## En réseau, l'ordinateur qui a l'autorité sur ce nœud simule le cube et
-## diffuse `sync_position` avec l'heure de son horloge `sync_time` (nœud Sync, environ
-## 30 fois par seconde) ; les autres ordinateurs gardent les dernières positions reçues et
-## affichent le canard REMOTE_DELAY s en retard, en glissant entre deux positions : il
-## avance régulièrement même si les paquets arrivent par à-coups (partage de connexion).
+## diffuse `sync_position` (nœud Sync) ; les autres ordinateurs lissent le
+## cube vers cette position.
 ##
 ## Vie : `health` (diffusée par l'ordinateur qui a l'autorité). Dégâts via
 ## take_damage() (depuis n'importe quel ordinateur, avec le joueur qui a tiré : à la mort,
@@ -81,14 +79,8 @@ const WORLD_LAYER := 1
 const DEEP_WATER_GROUP := &"eau_profonde"
 const PLAYERS_LAYER := 2
 const SPAWN_LAYERS: Array[int] = [4, 8]
-## Retard (s) avec lequel on affiche les canards des autres ordinateurs : assez pour avoir
-## presque toujours deux positions reçues de part et d'autre, même si un paquet se perd ou
-## arrive en retard. Au-delà de la dernière position reçue, le canard continue sur sa lancée
-## au plus REMOTE_MAX_EXTRAPOLATION s, puis s'arrête en l'attendant.
-const REMOTE_DELAY := 0.1
-const REMOTE_MAX_EXTRAPOLATION := 0.15
-## Positions reçues gardées (environ 1 s à 30 envois par seconde).
-const REMOTE_SNAPSHOTS := 32
+## Vitesse de rattrapage des cubes distants (plus élevé = plus réactif, moins lisse).
+const REMOTE_SMOOTHING := 25.0
 ## Au-delà de cet écart, un cube distant est téléporté (ex. réapparition).
 ## Animations du canard (machine à états du nœud AnimationTree, transitions et fondus
 ## réglables dans l'éditeur). Le script ne fait que renseigner ses conditions :
@@ -269,15 +261,8 @@ var _name_tag_alpha := 0.0
 var display_name_override := ""
 ## Faux tant que la partie n'a pas commencé : le cube reste figé.
 var active := false
-## Heure (s, horloge de l'ordinateur qui contrôle ce cube) de `sync_position`. Diffusée
-## juste avant elle par le nœud Sync.
-var sync_time := 0.0
 ## Position diffusée sur le réseau par l'ordinateur qui contrôle ce cube.
-var sync_position: Vector3:
-	set(value):
-		sync_position = value
-		if is_inside_tree() and not is_multiplayer_authority():
-			_receive_snapshot(sync_time, value)
+var sync_position: Vector3
 ## Points de vie (0 = mort). Diffusé par le nœud Sync quand il change.
 var health := 100.0:
 	set(value):
@@ -380,11 +365,6 @@ var _tunnel_landing_found := false
 ## la pose du dash tout le trajet (variable, contrairement à un dash normal) et resserre la
 ## caméra locale (cf. PlayerCamera.tunnel_mode).
 var _in_tunnel := false
-## Canards des autres ordinateurs : positions reçues [heure de l'expéditeur, position], de la
-## plus ancienne à la plus récente, et écart estimé entre notre horloge et la sienne (le plus
-## petit observé = le paquet le plus rapide ; cf. _receive_snapshot).
-var _snapshots: Array[Array] = []
-var _clock_offset := INF
 
 ## Caméra du joueur : les déplacements sont relatifs à son orientation.
 @onready var camera: PlayerCamera = $PlayerCamera
@@ -564,7 +544,6 @@ func _physics_process(delta: float) -> void:
 			_respawn_left -= delta
 			if _respawn_left <= 0.0:
 				respawn()
-		sync_time = _now()
 		sync_position = position
 	else:
 		_follow_network(delta)
@@ -1165,20 +1144,20 @@ func _play_dash() -> void:
 
 
 ## Sur tous les ordinateurs (appelé par celui qui contrôle ce cube) : son du saut.
-@rpc("authority", "call_local", "unreliable") # Son et animation seulement : tant pis si perdu.
+@rpc("authority", "call_local", "reliable")
 func _play_jump() -> void:
 	_jump_sound.play()
 
 
 ## Sur tous les ordinateurs (appelé par celui qui contrôle ce cube) : son d'atterrissage.
-@rpc("authority", "call_local", "unreliable") # Son et animation seulement : tant pis si perdu.
+@rpc("authority", "call_local", "reliable")
 func _play_land() -> void:
 	_land_sound.play()
 
 
 ## Sur tous les ordinateurs : envol depuis un sèche-cheveux (son du saut plus grave,
 ## bouffée d'air chaud).
-@rpc("authority", "call_local", "unreliable") # Son et animation seulement : tant pis si perdu.
+@rpc("authority", "call_local", "reliable")
 func _play_updraft() -> void:
 	_jump_sound.play()
 	_dash_sound.play()
@@ -1492,52 +1471,12 @@ func _step_up(delta: float) -> bool:
 	return true
 
 
-func _now() -> float:
-	return Time.get_ticks_usec() / 1_000_000.0
-
-
-## Canard d'un autre ordinateur : nouvelle position reçue (cf. sync_position).
-func _receive_snapshot(time: float, point: Vector3) -> void:
-	if time <= 0.0 or (not _snapshots.is_empty() and time <= _snapshots[-1][0]):
-		return # Réapparition, point d'apparition… : pas une position diffusée (ou en retard).
-	# L'écart entre les horloges : le plus petit observé (paquet le plus rapide), qui remonte
-	# lentement si le réseau devient durablement plus lent.
-	var offset := _now() - time
-	_clock_offset = offset if offset < _clock_offset else _clock_offset + (offset - _clock_offset) * 0.01
-	_snapshots.append([time, point])
-	if _snapshots.size() > REMOTE_SNAPSHOTS:
-		_snapshots.pop_front()
-
-
-## Canard d'un autre ordinateur : affiché là où il était REMOTE_DELAY s avant la dernière
-## position reçue (à l'heure de son horloge), entre les deux positions reçues qui encadrent
-## ce moment.
-func _follow_network(_delta: float) -> void:
-	if _snapshots.is_empty():
-		return
-	var time := _now() - _clock_offset - REMOTE_DELAY
-	var target: Vector3 = _snapshots[-1][1]
-	if time <= _snapshots[0][0]:
-		target = _snapshots[0][1]
-	else:
-		for i in range(_snapshots.size() - 1, 0, -1):
-			var before: Array = _snapshots[i - 1]
-			var after: Array = _snapshots[i]
-			if time >= before[0] or i == 1:
-				var span: float = after[0] - before[0]
-				var t: float = (time - before[0]) / span if span > 0.0 else 1.0
-				if i == _snapshots.size() - 1:
-					t = minf(t, 1.0 + REMOTE_MAX_EXTRAPOLATION / maxf(span, 0.001)) # Sur sa lancée, un peu.
-				else:
-					t = minf(t, 1.0)
-				# Téléporté entre les deux (réapparition, tunnel…) : pas de glissade.
-				target = after[1] if (after[1] as Vector3).distance_to(before[1]) > REMOTE_SNAP_DISTANCE \
-						else (before[1] as Vector3).lerp(after[1], t)
-				break
-	var snap := position.distance_to(target) > REMOTE_SNAP_DISTANCE
-	position = target
-	if snap:
+func _follow_network(delta: float) -> void:
+	if position.distance_to(sync_position) > REMOTE_SNAP_DISTANCE:
+		position = sync_position
 		reset_physics_interpolation()
+	else:
+		position = position.lerp(sync_position, 1.0 - exp(-REMOTE_SMOOTHING * delta))
 
 
 func _apply_color() -> void:

@@ -15,6 +15,11 @@ extends Node3D
 ## en dessous). Un éclatement ne met à jour que les carreaux qu'il touche. Sur une pente,
 ## chaque pixel de la tache va dans l'étage de sa propre hauteur (celle du plan de la pente
 ## touchée) : la flaque couvre la pente, au lieu d'une bande horizontale de LAYER_HEIGHT m.
+## Elle s'arrête à MAX_SLOPE_RISE m au-dessus et au-dessous du point touché (une bande en
+## travers de la pente) : sans cette limite, une grande flaque sur une pente raide (grosse
+## bulle sur une serviette) traversait des dizaines d'étages, soit des centaines de carreaux
+## (Decals) créés d'un coup, et le jeu saccadait. Seuls les carreaux que la pente traverse
+## vraiment sont créés.
 ## Peinture étalée sur plusieurs images (au plus `paint_budget_ms` ms par image) : une
 ## grosse flaque ne fait pas saccader le jeu. Elle est peinte par anneaux, du centre vers
 ## les bords, et s'étale en `spread_time` s (sous l'éclaboussure, qui masque cette croissance).
@@ -44,6 +49,9 @@ extends Node3D
 ## Côté d'un carreau (m) et hauteur d'un étage (m).
 const CHUNK_SIZE := 8.0
 const LAYER_HEIGHT := 0.5
+## Sur une pente, hauteur (m) au-dessus et au-dessous du point touché au-delà de laquelle la
+## flaque n'est pas peinte.
+const MAX_SLOPE_RISE := 1.0
 ## Calque visuel des canards (cf. Player._apply_color) et des éclaboussures, exclu des Decals :
 ## l'eau ne les colore pas.
 const DUCK_VISUAL_LAYER := 2
@@ -158,15 +166,28 @@ func add_puddle(point: Vector3, radius: float, amount := 1.0, splash := true, no
 	# Pente : la tache suit le plan de la surface touchée ; elle s'étend sur les étages que ce
 	# plan traverse dans son rayon (un seul sur un sol plat). Surface trop raide : à plat.
 	var slope := normal.normalized() if normal.y > 0.2 else Vector3.UP
-	var rise := reach * Vector2(slope.x, slope.z).length() / slope.y
+	var gradient := -Vector2(slope.x, slope.z) / slope.y # Montée (m) par mètre en x et en z.
+	var rise := minf(reach * gradient.length(), MAX_SLOPE_RISE)
+	var on_slope := rise > 0.0
+	var band := _layer_band(slope)
 	var min_chunk := Vector2i(floori((point.x - reach) / CHUNK_SIZE), floori((point.z - reach) / CHUNK_SIZE))
 	var max_chunk := Vector2i(floori((point.x + reach) / CHUNK_SIZE), floori((point.z + reach) / CHUNK_SIZE))
 	var parts: Array[Dictionary] = []
-	for layer in range(roundi((point.y - rise) / LAYER_HEIGHT), roundi((point.y + rise) / LAYER_HEIGHT) + 1):
-		for cx in range(min_chunk.x, max_chunk.x + 1):
-			for cz in range(min_chunk.y, max_chunk.y + 1):
+	for cx in range(min_chunk.x, max_chunk.x + 1):
+		for cz in range(min_chunk.y, max_chunk.y + 1):
+			# Hauteurs extrêmes de la pente sur la partie de la tache dans ce carreau (aux coins
+			# du rectangle commun : la hauteur varie en ligne droite).
+			var low := Vector2(maxf(cx * CHUNK_SIZE, point.x - reach), maxf(cz * CHUNK_SIZE, point.z - reach))
+			var high := Vector2(minf((cx + 1) * CHUNK_SIZE, point.x + reach), minf((cz + 1) * CHUNK_SIZE, point.z + reach))
+			var offset := Vector2(absf(gradient.x) * (high.x - low.x), absf(gradient.y) * (high.y - low.y))
+			var mid := point.y + gradient.dot((low + high) / 2.0 - Vector2(point.x, point.z))
+			var bottom := maxf(mid - (offset.x + offset.y) / 2.0, point.y - rise)
+			var top := minf(mid + (offset.x + offset.y) / 2.0, point.y + rise)
+			for layer in range(roundi(point.y / LAYER_HEIGHT - rise / LAYER_HEIGHT), roundi(point.y / LAYER_HEIGHT + rise / LAYER_HEIGHT) + 1):
+				if on_slope and (layer * LAYER_HEIGHT + band < bottom or layer * LAYER_HEIGHT - band > top):
+					continue # La pente ne passe pas par cet étage dans ce carreau.
 				parts.append(_make_job(_get_chunk(Vector3i(cx, layer, cz)), Vector2(cx, cz) * CHUNK_SIZE,
-						point, radius, amount, slope, layer, rise > 0.0))
+						point, radius, amount, slope, layer, on_slope, rise))
 	_jobs.append({"parts": parts, "done": 0.0, "reach": reach * pixels_per_meter, "age": 0.0})
 
 
@@ -195,14 +216,14 @@ func _process(delta: float) -> void:
 ## `layer`. Si `on_slope`, seuls les pixels dont la hauteur sur le plan (`point`, `slope`)
 ## tombe dans cet étage sont peints.
 func _make_job(chunk: Dictionary, origin: Vector2, point: Vector3, radius: float, amount: float,
-		slope := Vector3.UP, layer := 0, on_slope := false) -> Dictionary:
+		slope := Vector3.UP, layer := 0, on_slope := false, rise := 0.0) -> Dictionary:
 	var size := _chunk_pixels()
 	var center := (Vector2(point.x, point.z) - origin) * pixels_per_meter
 	var r := radius * pixels_per_meter
 	var reach := r * (1.0 + shape_noise)
 	return {
 		"chunk": chunk, "origin": origin, "center": center, "r": r, "reach": reach, "amount": amount,
-		"point": point, "slope": slope, "layer": layer, "on_slope": on_slope,
+		"point": point, "slope": slope, "layer": layer, "on_slope": on_slope, "rise": rise,
 		"row": maxi(floori(center.y - reach), 0), "last_row": mini(ceili(center.y + reach), size - 1),
 		"first_col": maxi(floori(center.x - reach), 0), "last_col": mini(ceili(center.x + reach), size - 1),
 	}
@@ -240,10 +261,8 @@ func _paint_ring(job: Dictionary, inner: float, outer: float) -> void:
 	var point: Vector3 = job.point
 	var slope: Vector3 = job.slope
 	var layer: int = job.layer
-	# Demi-hauteur d'étage, plus de quoi déborder de 2 pixels sur l'étage voisin : sans ce
-	# recouvrement, le lissage de la texture au bord de l'étage dessine une ligne claire.
-	# (Le Decal coupe net au bord de l'étage : le débordement ne se voit pas.)
-	var band := LAYER_HEIGHT / 2.0 + 2.0 / pixels_per_meter * Vector2(slope.x, slope.z).length() / slope.y + 0.01
+	var rise: float = job.rise
+	var band := _layer_band(slope)
 	var dry := threshold - damp_width # En dessous, le pixel reste transparent (cf. _shade).
 	var now := _clock + 1.0 # (+1 : 0 veut dire « sec »)
 	var inner2 := inner * inner
@@ -289,7 +308,7 @@ func _paint_ring(job: Dictionary, inner: float, outer: float) -> void:
 				var world := origin + pixel / pixels_per_meter
 				if on_slope: # Hauteur de la pente ici : ce pixel est-il dans l'étage de ce carreau ?
 					var height := point.y - (slope.x * (world.x - point.x) + slope.z * (world.y - point.z)) / slope.y
-					if absf(height - layer * LAYER_HEIGHT) > band:
+					if absf(height - layer * LAYER_HEIGHT) > band or absf(height - point.y) > rise:
 						continue
 				# Rayon déformé selon l'endroit : contour en lobes, pas en cercle.
 				var local_r := r * (1.0 + shape_noise * _noise.get_noise_2d(world.x, world.y))
@@ -396,6 +415,13 @@ func _shade(chunk: Dictionary, px: int, py: int, wetness: float, fade := 0.0) ->
 	(chunk.albedo as Image).set_pixel(px, py, color)
 	var roughness := lerpf(lerpf(damp_roughness, water_roughness, water), damp_roughness, fade)
 	(chunk.orm as Image).set_pixel(px, py, Color(1.0, roughness, 0.0, maxf(damp, water) * (1.0 - fade)))
+
+
+## Demi-hauteur d'étage, plus de quoi déborder de 2 pixels sur l'étage voisin : sans ce
+## recouvrement, le lissage de la texture au bord de l'étage dessine une ligne claire.
+## (Le Decal coupe net au bord de l'étage : le débordement ne se voit pas.)
+func _layer_band(slope: Vector3) -> float:
+	return LAYER_HEIGHT / 2.0 + 2.0 / pixels_per_meter * Vector2(slope.x, slope.z).length() / slope.y + 0.01
 
 
 func _get_chunk(key: Vector3i) -> Dictionary:

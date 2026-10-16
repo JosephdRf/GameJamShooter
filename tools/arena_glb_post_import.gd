@@ -11,6 +11,7 @@ extends EditorScenePostImport
 ##     et les objets déjà simples (au plus TRIMESH_MAX_TRIANGLES triangles) ;
 ##   - coque convexe prolongée jusqu'au sol (RAMPS) : la serviette pliée en pente, sur laquelle on
 ##     monte ;
+##   - coin (WEDGES) : la tong posée en pente, réduite à une simple rampe rectangulaire ;
 ##   - boîte : les objets « en pavé » (BOX_PREFIXES : serviettes, magazines, étagères…) ;
 ##   - forme exacte simplifiée (au plus CONCAVE_TRIANGLES triangles, cf. SurfaceTool.generate_lod) :
 ##     les objets creux ou sur pieds dont la forme compte pour se déplacer (CONCAVE_PREFIXES :
@@ -63,18 +64,26 @@ const CONCAVE_DETAILED := {"panier_linge": 3000}
 ## 0,6 à 0,8 m, plus haut que la marche que le canard franchit seul (Player.max_step_height) : sa
 ## coque, étendue jusqu'à une arête au sol, devient une pente lisse (environ 30°) du sol au haut de
 ## la pile, sans sauter.
-## Tong_L, posée en pente du sol à la marche de la zone d'apparition rouge : arête au sol au bout
-## bas (sinon une marche de 0,54 m), et bout haut élargi contre la marche (sinon le canard se
-## coinçait entre le bord de la marche et le flanc de la tong) ; cf. HULL_TOP.
 const RAMPS := {
 	"serviette_005": [Vector3(-27.45, -0.27, -17.3), Vector3(-27.8, -0.27, -10.8)],
-	"tong_l": [Vector3(29.3, -0.27, 11.2), Vector3(29.3, -0.27, 12.9),
-			Vector3(34.6, 1.87, 9.6), Vector3(34.6, 1.87, 12.9)],
 }
-## Hauteur maximale (dans la scène) de la coque d'un objet de RAMPS : Tong_L dépasse de 0,2 m la
-## marche contre laquelle elle s'appuie (bourrelet où le canard butait en venant de la marche) ;
-## arasée au niveau de la marche, on passe de l'une à l'autre de plain-pied.
-const HULL_TOP := {"tong_l": 1.87}
+## Hauteur maximale (dans la scène) de la coque d'un objet de RAMPS.
+const HULL_TOP := {}
+## Collision remplacée par un coin (points dans la scène) : rectangulaire vu du dessus, dessus en
+## pente lisse, plein jusqu'au sol. Tong_L, posée en pente du sol à la marche de la zone
+## d'apparition rouge : sa coque suivait l'anse (bosse où l'on accrochait, l'eau rebondissait
+## dessus dans le vide). Le coin part du sol (pas de marche au bout bas) et arrive au ras du haut de
+## la marche avant son bord (x = 34,35), puis continue à plat par-dessus : arrivé juste sous le
+## bord, le bas arrondi du canard se posait sur l'arête et il restait bloqué. Sur toute la
+## largeur de la semelle.
+const WEDGES := {
+	"tong_l": [
+		Vector3(29.0, -0.27, 9.6), Vector3(29.0, -0.27, 12.95),
+		Vector3(34.1, 1.87, 9.6), Vector3(34.1, 1.87, 12.95),
+		Vector3(34.8, 1.87, 9.6), Vector3(34.8, 1.87, 12.95),
+		Vector3(34.8, -0.27, 9.6), Vector3(34.8, -0.27, 12.95),
+	],
+}
 ## Parmi CONCAVE_PREFIXES, ceux sur lesquels on marche directement : décomposés en coques
 ## convexes (cf. ci-dessus) plutôt qu'une seule forme concave.
 ## La bouée oiseau (près de 2 000 faces concaves) et les tuyaux de la baignoire.
@@ -192,6 +201,24 @@ func _collider_for(mi: MeshInstance3D) -> String:
 	if _starts(name, TRIMESH_PREFIXES) or _triangles(mi.mesh) <= TRIMESH_MAX_TRIANGLES:
 		mi.create_trimesh_collision()
 		return "trimesh"
+	for prefix: String in WEDGES:
+		if name.begins_with(prefix):
+			var to_mesh := _scene_transform(mi).affine_inverse()
+			var wedge := ConvexPolygonShape3D.new()
+			var corners := PackedVector3Array()
+			for point: Vector3 in WEDGES[prefix]:
+				corners.append(to_mesh * point)
+			wedge.points = corners
+			var wedge_body := StaticBody3D.new()
+			wedge_body.name = mi.name + "_col"
+			var wedge_shape := CollisionShape3D.new()
+			wedge_shape.name = "CollisionShape3D"
+			wedge_shape.shape = wedge
+			wedge_body.add_child(wedge_shape)
+			mi.add_child(wedge_body)
+			wedge_body.owner = mi.owner
+			wedge_shape.owner = mi.owner
+			return "coin"
 	for prefix: String in RAMPS:
 		if name.begins_with(prefix):
 			mi.create_convex_collision(true, false)

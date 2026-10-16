@@ -174,18 +174,15 @@ radius = 0.79625
 height = 2.03125
 
 [sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_sync"]
-properties/0/path = NodePath(".:sync_time")
+properties/0/path = NodePath(".:sync_position")
 properties/0/spawn = true
 properties/0/replication_mode = 1
-properties/1/path = NodePath(".:sync_position")
+properties/1/path = NodePath(".:health")
 properties/1/spawn = true
-properties/1/replication_mode = 1
-properties/2/path = NodePath(".:health")
+properties/1/replication_mode = 2
+properties/2/path = NodePath(".:sync_facing")
 properties/2/spawn = true
-properties/2/replication_mode = 2
-properties/3/path = NodePath(".:sync_facing")
-properties/3/spawn = true
-properties/3/replication_mode = 1
+properties/2/replication_mode = 1
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_capture"]
 transparency = 1
@@ -227,8 +224,6 @@ shape = SubResource("CapsuleShape3D_duck")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.86875, 0)
 
 [node name="Sync" type="MultiplayerSynchronizer" parent="." unique_id=167297076]
-replication_interval = 0.033
-delta_interval = 0.05
 replication_config = SubResource("SceneReplicationConfig_sync")
 public_visibility = false
 

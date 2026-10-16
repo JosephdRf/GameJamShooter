@@ -1,7 +1,9 @@
 extends Control
 ## Écran de chargement (fictif) : la jauge (WaterGauge, comme la jauge d'eau du combat)
 ## se remplit par à-coups pendant DURATION secondes (bonds rapides, pauses), puis l'écran
-## d'accueil s'affiche. « Chargement… » à gauche, pourcentage à droite.
+## d'accueil s'affiche. « Chargement… » à gauche, pourcentage à droite. En fond, une image du jeu
+## (assets/ui/loading : canards en pleine bataille dans la salle de bain, vue en plongée), assombrie
+## en bas pour que le texte et la jauge restent lisibles.
 
 const DURATION := 3.0
 ## Temps passé à 100 % avant de changer d'écran (compris dans DURATION).

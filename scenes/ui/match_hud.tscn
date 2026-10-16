@@ -4,6 +4,7 @@
 [ext_resource type="FontFile" path="res://assets/fonts/titan_one/TitanOne-Regular.ttf" id="2_font"]
 [ext_resource type="Script" path="res://scripts/ui/scoreboard.gd" id="3_scoreboard"]
 [ext_resource type="Script" path="res://scripts/ui/water_gauge.gd" id="4_water_gauge"]
+[ext_resource type="Script" path="res://scripts/ui/dash_gauge.gd" id="5_dash_gauge"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bar_bg"]
 bg_color = Color(0.08, 0.09, 0.12, 0.85)
@@ -116,3 +117,42 @@ size_flags_horizontal = 3
 size_flags_vertical = 4
 mouse_filter = 2
 script = ExtResource("4_water_gauge")
+
+[node name="Dash" type="HBoxContainer" parent="."]
+unique_name_in_owner = true
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -240.0
+offset_top = -104.0
+offset_right = -32.0
+offset_bottom = -28.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 2
+theme_override_constants/separation = 16
+alignment = 2
+
+[node name="DashLabel" type="Label" parent="Dash"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_outline_color = Color(0.1, 0.38, 0.72, 1)
+theme_override_colors/font_shadow_color = Color(0.231, 0.51, 0.965, 1)
+theme_override_constants/outline_size = 10
+theme_override_constants/shadow_offset_x = 3
+theme_override_constants/shadow_offset_y = 3
+theme_override_constants/shadow_outline_size = 10
+theme_override_fonts/font = ExtResource("2_font")
+theme_override_font_sizes/font_size = 38
+text = "Dash"
+vertical_alignment = 1
+
+[node name="DashGauge" type="Control" parent="Dash"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(70, 70)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+script = ExtResource("5_dash_gauge")

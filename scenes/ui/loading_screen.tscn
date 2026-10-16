@@ -4,6 +4,16 @@
 [ext_resource type="FontFile" path="res://assets/fonts/titan_one/TitanOne-Regular.ttf" id="2_font"]
 [ext_resource type="Script" path="res://scripts/ui/water_gauge.gd" id="3_gauge"]
 [ext_resource type="Script" path="res://scripts/ui/rising_bubbles.gd" id="rb_bubbles"]
+[ext_resource type="Texture2D" path="res://assets/ui/loading/plongee_vers_carton.jpg" id="4_art"]
+
+[sub_resource type="Gradient" id="Gradient_shade"]
+colors = PackedColorArray(0.04, 0.08, 0.16, 0, 0.04, 0.08, 0.16, 0.55)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_shade"]
+gradient = SubResource("Gradient_shade")
+width = 8
+height = 128
+fill_to = Vector2(0, 1)
 
 [node name="LoadingScreen" type="Control"]
 layout_mode = 3
@@ -23,6 +33,31 @@ grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.08, 0.09, 0.12, 1)
 
+[node name="Art" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("4_art")
+expand_mode = 1
+stretch_mode = 6
+
+[node name="Shade" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_top = 0.62
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("GradientTexture2D_shade")
+expand_mode = 1
+stretch_mode = 0
+
 [node name="Bubbles" type="Control" parent="."]
 layout_mode = 1
 anchors_preset = 15
@@ -37,9 +72,9 @@ script = ExtResource("rb_bubbles")
 layout_mode = 1
 anchors_preset = -1
 anchor_left = 0.5
-anchor_top = 0.78
+anchor_top = 0.9
 anchor_right = 0.5
-anchor_bottom = 0.78
+anchor_bottom = 0.9
 offset_left = -320.0
 offset_top = -50.0
 offset_right = 320.0

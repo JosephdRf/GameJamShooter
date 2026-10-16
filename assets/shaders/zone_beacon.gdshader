@@ -16,6 +16,11 @@ uniform float zone_radius = 6.0;
 uniform vec2 zone_half_size = vec2(5.0);
 uniform float inside_margin = 3.0;
 uniform float inside_min = 0.12;
+// Premier obstacle au-dessus de la zone (plafond, dessous d'un meuble), en m au-dessus du bas de
+// la colonne : au-delà, la colonne continue mais pâle (above_dim), pour qu'on ne croie pas la zone
+// posée sur cet obstacle. Très grand = rien au-dessus.
+uniform float ceiling = 100000.0;
+uniform float above_dim = 0.22;
 
 // Distance horizontale (m) de la caméra au bord de la zone (négative dedans).
 float camera_distance(vec3 camera, vec3 center) {
@@ -54,5 +59,6 @@ void fragment() {
 	float wave = pow(phase, 2.5) * smoothstep(1.0, 0.94, phase);
 	float bands = mix(wave_floor, 1.25, wave);
 	ALBEDO = mix(color.rgb, vec3(1.0), 0.25 * pow(edge, 3.0));
-	ALPHA = clamp(intensity * rim * fade * bands, 0.0, 1.0) * side * mix(inside_min, 1.0, smoothstep(0.0, inside_margin, camera_distance(CAMERA_POSITION_WORLD, NODE_POSITION_WORLD)));
+	float above = mix(1.0, above_dim, smoothstep(ceiling - 0.2, ceiling + 0.6, y));
+	ALPHA = clamp(intensity * rim * fade * bands, 0.0, 1.0) * above * side * mix(inside_min, 1.0, smoothstep(0.0, inside_margin, camera_distance(CAMERA_POSITION_WORLD, NODE_POSITION_WORLD)));
 }

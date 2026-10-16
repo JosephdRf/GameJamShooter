@@ -21,19 +21,41 @@ extends EditorScenePostImport
 ##     le panier et le carton ont un dessus en boîte (TOP_BOX), pour y marcher sans accrocher ;
 ##     ceux de MULTICONVEX_PREFIXES (vide pour l'instant) sont décomposés en plusieurs coques
 ##     convexes (VHACD) plutôt qu'en une seule forme concave ;
+##   - une coque convexe unique pour un objet fait de plusieurs pièces (MERGED_HULLS : le bateau, le
+##     flacon de shampoing couché qui sert de rampe) : les coques séparées des pièces (anneaux,
+##     bouchons) dépassaient et formaient des marches et des interstices où le canard se coinçait
+##     en dashant ;
+##   - une coque convexe aussi pour les objets simples, même peu détaillés (CONVEX_PREFIXES :
+##     rouleaux de papier, étagères, poignées…) : plus légère et plus lisse qu'une forme exacte ;
 ##   - une coque convexe simplifiée : tout le reste.
 ## Les objets sans collision reçoivent la métadonnée `sans_collision` (arena5.gd n'en ajoute pas).
 ## Préfixes : « Bateau_* » garde ses collisions ; noms comparés en minuscules.
 
-const SKIP := ["eau", "socle_seche_cheveux"]
+const SKIP := ["eau", "socle_seche_cheveux",
+		# Petites pièces du sèche-cheveux qu'on traverse : fil (sa coque faisait une bosse invisible
+		# de 8 m au sol), prise, grilles, interrupteurs, cadres, support d'hélice.
+		"seche_cheveux_fil", "seche_cheveux_prise", "seche_cheveux_grille",
+		"seche_cheveux_interrupteur", "seche_cheveux_cadre", "seche_cheveux_support",
+		"seche_cheveux_coque_interieure"]
+## Objets assemblés de plusieurs pièces : une seule coque convexe, portée par la première pièce
+## (les autres n'ont plus de collision). Ceux de VERTICAL_SIDES ont des flancs verticaux (la coque
+## est prolongée jusqu'à l'aplomb de son point le plus bas) : la coque du bateau, plus large en
+## haut, surplombait le matelas voisin et pinçait le canard entre les deux.
+const MERGED_HULLS := {
+	"bateau": ["bateau_coque", "bateau_pont", "bateau_cercle_a", "bateau_cercle_b", "bateau_bouees"],
+	"flacon_shampoing": ["shampoing_corps", "shampoing_couvercle_bas", "shampoing_couvercle_haut"],
+}
+const VERTICAL_SIDES := ["bateau"]
+## Coque convexe (simplifiée) même pour un objet peu détaillé.
+const CONVEX_PREFIXES := ["papier_toilette", "etagere", "poignee_l", "poignee_r", "brosse_cheveux",
+		"eponge", "bateau_cabine", "bateau_tube"]
 const TINY_SIZE := 1.0
 const TRIMESH_MAX_TRIANGLES := 150
 const TRIMESH_PREFIXES := ["sol", "murs", "plafond", "marche"]
 const BOX_PREFIXES := ["serviette", "magazine", "rebord", "etagere", "machine_a_laver",
 		"cadre", "vitre", "porte"]
 const CONCAVE_PREFIXES := ["cuve", "placard", "tabouret", "bouee_matelas", "pieds_baignoire", "toilettes", "table_repassage",
-		"bateau_coque", "carton", "vasque", "tuyaux", "panier_linge",
-		"bouee_detail"]
+		"carton", "vasque", "tuyaux", "panier_linge", "bouee_detail"]
 const CONCAVE_TRIANGLES := 400
 const CONCAVE_DETAILED := {"panier_linge": 3000}
 ## Coques convexes prolongées jusqu'au sol : nom de l'objet -> points ajoutés à sa coque (dans la
@@ -55,9 +77,10 @@ const RAMPS := {
 const HULL_TOP := {"tong_l": 1.87}
 ## Parmi CONCAVE_PREFIXES, ceux sur lesquels on marche directement : décomposés en coques
 ## convexes (cf. ci-dessus) plutôt qu'une seule forme concave.
-const MULTICONVEX_PREFIXES := []
+## La bouée oiseau (près de 2 000 faces concaves) et les tuyaux de la baignoire.
+const MULTICONVEX_PREFIXES := ["bouee_detail", "tuyaux"]
 ## Nombre de coques convexes au plus (plus = forme plus fidèle, mais plus de calcul).
-const MULTICONVEX_MAX_HULLS := 24
+const MULTICONVEX_MAX_HULLS := 8
 ## Hauteur (m) du bas de l'objet sans collision : le rebord du panier posé au sol, sur lequel le
 ## canard bute à l'entrée des poignées.
 const COLLISION_BOTTOM_CUT := {"panier_linge": 0.2}
@@ -85,6 +108,9 @@ const REMOVED_PARTS := {
 func _post_import(scene: Node) -> Object:
 	var counts := {}
 	_add_collisions(scene, counts)
+	for group: String in MERGED_HULLS:
+		_merge_hull(scene, MERGED_HULLS[group], group in VERTICAL_SIDES)
+		counts["coque fusionnée"] = counts.get("coque fusionnée", 0) + 1
 	print("arena GLB post-import: ", counts)
 	return scene
 
@@ -100,6 +126,55 @@ func _add_collisions(node: Node, counts: Dictionary) -> void:
 		_add_collisions(child, counts)
 
 
+## Une seule coque convexe pour les pièces dont le nom commence par l'un des `prefixes` : les
+## sommets de toutes les pièces, ramenés dans l'espace de la première, forment une coque
+## simplifiée posée sur elle ; les autres pièces perdent leur collision.
+func _merge_hull(scene: Node, prefixes: Array, vertical_sides := false) -> void:
+	var parts: Array[MeshInstance3D] = []
+	for mi: MeshInstance3D in scene.find_children("*", "MeshInstance3D", true, false):
+		if mi.mesh != null and _starts(String(mi.name).to_lower(), prefixes):
+			parts.append(mi)
+	if parts.is_empty():
+		return
+	var anchor := parts[0]
+	var to_anchor := _scene_transform(anchor).affine_inverse()
+	var points := PackedVector3Array()
+	for mi in parts:
+		var to_anchor_space := to_anchor * _scene_transform(mi)
+		for v in mi.mesh.get_faces():
+			points.append(to_anchor_space * v)
+		for child in mi.get_children():
+			if child is StaticBody3D:
+				mi.remove_child(child)
+				child.free()
+		mi.set_meta(&"sans_collision", true)
+	anchor.remove_meta(&"sans_collision")
+	if vertical_sides: # Chaque point recopié à la hauteur du point le plus bas (dans la scène).
+		var to_scene := _scene_transform(anchor)
+		var bottom := INF
+		for v in points:
+			bottom = minf(bottom, (to_scene * v).y)
+		var count := points.size()
+		for i in count:
+			var w := to_scene * points[i]
+			w.y = bottom
+			points.append(to_scene.affine_inverse() * w)
+	var arrays := []
+	arrays.resize(Mesh.ARRAY_MAX)
+	arrays[Mesh.ARRAY_VERTEX] = points
+	var merged := ArrayMesh.new()
+	merged.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+	var body := StaticBody3D.new()
+	body.name = "StaticBody3D"
+	var shape := CollisionShape3D.new()
+	shape.name = "CoqueFusionnee"
+	shape.shape = merged.create_convex_shape(true, true)
+	body.add_child(shape)
+	anchor.add_child(body)
+	body.owner = anchor.owner
+	shape.owner = anchor.owner
+
+
 func _collider_for(mi: MeshInstance3D) -> String:
 	for child in mi.get_children():
 		if child is StaticBody3D:
@@ -111,6 +186,9 @@ func _collider_for(mi: MeshInstance3D) -> String:
 	if _starts(name, SKIP) or maxf(world_size.x, maxf(world_size.y, world_size.z)) < TINY_SIZE:
 		mi.set_meta(&"sans_collision", true)
 		return "aucune"
+	if _starts(name, CONVEX_PREFIXES):
+		mi.create_convex_collision(true, true)
+		return "coque"
 	if _starts(name, TRIMESH_PREFIXES) or _triangles(mi.mesh) <= TRIMESH_MAX_TRIANGLES:
 		mi.create_trimesh_collision()
 		return "trimesh"
@@ -237,6 +315,8 @@ static func _build_multiconvex(faces: PackedVector3Array) -> StaticBody3D:
 	temp_mi.mesh = temp_mesh
 	var settings := MeshConvexDecompositionSettings.new()
 	settings.max_convex_hulls = MULTICONVEX_MAX_HULLS
+	settings.max_concavity = 0.01 # Par défaut (1,0) : une seule coque qui bouche tout.
+	settings.resolution = 200000
 	temp_mi.create_multiple_convex_collisions(settings)
 	var body: StaticBody3D = null
 	for child in temp_mi.get_children():

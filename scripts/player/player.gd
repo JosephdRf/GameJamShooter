@@ -145,6 +145,11 @@ const MIN_MUZZLE_HEIGHT := 0.6825
 const LAND_SOUND_MIN_SPEED := 4.0
 ## Canon à eau : intervalle (s) entre deux envois du point visé aux autres ordinateurs.
 const CANNON_AIM_SYNC_INTERVAL := 0.066
+## Anneau au sol autour du canard (cf. _create_zone_ring) : côté du carré (m) et hauteur au-dessus
+## des pieds (m, évite le scintillement avec le sol).
+const ZONE_RING_SHADER := preload("res://assets/shaders/duck_ring.gdshader")
+const ZONE_RING_SIZE := 4.6
+const ZONE_RING_LIFT := 0.06
 ## Canon à eau : un appui plus court que ça (s) est un « simple appui » (cf. cannon_tap_duration).
 const CANNON_TAP_TIME := 0.2
 ## Sillage sur l'eau pendant une glissade : un rond et une gerbe toutes les WAKE_INTERVAL s.
@@ -306,6 +311,11 @@ var _dash_animation_left := 0.0
 ## Éclaboussures de savon de chaque côté du canard pendant le dash (cf. _create_dash_splash),
 ## tournées comme le modèle.
 var _dash_splash: Node3D
+## Anneau au sol à la couleur de l'équipe, avec une flèche vers la zone à défendre
+## (cf. _create_zone_ring) ; zones de la partie (cherchées au premier besoin).
+var _zone_ring: MeshInstance3D
+var _zones: Array[Node] = []
+var _ring_arrow_alpha := 0.0
 ## Direction du déplacement vue par le canard (x : droite, y : avant), pour l'état walk.
 var _strafe := Vector2(0, 1)
 ## Bout du canon (Marker3D créé dans _ready sur le mesh du pistolet) : départ des bulles.
@@ -424,6 +434,7 @@ func _ready() -> void:
 		_create_muzzle()
 		_create_name_tag()
 		_create_dash_splash()
+		_create_zone_ring()
 	# L'éditeur enregistre parfois les triangles du mélange des marches avant ses points :
 	# ils sont alors ignorés au chargement et la marche reste figée. On les recalcule.
 	var walk_space := (_animation_tree.tree_root as AnimationNodeStateMachine).get_node(&"walk") as AnimationNodeBlendSpace2D
@@ -529,6 +540,7 @@ func _physics_process(delta: float) -> void:
 	if not active:
 		_update_model(Vector3.ZERO, delta)
 		_update_name_tag_visibility(delta)
+		_update_zone_ring(delta)
 		return
 	var previous_position := position
 	if is_multiplayer_authority():
@@ -550,6 +562,7 @@ func _physics_process(delta: float) -> void:
 	# Vitesse réelle (aussi pour les canards des autres ordinateurs, qui ne reçoivent que la position).
 	_update_model((position - previous_position) / delta, delta)
 	_update_name_tag_visibility(delta)
+	_update_zone_ring(delta)
 
 
 ## Oriente la caméra et le canard vers `point` (sur le plan horizontal).
@@ -795,6 +808,11 @@ func _shot_direction(origin: Vector3, aim_point: Vector3) -> Vector3:
 	if direction.dot(camera.get_aim_ray()[1]) < 0.5:
 		direction = camera.get_aim_ray()[1]
 	return direction
+
+
+## Recharge du dash, de 0 (vient de dasher) à 1 (prêt), pour la jauge du MatchHud.
+func get_dash_ready_ratio() -> float:
+	return 1.0 - _dash_cooldown_left / dash_cooldown if dash_cooldown > 0.0 else 1.0
 
 
 ## Vrai si la réserve d'eau est en train de se recharger.
@@ -1075,6 +1093,49 @@ func _hide_capture_bubble(pop: bool) -> void:
 	_capture_tween.tween_property(_capture_bubble, ^"scale", Vector3.ONE * 1.4, 0.15)
 	_capture_tween.tween_property(_capture_bubble, ^"transparency", 1.0, 0.15)
 	_capture_tween.chain().tween_callback(_capture_bubble.hide)
+
+
+## Anneau au sol autour du canard (sur tous les ordinateurs, pour tous les canards) : cercle à la
+## couleur de son équipe, et sur son bord une flèche dorée tournée vers la zone à défendre, pour
+## que chacun sache où aller. Plan horizontal à hauteur des pieds (shader duck_ring).
+func _create_zone_ring() -> void:
+	var plane := PlaneMesh.new()
+	plane.size = Vector2.ONE * ZONE_RING_SIZE
+	var material := ShaderMaterial.new()
+	material.shader = ZONE_RING_SHADER
+	plane.material = material
+	_zone_ring = MeshInstance3D.new()
+	_zone_ring.name = "ZoneRing"
+	_zone_ring.mesh = plane
+	_zone_ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_zone_ring.layers = Puddles.DUCK_VISUAL_LAYER # Les flaques (Decals) ne le colorent pas.
+	_zone_ring.position.y = _model.position.y + ZONE_RING_LIFT
+	add_child(_zone_ring)
+
+
+## Couleur de l'anneau, direction et opacité de sa flèche (vers la zone active ; masquée sans zone
+## active ou quand le canard est déjà dedans).
+func _update_zone_ring(delta: float) -> void:
+	if _zone_ring == null:
+		return
+	_zone_ring.visible = is_alive() and not dummy and not _tunnel
+	if not _zone_ring.visible:
+		return
+	if _zones.is_empty():
+		_zones = get_tree().get_nodes_in_group(ZoneDefense.GROUP)
+	var zone: ZoneDefense = null
+	for z: ZoneDefense in _zones:
+		if z.active:
+			zone = z
+	var material := _zone_ring.mesh.surface_get_material(0) as ShaderMaterial
+	material.set_shader_parameter(&"color", get_team_color())
+	var wanted := 0.0
+	if zone != null and not zone.contains(global_position, get_body_radius()):
+		var to_zone := zone.global_position - global_position
+		material.set_shader_parameter(&"arrow_angle", atan2(to_zone.z, to_zone.x))
+		wanted = 1.0
+	_ring_arrow_alpha = move_toward(_ring_arrow_alpha, wanted, delta / 0.25)
+	material.set_shader_parameter(&"arrow_alpha", _ring_arrow_alpha)
 
 
 ## Effet de savon du dash : deux gerbes de mousse blanche, projetées sur les côtés

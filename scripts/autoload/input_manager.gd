@@ -4,7 +4,7 @@ extends Node
 ##   move_left/right/up/down : se déplacer (Z/Q/S/D ou flèches / stick gauche)
 ##   look_left/right/up/down : tourner la caméra (stick droit ; la souris est gérée par PlayerCamera)
 ##   jump                    : sauter (Espace / bouton du bas)
-##   dash                    : dash (Maj / bouton de gauche)
+##   dash                    : dash (Maj / bouton de gauche ou clic du stick gauche)
 ##   shoot                   : tirer, maintenu = en continu (clic gauche, T / gâchette droite)
 ##   water_cannon            : canon à eau (clic droit / gâchette ou bouton haut gauche)
 ##   aim                     : viser, maintenu = zoom sans aide à la visée (clic gauche / gâchette gauche)
@@ -24,6 +24,7 @@ extends Node
 ##   bouton de gauche (Joypad Button 2) = Y sur Switch Pro, Carré sur PlayStation
 ##   gâchettes (axes 4 et 5)            = ZL / ZR sur Switch Pro, L2 / R2 sur PlayStation
 ##   Start (Joypad Button 6)            = + sur Switch Pro, Options sur PlayStation
+##   clic du stick gauche (Joypad Button 7) = L3 sur Switch Pro et PlayStation
 ##
 ## Ce script ne crée aucune action : il filtre les axes (sticks et gâchettes) des
 ## manettes qui envoient de fausses valeurs (vu avec une Switch Pro sous macOS : stick

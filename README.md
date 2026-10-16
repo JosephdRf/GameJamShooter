@@ -59,7 +59,8 @@ Les chemins sont regroupés dans `scripts/ui/screens.gd` (`Screens.TITLE`, `Scre
    du sol est couverte), liseré clair sur son bord ; rayures qui défilent si la zone est disputée ; il se
    résorbe vite si l'équipe sort (`zone_floor.gdshader`). Une colonne de lumière de 30 m, parcourue de vagues qui montent (plus vite pendant une
    capture), dorée puis à la couleur de l'équipe qui capture (
-   `beacon_height`) montre la zone active de loin. Un canard compte comme dedans tant que son corps touche la zone (même centré un peu
+   `beacon_height`) montre la zone active de loin ; au-dessus du premier obstacle qui la couvre
+   (dessous du carton, plafond…), elle continue mais pâle, pour qu'on ne croie pas la zone posée dessus. Un canard compte comme dedans tant que son corps touche la zone (même centré un peu
    hors du bord), jusqu'à 4,5 m au-dessus de son sol (`capture_height` : en sautant oui, depuis l'étage du dessus non). Si l'équipe sort, la barre repart à 0 ; si les deux équipes sont dedans, elle est en
    pause. Une zone reste jusqu'à sa capture (pas de limite de temps) ; **5 s** après
    une capture, une autre apparaît, annoncée par « Une nouvelle zone est apparue ! » (`next_zone_delay`). Scores : bleu à gauche du chrono, rouge à droite. À chaque prise :
@@ -81,7 +82,7 @@ par commande, avec sa touche clavier et son bouton de manette. Le code n'utilise
 | Se déplacer | `move_left/right/up/down` | Z/Q/S/D (W/A/S/D en QWERTY) ou flèches | Stick gauche | Stick gauche |
 | Tourner la caméra | `look_left/right/up/down` | Souris / trackpad | Stick droit | Stick droit |
 | Sauter | `jump` | Espace | B | Croix |
-| Dash (au sol, ~10 m, toutes les 2 s ; gauche / droite l'infléchissent) | `dash` | Maj | Y | Carré |
+| Dash (au sol, ~10 m, toutes les 2 s ; gauche / droite l'infléchissent) | `dash` | Maj | Y ou L3 (clic du stick gauche) | Carré ou L3 |
 | Tirer une bulle (maintenir = en continu) | `shoot` | Clic gauche / T | ZR | R2 |
 | Viser : la caméra zoome, sans aide à la visée (**désactivé pour l'instant** : aucune touche) | `aim` | — | — | — |
 | Bulle de capture (toutes les 1 s, 20 % d'eau) | `capture` | Clic molette | R | R1 |
@@ -191,6 +192,12 @@ Un joueur qui tombe de la plateforme meurt.
   (`water_lifetime` = 63 s, `fade_duration`) ; réarroser une flaque la rafraîchit (groupe « Évaporation » du nœud `Puddles`).
 - **Effet de savon du dash** : deux gerbes de gouttes bleues projetées sur les côtés du canard pendant
   tout le dash (`Player._create_dash_splash`).
+- **Anneau autour de chaque canard** : cercle au sol à la couleur de son équipe, avec une flèche dorée
+  qui dépasse de son bord vers la zone à défendre (masquée sans zone active ou une fois dedans) :
+  tout le monde sait où aller (`Player._create_zone_ring`, shader `duck_ring.gdshader`).
+- Jauge **Dash** en bas à droite (`MatchHud`, nœud `Dash` : bulle de `DashGauge`) : elle se remplit
+  d'eau pendant les 2 s de recharge (plus claire), puis devient pleine et vive, avec deux chevrons, quand
+  le dash est prêt ; elle gonfle avec un éclat blanc à cet instant.
 - **Dash sur l'eau** : il ne s'use pas. Le canard garde sa vitesse tant qu'il glisse sur une flaque, et
   la distance du dash ne compte que sur le sol sec (`dash_slides_on_water` sur le joueur). Contre un mur,
   le dash se termine normalement.
@@ -385,8 +392,14 @@ Un joueur qui tombe de la plateforme meurt.
   au sol, pour qu'on entre dessous par le grand trou et les deux poignées ; son dessus, comme celui du
   carton voisin (où l'on entre aussi par deux trous), est une boîte plate (`TOP_BOX`) pour y marcher sans
   accrocher. Le même script retire les 4 barres
-  du tabouret entre les pieds (rendu et collision, `REMOVED_PARTS`), pour passer dessous. La bouée oiseau
-  (`Bouee_Detail`) a une forme simplifiée (plus de coque convexe) ; la serviette pliée en pente
+  du tabouret entre les pieds (rendu et collision, `REMOVED_PARTS`), pour passer dessous. Le bateau (coque, pont,
+  anneaux, bouées) et le flacon de shampoing couché qui sert de rampe (corps, bouchons) ont chacun une
+  seule coque convexe lisse (`MERGED_HULLS`) : leurs pièces séparées formaient des marches et des
+  interstices où l'on se coinçait en dashant ; le bateau a des flancs verticaux (sa coque, plus large en
+  haut, pinçait le canard contre le matelas). Rouleaux de papier, étagères, poignées, brosse, éponge :
+  coque convexe (`CONVEX_PREFIXES`) ; bouée oiseau et tuyaux : quelques coques convexes (VHACD) ; petites
+  pièces du sèche-cheveux (fil, prise, grilles…) : aucune collision. Environ 40 % de collision en moins.
+  La serviette pliée en pente
   (`Serviette_005`) a une coque prolongée jusqu'au sol (`RAMPS`) : on y monte sans sauter. Après modification
   du script : réimporter `arene_bain.glb`.
 

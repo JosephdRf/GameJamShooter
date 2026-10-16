@@ -247,13 +247,15 @@ func _update_crosshair() -> void:
 		if player.is_local:
 			_crosshair.visible = player.is_alive() and not _ended
 			_hud.set_water(player.water, player.is_water_recharging())
+			_hud.set_dash(player.get_dash_ready_ratio())
 			_crosshair.set_on_target(_crosshair.visible and player.is_aiming_at_enemy())
 			_crosshair.set_in_range(player.is_bubble_in_range())
 			_crosshair.set_aim(player.camera.aim_offset,
 					player.aim_assist.box_size if _debug_mode and player.aim_assist.is_active() else Vector2.ZERO)
 			return
 	_crosshair.visible = false
-	_hud.set_water(-1.0, false) # Pas de joueur local : pas de jauge.
+	_hud.set_water(-1.0, false) # Pas de joueur local : pas de jauges.
+	_hud.set_dash(-1.0)
 
 
 func _update_capture_bar() -> void:

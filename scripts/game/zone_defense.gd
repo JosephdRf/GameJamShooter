@@ -35,6 +35,8 @@ extends Node3D
 ## Émis sur l'hôte : `team` = équipe qui a capturé (1 ou 2), 0 si temps écoulé.
 signal finished(team: int)
 
+## Groupe des zones (cf. Player : flèche vers la zone active).
+const GROUP := &"defense_zones"
 ## Intervalle (s) entre deux envois de l'état par l'hôte.
 const SYNC_INTERVAL := 0.1
 const IDLE_COLOR := Color(1, 0.95, 0.7) # Jaune pâle : visible sur le sol clair.
@@ -144,6 +146,8 @@ var _floor_progress := 0.0
 
 @onready var _disk: MeshInstance3D = $Disk
 @onready var _wall: MeshInstance3D = $Wall
+## Colonne de lumière : obstacle au-dessus déjà cherché (cf. _find_ceiling).
+var _ceiling_found := false
 @onready var _beacon: MeshInstance3D = $Beacon
 @onready var _ring: MeshInstance3D = $Ring
 @onready var _light: OmniLight3D = $Light
@@ -154,8 +158,25 @@ func _ready() -> void:
 	if Engine.is_editor_hint():
 		_update_visuals()
 		return
+	add_to_group(GROUP)
 	_create_build_up()
 	_apply_state(false, 0, false, 0.0, 0.0)
+
+
+## Colonne de lumière : hauteur du premier obstacle au-dessus de la zone (plus bas des rayons
+## lancés vers le haut au centre et vers les bords), au-delà de laquelle elle pâlit (shader
+## zone_beacon, `ceiling`). Calculée une fois, au premier affichage (décor fixe).
+func _find_ceiling() -> void:
+	_ceiling_found = true
+	var space := get_world_3d().direct_space_state
+	var lowest := INF
+	var reach := Vector2(size.x / 2.0, size.y / 2.0) * 0.6 if shape == Shape.RECTANGLE else Vector2.ONE * radius * 0.6
+	for offset: Vector2 in [Vector2.ZERO, Vector2(reach.x, 0), Vector2(-reach.x, 0), Vector2(0, reach.y), Vector2(0, -reach.y)]:
+		var from := global_transform * Vector3(offset.x, 0.5, offset.y)
+		var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(from, from + Vector3.UP * beacon_height, Player.WORLD_LAYER))
+		if not hit.is_empty():
+			lowest = minf(lowest, hit.position.y - global_position.y)
+	(_beacon.material_override as ShaderMaterial).set_shader_parameter(&"ceiling", lowest if lowest < INF else 100000.0)
 
 
 ## Hôte uniquement : fait apparaître la zone pour tout le monde.
@@ -233,6 +254,8 @@ func contains(point: Vector3, margin := 0.0) -> bool:
 func _process(delta: float) -> void:
 	if Engine.is_editor_hint():
 		return
+	if active and not _ceiling_found:
+		_find_ceiling()
 	if active:
 		_wave_offset += (WAVE_SPEED_CAPTURING if capturing_team != 0 else WAVE_SPEED) * delta
 		(_beacon.material_override as ShaderMaterial).set_shader_parameter(&"scroll_offset", fmod(_wave_offset, 900.0)) # 900 = 200 écarts de vagues : pas de saut.

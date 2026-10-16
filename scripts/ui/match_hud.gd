@@ -3,7 +3,7 @@ extends CanvasLayer
 ## score bleu | compte à rebours | score rouge (Scoreboard : formes, chiffres jaunes
 ## dans les dernières secondes, clignotement en prolongation, scores qui grossissent),
 ## et en dessous la barre de capture de la zone ; en bas à gauche, la réserve d'eau du
-## joueur. La scène de jeu
+## joueur ; en bas à droite, la recharge de son dash. La scène de jeu
 ## appelle les fonctions set_* ; ce script ne fait qu'afficher.
 
 ## Clignotement de la jauge d'eau quand il n'y a pas assez d'eau pour tirer.
@@ -15,6 +15,8 @@ const WATER_DENIED_COLOR := Color(0.95, 0.3, 0.3)
 @onready var _capture_bar: ProgressBar = %CaptureBar
 @onready var _water: Control = %Water
 @onready var _water_gauge: WaterGauge = %WaterGauge
+@onready var _dash: Control = %Dash
+@onready var _dash_gauge: DashGauge = %DashGauge
 
 var _water_flash: Tween
 
@@ -35,6 +37,12 @@ func set_water(ratio: float, recharging: bool) -> void:
 	_water.visible = ratio >= 0.0
 	_water_gauge.ratio = maxf(ratio, 0.0)
 	_water_gauge.recharging = recharging
+
+
+## Jauge du dash : `ratio` de 0 (vient de dasher) à 1 (prêt) ; négatif = masquée.
+func set_dash(ratio: float) -> void:
+	_dash.visible = ratio >= 0.0
+	_dash_gauge.ratio = maxf(ratio, 0.0)
 
 
 ## Pas assez d'eau pour tirer : toute la jauge clignote en rouge (visible même vide) et

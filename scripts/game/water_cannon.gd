@@ -21,14 +21,17 @@ extends Node3D
 ## Réseau : seuls l'état du canon et le point visé sont envoyés (cf. Player) ; chaque
 ## ordinateur simule ses gouttes. L'écart et la vitesse de chaque goutte viennent de son
 ## numéro (pas du hasard), donc le jet est le même partout, à la latence près. Seul
-## l'ordinateur du tireur compte les dégâts, regroupés par cible à chaque image (un seul
-## Player.take_damage par cible et par image, pas un par goutte).
+## l'ordinateur du tireur compte les dégâts, regroupés par cible et envoyés toutes les
+## DAMAGE_SEND_INTERVAL s (un seul Player.take_damage par cible, pas un par goutte ni par
+## image : moins de messages fiables à faire passer sur un réseau lent).
 
 ## Une goutte sur PAINT_EVERY qui touche le sol y peint, avec PAINT_EVERY fois plus d'eau :
 ## même trace (les gouttes tombent presque au même endroit), peinture bien moins coûteuse.
 const PAINT_EVERY := 3
 ## Une goutte sur SLOW_EVERY part moins vite (cf. min_speed_ratio).
 const SLOW_EVERY := 5
+## Intervalle (s) entre deux envois des dégâts du jet.
+const DAMAGE_SEND_INTERVAL := 0.1
 
 ## Gouttes émises par seconde et par canon.
 @export var drops_per_second := 140.0
@@ -61,10 +64,11 @@ var _emission := {}
 var _multimesh := MultiMesh.new()
 ## Gouttes tombées au sol, pour n'en peindre qu'une sur PAINT_EVERY.
 var _landed := 0
-## Dégâts de l'image en cours, par cible (Player -> PV), envoyés en une fois (cf. _deal_damage).
+## Dégâts pas encore envoyés, par cible (Player -> PV), envoyés en une fois (cf. _deal_damage).
 var _pending_damage := {}
-## Cible -> joueur (1 à 4) qui l'a arrosée en dernier dans l'image (pour le fil des éliminations).
+## Cible -> joueur (1 à 4) qui l'a arrosée en dernier (pour le fil des éliminations).
 var _pending_attacker := {}
+var _damage_send_left := 0.0
 var _puddles: Puddles
 
 @onready var _players: Node = get_node(^"../Players")
@@ -114,7 +118,10 @@ func _physics_process(delta: float) -> void:
 	for player: Player in _players.get_children():
 		_emit(player, delta)
 	_move_drops(delta)
-	_deal_damage()
+	_damage_send_left -= delta
+	if _damage_send_left <= 0.0:
+		_damage_send_left = DAMAGE_SEND_INTERVAL
+		_deal_damage()
 	_draw_drops()
 
 
@@ -197,7 +204,7 @@ func _on_drop_hit(hit: Dictionary, shooter: Player) -> void:
 	_puddles.drip(hit.position, normal)
 
 
-## Envoie les dégâts de l'image : un seul take_damage par cible.
+## Envoie les dégâts accumulés : un seul take_damage par cible.
 func _deal_damage() -> void:
 	for target: Player in _pending_damage:
 		if is_instance_valid(target):

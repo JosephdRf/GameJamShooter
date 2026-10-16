@@ -12,7 +12,7 @@ extends Node
 ## Vitesse à laquelle le viseur rejoint la cible (plus élevé = plus rapide).
 @export var follow_speed := 12.0
 ## Au-delà de cette distance (m), un adversaire n'attire pas le viseur.
-## Le rectangle s'affiche en debug mode (Ctrl + D, cf. Game).
+## Le rectangle s'affiche en debug mode (cf. Game._debug_mode).
 @export var max_distance := 30.0
 
 @onready var _player: Player = get_parent()

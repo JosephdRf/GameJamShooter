@@ -15,7 +15,6 @@ extends Node
 ##   ui_accept (de Godot)    : valider (Entrée, Espace / bouton de droite)
 ##   ui_cancel (de Godot)    : quitter le jeu (Échap)
 ##   debug_damage            : version de développement, 10 dégâts à son canard (H)
-##   debug_mode              : afficher / masquer le debug mode : PV, rectangle de l'aide à la visée (Ctrl + D)
 ##
 ## Les touches sont *physiques* : Z/Q/S/D en AZERTY = W/A/S/D en QWERTY.
 ## Les boutons de manette sont repérés par leur *position* (noms Xbox dans Godot) :

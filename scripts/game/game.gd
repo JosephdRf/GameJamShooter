@@ -7,7 +7,7 @@ extends Node3D
 ## Tirs : chaque bulle tirée (signal Player.shot) est créée sous Projectiles et
 ## se supprime d'elle-même en éclatant ; sur le sol, elle laisse une flaque (Puddles).
 ## Test (version de développement) : l'action debug_damage (H) inflige 10 dégâts à son propre cube.
-## Debug mode (action debug_mode : Ctrl + D), désactivé au lancement : affiche les
+## Debug mode (_debug_mode, sans touche : à activer dans le code), désactivé : affiche les
 ## PV du joueur local (DebugHealth) et le rectangle de l'aide à la visée.
 ## Chaque ordinateur affiche la caméra du joueur qu'il a choisi dans le salon.
 ## Les joueurs non choisis restent sur place (contrôlés par personne).
@@ -132,9 +132,6 @@ func _process(delta: float) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed(&"ui_cancel"):
 		get_tree().quit()
-	elif event.is_action_pressed(&"debug_mode"):
-		_debug_mode = not _debug_mode
-		_debug_layer.visible = _debug_mode
 	elif OS.is_debug_build() and event.is_action_pressed(&"debug_damage"):
 		for player: Player in _players.get_children():
 			if player.is_local and player.active:
